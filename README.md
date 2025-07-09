@@ -74,3 +74,12 @@ id,quote_text,tradition,source_ref,author,tags
 1,"A kindly tongue is the lodestone of the heart of men. It is the bread of the spirit, it clotheth the words with meaning, it is the fountain of the light of wisdom and understanding.",Baha'i,"Gleanings from the Writings of Baháʼu'lláh",Baháʼu'lláh,"kindness,speech,influence,heart"
 2,"A gentle answer turns away wrath,\nbut a harsh word stirs up anger.",Judaism,"Proverbs 15:1",Solomon,"kindness,anger,speech,wisdom"
 3,"He who has a hundred desires, has a hundred woes. He who has no desires, has no woes.",Buddhism,"The Dhammapada, 13.177",The Buddha,"desire,suffering,detachment,peace"
+
+
+### A Note on Attribution for the Qur'an
+
+In this collection, quotes from various traditions are attributed to their central human figures (e.g., Jesus, The Buddha, Zarathushtra) for the sake of data consistency.
+
+The Islamic tradition holds that the Qur'an is the literal, unauthored word of God, revealed *through* the Angel Gabriel to Prophet Muhammad. Therefore, Prophet Muhammad is understood as the **messenger** of the revelation, not its author.
+
+To maintain a consistent structure in the `author` field, verses from the Qur'an are attributed here to **`Prophet Muhammad`** in his role as the final recipient and conveyor of the message. This is a classification choice for the database and not a theological statement on authorship.
