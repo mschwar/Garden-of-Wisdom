@@ -76,6 +76,35 @@ id,quote_text,tradition,source_ref,author,tags
 3,"He who has a hundred desires, has a hundred woes. He who has no desires, has no woes.",Buddhism,"The Dhammapada, 13.177",The Buddha,"desire,suffering,detachment,peace"
 ```
 
+---
+
+## Future Goals & Roadmap
+
+This project is designed to evolve. The clean data structure is the foundation for more advanced features that will make this collection even more impactful.
+
+### Phase 1: Creating a Source Manifest (Complete)
+A new file, `sources.csv`, has been added to the repository. This file acts as a master list and worksheet for all source texts referenced in `quotes.csv`. It includes:
+- **`source_id`**: A unique ID for each source text.
+- **`source_title`**: The canonical name of the book or collection.
+- **`tradition`**: The associated tradition.
+- **`gutenberg_search_term`**: A suggested search term for finding the text on Project Gutenberg.
+- **`notes`**: Important context, especially for copyrighted, sacred, or oral traditions that require special handling or specific digital libraries.
+
+### Phase 2: Gathering the Source Texts (Next Step)
+The next step is to gather the full texts for local use.
+1.  **Create a `texts/` Directory**: A local folder to store the downloaded `.txt` files.
+2.  **Download Texts**: Use the `sources.csv` file as a guide. Download public domain works from Project Gutenberg and note the URLs for copyrighted/sacred digital libraries.
+3.  **Link Quotes to Sources**: A new `source_id` column will be added to `quotes.csv`, linking each quote to its master source in `sources.csv`.
+
+### Phase 3: The Hyperlinking Engine (Ambitious Goal)
+The ultimate goal is to transform this database into a fully-linked digital concordance. This is a more advanced, long-term objective that would involve:
+- Developing a script to parse the local text files in the `texts/` directory.
+- Locating the exact position (line number or character index) of each quote within its source text.
+- Generating a new data file or a simple web interface that provides a direct "jump-to-quote" hyperlink for every entry in the collection.
+
+---
+
+
 ### A Note on Attribution for the Qur'an
 
 In this collection, quotes from various traditions are attributed to their central human figures (e.g., Jesus, The Buddha, Zarathushtra) for the sake of data consistency.
