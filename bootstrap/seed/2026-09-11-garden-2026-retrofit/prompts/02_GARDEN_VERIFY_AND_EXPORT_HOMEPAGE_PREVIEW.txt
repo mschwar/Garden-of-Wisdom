@@ -17,9 +17,20 @@ Read:
 
 # OWNER-SUPPLIED DONOR SET
 
-Before execution, the owner will replace this line with approved Garden legacy IDs:
+APPROVED_GARDEN_IDS = [3, 12, 15, 26, 30]
 
-APPROVED_GARDEN_IDS = [REPLACE_ME]
+Approved 2026-09-11. Rationale (full analysis in `docs/DECISIONS.md`, entry "Approved donor set
+for the homepage preview export"):
+these five are the least-ambiguous, most-widely-cited passages in the Garden Bahá'í subset — all
+resolve cleanly to `source_id 12` (Official Bahá'í Writings) in `sources.csv`, none carries a
+`has_unresolved_glyph` flag, none appears in any near-duplicate candidate pair from
+`docs/data/DATA_QUALITY_REPORT.md`, and none is drawn from The Hidden Words (avoiding redundancy
+with the homepage's existing 153-passage Hidden Words corpus, per this prompt's own preference).
+Two other candidate sets were considered and deliberately deferred to a later pass, not rejected:
+a citation-shape-diversity set (spanning Gleanings/Epistle/Tablets/Paris Talks/Kitáb-i-Aqdas/
+Selections from the Báb) and a Hidden-Words-collision test set (deliberately including Garden id 18,
+the opening line of the Persian Hidden Words) — both are better suited to a follow-up export once
+this first "tiny preview" proves the verify→export mechanics end-to-end.
 
 Do not choose a different set without stopping for approval.
 

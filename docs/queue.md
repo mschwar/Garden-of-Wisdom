@@ -27,7 +27,12 @@ are picked up or closed, don't just append.
 
 ## Explicitly NOT started (out of Phase 0 scope, do not start without human sign-off)
 
-- Donor-set selection or authoritative verification of any quotes for export.
+- Authoritative verification or export of any quotes. **Donor-set selection is done** — ids
+  [3, 12, 15, 26, 30] approved 2026-09-11 (`docs/DECISIONS.md`) and filled into
+  `bootstrap/seed/2026-09-11-garden-2026-retrofit/prompts/02_GARDEN_VERIFY_AND_EXPORT_HOMEPAGE_PREVIEW.txt`'s
+  `APPROVED_GARDEN_IDS`. Running that prompt (verification against the authoritative Bahá'í
+  Reference Library, then export) is the next step, still gated on the `bahai-homepage` H2B
+  collection contract being reviewed/accepted.
 - Any `bahai-homepage` export or implementation work.
 - Bulk quote verification.
 
