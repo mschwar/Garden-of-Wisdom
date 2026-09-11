@@ -1,0 +1,182 @@
+You are operating in the repository `mschwar/Garden-of-Wisdom`.
+
+This is a bounded repo-archaeology + 2026 retrofit + data-rehabilitation + quote-browser task.
+
+READ FIRST:
+1. START_GARDEN_2026_RETROFIT.md
+2. bootstrap/seed/2026-09-11-garden-2026-retrofit/README.md
+3. bootstrap/seed/2026-09-11-garden-2026-retrofit/workunits/G0_G1_G2_G3_PHASE0.md
+4. bootstrap/seed/2026-09-11-garden-2026-retrofit/shared/CROSS_REPO_COLLECTION_PRINCIPLES.md
+5. the entire current README.md
+6. git history
+7. quotes.csv and sources.csv as raw bytes / with encoding inspection, not only rendered text
+
+Then independently verify repository state before changing anything.
+
+# OWNER INTENT
+
+Garden of Wisdom is a personal, curated collection of memorable passages from multiple religious/philosophical traditions for memorization and reflection. It should remain distinct from `bahai-homepage`.
+
+The goal of this phase is to turn a fragile 2025 CSV repository into a legible, agent-first personal quote library and curation workbench, while preserving its history and uncertainty.
+
+A second goal is to build a simple static quote browser/audit console so a human can easily look at, search, sort, filter, copy, inspect, and quality-check the database.
+
+A later goal — NOT authorized yet — is to export a tiny verified Bahá’í subset as a test collection for `bahai-homepage`.
+
+# IMPORTANT OBSERVATIONS TO VERIFY, NOT BLINDLY TRUST
+
+Previous inspection found:
+- the repo has only README.md, quotes.csv, sources.csv and a tracked .DS_Store;
+- README claims UTF-8 but GitHub decoding/rendering shows mojibake such as Bahá’í names rendered incorrectly;
+- IDs appear to have gaps (e.g. 250→261, 290→301);
+- README's controlled tradition list appears stale relative to the data;
+- probable duplicate/variant records exist (e.g. Gita 2.47 variants; Dhammapada v.1 variants; Yasna 43:1 variants);
+- exact quotes, excerpts, paraphrases, proverbs/oral attributions, and uncertain records appear mixed together;
+- sources.csv is a useful start but quote rows are not yet linked to source IDs and source provenance is incomplete.
+
+Re-test all of that from the repo itself. Correct any mistaken premise in your handoff.
+
+# PHASE 0 CONTRACT
+
+Execute work unit G0/G1/G2/G3 only.
+
+## G0 — archaeology
+
+Reconstruct the repository from first principles:
+- purpose and stable intent;
+- history and major changes;
+- current data shape and actual row counts;
+- ID integrity;
+- distributions by tradition/author/source/tag;
+- encoding state;
+- malformed rows/columns;
+- duplicate and near-duplicate candidates;
+- attribution/source ambiguity;
+- quote-type ambiguity;
+- source-manifest quality;
+- rights/provenance risks.
+
+Write the evidence-backed findings under `docs/audit/2026-09-11/`.
+
+## G1 — agent-first retrofit
+
+Create the minimum durable repo control layer:
+- AGENTS.md
+- canonical README.md
+- docs/product/PRODUCT_DOCTRINE.md
+- docs/data/DATA_CONTRACT.md
+- docs/data/DATA_QUALITY_REPORT.md
+- docs/architecture/QUOTE_BROWSER.md
+- docs/queue.md
+- docs/RUNBOOK.md
+- docs/DECISIONS.md (append-only from creation onward)
+
+Make it possible for a new agent to enter cold and know:
+- what this project is;
+- what data is authoritative vs provisional;
+- what commands to run;
+- what it may change autonomously;
+- what requires human/provenance review;
+- how to resume work.
+
+## G2 — data rehabilitation
+
+Preserve before repair.
+
+1. Preserve the original CSV bytes in an archival location or git-appropriate immutable record before normalization.
+2. Diagnose the encoding/corruption mechanism from evidence. Do not guess-and-replace character sequences casually.
+3. Produce valid UTF-8 canonical working data.
+4. Do not rewrite quote wording to make it “look right” unless the transformation is a provable encoding restoration.
+5. Preserve legacy IDs even if non-contiguous.
+6. Add an explicit representation for at least:
+   - quote/item type (`full-passage`, `excerpt`, `paraphrase`, `oral-attribution`, `unknown` or justified equivalents),
+   - verification/review status,
+   - source/provenance linkage.
+7. Reconcile the source manifest into a structurally valid form.
+8. Remove tracked `.DS_Store` and add an ignore rule.
+9. Add deterministic validation that reports, at minimum:
+   - parse validity,
+   - duplicate IDs,
+   - missing required fields,
+   - malformed UTF-8,
+   - invalid controlled values,
+   - exact duplicate text,
+   - suspicious/near-duplicate candidates where practical,
+   - unresolved source links,
+   - counts by quote type and verification status.
+
+If a schema migration would destroy useful legacy information, preserve the legacy data and create a normalized layer rather than rewriting destructively.
+
+## G3 — static quote browser/audit console
+
+Build the simplest durable interface that materially improves human curation.
+
+Required behavior:
+- opens from a local static server and is suitable for GitHub Pages later;
+- global text search across quote/author/source/tags;
+- sort by at least ID, tradition, author, source and length;
+- filters for tradition, author, source, tag, quote type and verification status;
+- visible total and filtered counts;
+- one-click copy quote;
+- one-click copy quote + attribution;
+- copy record JSON or equivalent machine-readable representation;
+- expandable provenance/details;
+- visible issue badges / an “issues only” view;
+- duplicate/near-duplicate review aid if the validator emits candidates;
+- responsive enough for laptop/mobile review;
+- no backend, auth, analytics, runtime AI, database or framework unless you can demonstrate a framework is truly necessary.
+
+The browser must make uncertainty visible. It must not visually present every row as verified scripture.
+
+# CROSS-REPO BOUNDARY
+
+Read `shared/CROSS_REPO_COLLECTION_PRINCIPLES.md` as design input only.
+
+Do NOT:
+- modify `bahai-homepage`;
+- build a homepage-specific export in this phase;
+- make the Garden schema equal to the homepage runtime schema merely for convenience;
+- verify hundreds of quotes manually.
+
+Garden should be able to export later, but it remains its own curation product.
+
+# VALIDATION
+
+Create repo-native commands for at least:
+- data validation;
+- browser/local run;
+- any browser smoke test you introduce.
+
+Run them from a clean/reproducible state and paste raw results into the handoff.
+
+# GIT
+
+Use a dedicated branch for implementation after the seed branch if appropriate.
+Keep commits coherent.
+Do not rewrite history.
+Do not squash away the original 2025 history.
+
+# REQUIRED HANDOFF
+
+Create `GARDEN_PHASE0_HANDOFF.md` at the repo root containing:
+1. what the project actually is;
+2. archaeology findings;
+3. exact data counts;
+4. exact encoding diagnosis and what was done;
+5. schema/data-contract decisions;
+6. what remains unverified;
+7. quote-browser features and exact run command/URL;
+8. validator commands and raw results;
+9. screenshots/evidence paths if produced;
+10. repo changes by category;
+11. queued next work;
+12. explicit proposal for how a later Garden export could satisfy the homepage collection contract without coupling the repos;
+13. every deviation from this prompt.
+
+# STOP CONDITION
+
+STOP after Phase 0/G0-G3 and the handoff.
+
+Do not start donor-set selection, authoritative verification, homepage export, or homepage implementation even if they seem obvious.
+
+The next step is human/frontier review of the rehabilitated data and browser.

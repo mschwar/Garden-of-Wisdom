@@ -1,0 +1,70 @@
+You are operating in `mschwar/Garden-of-Wisdom`.
+
+This task is BLOCKED unless both are true:
+1. Garden Phase 0 has been accepted by the owner.
+2. The `bahai-homepage` H2B collection contract has been accepted and is available to read.
+
+If either condition is false, STOP and say exactly what is missing.
+
+Read:
+- AGENTS.md
+- GARDEN_PHASE0_HANDOFF.md
+- docs/data/DATA_CONTRACT.md
+- docs/data/DATA_QUALITY_REPORT.md
+- docs/queue.md
+- the accepted homepage collection contract supplied by the owner
+- bootstrap/seed/2026-09-11-garden-2026-retrofit/workunits/G4_VERIFIED_HOMEPAGE_PREVIEW_EXPORT.md
+
+# OWNER-SUPPLIED DONOR SET
+
+Before execution, the owner will replace this line with approved Garden legacy IDs:
+
+APPROVED_GARDEN_IDS = [REPLACE_ME]
+
+Do not choose a different set without stopping for approval.
+
+# TASK
+
+For only those approved Garden records:
+- locate the authoritative Bahá’í Reference Library source where applicable;
+- verify exact display wording;
+- verify author/attribution;
+- verify source locator;
+- record canonical source URL;
+- classify item type (full passage/excerpt/paraphrase/etc.);
+- record verification evidence;
+- reject a donor from the export if it cannot be verified cleanly.
+
+Do not silently rewrite the Garden source row. Record correction/mapping provenance explicitly.
+
+Then emit a versioned homepage-preview collection that conforms exactly to the accepted H2B collection contract.
+
+Suggested location:
+`exports/bahai-homepage-preview/v1/collection.json`
+
+Also create:
+- `exports/bahai-homepage-preview/v1/README.md`
+- `exports/bahai-homepage-preview/v1/PROVENANCE.md`
+- deterministic export validation
+- a human-readable donor review table
+
+# CONSTRAINTS
+
+- Bahá’í-only for this preview.
+- Prefer non-Hidden-Words donor passages unless an approved donor intentionally tests overlap.
+- No paraphrase may be emitted as if it were exact scripture.
+- Keep Garden legacy IDs as upstream identity.
+- Do not modify `bahai-homepage`.
+- Do not expand beyond the approved donor set.
+
+# HANDOFF
+
+Create `GARDEN_HOMEPAGE_PREVIEW_EXPORT_HANDOFF.md` with:
+- accepted/rejected donors and reasons;
+- exact authoritative links;
+- export version/hash;
+- validation output;
+- any contract friction discovered;
+- exact path the homepage agent should consume.
+
+STOP after the verified export. Homepage wiring is a separate work unit.
