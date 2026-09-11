@@ -1,0 +1,207 @@
+:root {
+  --bg: #faf8f4;
+  --fg: #1c1a17;
+  --muted: #6b675f;
+  --card-bg: #ffffff;
+  --border: #ddd6c9;
+  --accent: #7a5c3e;
+  --pill-bg: #efe7d8;
+  --issue: #b3441e;
+  --issue-bg: #fbe8e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1815;
+    --fg: #ece8e0;
+    --muted: #a39d8f;
+    --card-bg: #24211d;
+    --border: #3a352c;
+    --accent: #d8b98a;
+    --pill-bg: #332d22;
+    --issue: #ff8a5c;
+    --issue-bg: #3a2318;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.4;
+}
+
+header h1 { margin: 0 0 4px; font-size: 1.5rem; }
+.subtitle { margin: 0 0 16px; color: var(--muted); font-size: 0.9rem; }
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+#search {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.control-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.control-row select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  min-width: 140px;
+}
+
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+}
+
+#sort-dir {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--muted);
+}
+
+.badge.issue {
+  background: var(--issue-bg);
+  color: var(--issue);
+  font-weight: 600;
+}
+
+.quote-text {
+  margin: 0;
+  font-size: 1rem;
+  quotes: "“" "”";
+}
+.quote-text::before { content: open-quote; }
+.quote-text::after { content: close-quote; }
+
+.attribution { font-size: 0.85rem; color: var(--muted); }
+.attribution .author { color: var(--fg); font-weight: 600; }
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.tradition-pill {
+  background: var(--pill-bg);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.provenance summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.provenance dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 10px;
+  font-size: 0.78rem;
+  margin: 8px 0 0;
+}
+.provenance dt { color: var(--muted); }
+.provenance dd { margin: 0; }
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.actions button {
+  font-size: 0.75rem;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.actions button:hover { border-color: var(--accent); }
+
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}

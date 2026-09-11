@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garden of Wisdom — Quote Browser</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Garden of Wisdom</h1>
+  <p class="subtitle">Curation &amp; audit console — <span id="total-count">0</span> quotes, <span id="filtered-count">0</span> shown</p>
+</header>
+
+<div id="controls">
+  <input id="search" type="search" placeholder="Search quote, author, source, tags…" autocomplete="off">
+
+  <div class="control-row">
+    <label>Tradition
+      <select id="filter-tradition"><option value="">All</option></select>
+    </label>
+    <label>Author
+      <select id="filter-author"><option value="">All</option></select>
+    </label>
+    <label>Source
+      <select id="filter-source"><option value="">All</option></select>
+    </label>
+    <label>Tag
+      <select id="filter-tag"><option value="">All</option></select>
+    </label>
+    <label>Item type
+      <select id="filter-item-type"><option value="">All</option></select>
+    </label>
+    <label>Verification
+      <select id="filter-verification"><option value="">All</option></select>
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="filter-issues-only"> Issues only
+    </label>
+  </div>
+
+  <div class="control-row">
+    <label>Sort by
+      <select id="sort-field">
+        <option value="id">ID</option>
+        <option value="tradition">Tradition</option>
+        <option value="author">Author</option>
+        <option value="source_ref">Source</option>
+        <option value="length">Length</option>
+      </select>
+    </label>
+    <button id="sort-dir" type="button" data-dir="asc">↑ Ascending</button>
+  </div>
+</div>
+
+<main id="results"></main>
+
+<template id="card-template">
+  <article class="card">
+    <div class="card-badges"></div>
+    <blockquote class="quote-text"></blockquote>
+    <div class="attribution">
+      <span class="author"></span> · <span class="source-ref"></span>
+    </div>
+    <div class="meta-row">
+      <span class="tradition-pill"></span>
+      <span class="tags"></span>
+    </div>
+    <details class="provenance">
+      <summary>Provenance &amp; details</summary>
+      <dl></dl>
+    </details>
+    <div class="actions">
+      <button class="copy-quote" type="button">Copy quote</button>
+      <button class="copy-attributed" type="button">Copy quote + attribution</button>
+      <button class="copy-json" type="button">Copy JSON</button>
+    </div>
+  </article>
+</template>
+
+<div id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
