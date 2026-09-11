@@ -40,3 +40,17 @@ hand-rolled RFC4180-ish parser in `browser/app.js` is sufficient for this datase
 keeps the "no framework unless demonstrably necessary" constraint from
 `docs/product/PRODUCT_DOCTRINE.md` / the originating work-unit prompt. Revisit if quote data
 grows pathological embedded-quote/newline cases the hand-rolled parser mishandles.
+
+## 2026-09-11 — Approved donor set for the homepage preview export: Garden ids [3, 12, 15, 26, 30]
+
+Three candidate donor-set options were proposed for
+`bootstrap/seed/2026-09-11-garden-2026-retrofit/prompts/02_GARDEN_VERIFY_AND_EXPORT_HOMEPAGE_PREVIEW.txt`'s
+`APPROVED_GARDEN_IDS`: (A) the safest/most-famous, least-ambiguous Bahá'í passages; (B) a set
+deliberately diverse across citation shapes and source works, to stress-test the export
+mechanics; (C) a set including one deliberate Hidden Words item, to test collision handling
+against the homepage's existing Hidden Words corpus. Chose **option A** — ids 3, 12, 15, 26, 30
+— because this is a first "tiny preview" export whose job is proving the verify→export pipeline
+works at all, not stress-testing edge cases yet. All five resolve cleanly to `source_id 12`
+("Official Baha'i Writings"), none carries `has_unresolved_glyph`, none appears in any
+near-duplicate candidate pair (`docs/data/DATA_QUALITY_REPORT.md`), and none is drawn from The
+Hidden Words. Options B and C are deferred to a later, deliberate follow-up export, not rejected.
