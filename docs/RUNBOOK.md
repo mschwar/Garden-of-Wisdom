@@ -26,6 +26,26 @@ supplementary walkthroughs S11/S12) and asserts the state machine, the operator 
 per-claim evidence standard, and the visible-uncertainty rule all hold. Exits 0 with
 `RESULT: PASS`. Run it after editing anything under `docs/program/`.
 
+## Create and check the corpus store (W1.1)
+
+```
+python3 scripts/garden_store.py create --dir DIR
+python3 scripts/garden_store.py export --dir DIR
+python3 scripts/check_garden_store.py
+```
+
+`scripts/garden_store.py` is the W1.1 store of record: one SQLite file (`garden.sqlite3`,
+standard-library `sqlite3`, no server, no network) plus a deterministic text export
+(`garden.export.txt`) that is the committed, diffable mirror. `create` is idempotent — a second
+run applies nothing and says so. `import --dir DIR --from FILE` loads an export (a no-op if the
+store already holds that exact text) and `verify --dir DIR` re-runs the
+export → re-import → byte-identical comparison. `scripts/check_garden_store.py` runs the full
+acceptance in a throwaway temp directory — create-from-empty, write, read back, export, wipe,
+re-import, byte-identical, plus idempotency, append-only/immutability enforcement, the four
+state vocabularies, and requirement 6's queries at ~2,000 rows — and exits non-zero with
+`RESULT: FAIL` and one `FAIL:` line per broken check. It never touches `quotes.csv`/`sources.csv`
+(it hashes both before and after). See `docs/program/W1_1_STORAGE_AND_SCHEMA.md`.
+
 ## Run the browser locally
 
 ```
