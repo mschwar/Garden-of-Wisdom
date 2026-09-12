@@ -40,12 +40,21 @@
   </div>
 
   <div class="control-row">
+    <label>View
+      <select id="view-mode">
+        <option value="cards">Cards</option>
+        <option value="table">Table</option>
+      </select>
+    </label>
     <label>Sort by
       <select id="sort-field">
         <option value="id">ID</option>
         <option value="tradition">Tradition</option>
         <option value="author">Author</option>
         <option value="source_ref">Source</option>
+        <option value="tags">Tags</option>
+        <option value="item_type">Type</option>
+        <option value="verification_status">Verification</option>
         <option value="length">Length</option>
       </select>
     </label>
@@ -54,6 +63,26 @@
 </div>
 
 <main id="results"></main>
+
+<div id="table-wrap">
+  <table id="quote-table" hidden aria-label="Quotes — filtered and sortable">
+    <thead>
+      <tr>
+        <th scope="col" data-sort="id">ID</th>
+        <th scope="col" data-sort="tradition">Tradition</th>
+        <th scope="col" data-sort="author">Author</th>
+        <th scope="col" data-sort="source_ref">Source</th>
+        <th scope="col" data-sort="tags">Tags</th>
+        <th scope="col" data-sort="item_type">Type</th>
+        <th scope="col" data-sort="verification_status">Verification</th>
+        <th scope="col" data-sort="length">Length</th>
+        <th scope="col">Quote text</th>
+        <th scope="col" class="th-actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 <template id="card-template">
   <article class="card">

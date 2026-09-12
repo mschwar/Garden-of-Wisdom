@@ -22,10 +22,14 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — infra
 
+- [ ] Add an automated browser smoke test for the quote browser (manual Claude-in-Chrome and
+      headless-Chrome smoke checks have been run, but no committed test exists).
+- [ ] At ~375px viewport the page overflows horizontally because `#controls select{min-width:140px}`
+      (the `#filter-source` dropdown renders ~390px). Reproduces in both card and table views;
+      the table view's `#table-wrap` already handles its own overflow. Fix the controls row
+      (e.g. allow selects to shrink / wrap on narrow screens). Flagged by foreign QA on PR #9.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
-- [ ] No automated browser test exists yet; only a manual Claude-in-Chrome smoke test was run
-      this phase.
 
 ## Open — candidate units found during G4 (not scheduled; specs only)
 
