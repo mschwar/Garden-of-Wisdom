@@ -299,3 +299,124 @@ path) plus three controls that show the vacuity guards themselves firing when
 `quotes.csv` stops distinguishing the behaviour — recorded in
 `GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md`.
 
+## 2026-09-12 — D1 (authorization): W1 is authorized IN FULL; the per-unit gates are not merged
+
+Gate A was accepted 2026-09-12 (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`). Considered
+authorizing W1 one unit at a time — W1.1, then re-decide — which is literally what the W0 report's
+stop point and the queue item said. Rejected: the operator chose to authorize the **whole wave**,
+on the explicit condition that authorizing the wave does **not** merge the per-unit gates. Each
+unit still keeps its own isolated branch/worktree, its own PR, independent/foreign QA, and its own
+merge; the unit boundaries are unchanged.
+
+Authorized in full: **W1.1** storage decision + minimal schema, **W1.2** candidate-envelope
+validator, **W1.3** manual capture/submission CLI, **W1.4** normalization + duplicate hints,
+**W1.5** curation review + decisions + audit history, **W1.6** end-to-end test pack + Gate B
+packet. Ordering and dependencies in `docs/program/W1_DECOMPOSITION.md` still hold: W1.1 → W1.2 →
+W1.3 → W1.4 (W1.4 may overlap W1.3) → W1.5 → W1.6. The stop point is unchanged — W1 ends at the
+Gate B packet, and W2 is not started. This entry supersedes the "W1 NOT authorized" posture
+everywhere it is stated (`docs/program/W1_DECOMPOSITION.md` header, `docs/queue.md`,
+`docs/program/W0_GATE_REPORT.md`).
+
+## 2026-09-12 — D2 (storage): W1.1's store of record is SQLite with a committed full-text export
+
+W1.1 decides the store. Chosen: **SQLite** as the store of record, with a full text export
+committed to git as the human-readable, diffable mirror. Rationale: it meets all eight
+storage/access requirements in `docs/program/W1_DECOMPOSITION.md` §Storage and access
+(immutable captures, append-only decision log, the four state dimensions, a fast unreviewed-queue
+query, no network, no server) with one file and one code path, and the committed export preserves
+diffability. Rejected: (a) plain JSONL/CSV files + git as the store — immutability and the
+append-only audit log become conventions rather than enforced structure; (b) a hybrid of JSONL
+plus a rebuildable SQLite index — two write paths for no W1 gain. The hybrid is recorded as the
+**upgrade path** if the operator later wants decisions diffable in git from day one. This
+supersedes the W0 "no datastore is chosen" entry: W0 chose nothing on purpose; W1.1 now decides.
+
+## 2026-09-12 — D3 (unverifiable): a side-car ledger keyed by legacy row id, not a widened enum
+
+`unverifiable` will be represented in a **side-car ledger keyed by legacy row id**, NOT by
+widening the 3-valued `quotes.csv` `verification_status` enum. Implementation is deferred until
+after W1.1 exists, so there is one store rather than two. Rationale: the CSV is a documented lossy
+projection of a 6-value research dimension (`docs/program/STATE_MODEL.md`), and
+`docs/program/W1_DECOMPOSITION.md` already names a side-car ledger as the way legacy rows are
+re-opened. Rejected: (a) adding a 4th enum value — a permanent widening of a frozen view that is
+still lossy; (b) leaving it to the export only — issue #5's live instance (Garden id 30) stays
+indistinguishable from a never-checked row.
+
+## 2026-09-12 — D4 (legacy capture provenance): one batch capture record for the 2026-09-11 import
+
+The 324 legacy rows get **ONE batch capture record** for the 2026-09-11 rehabilitation import,
+explicitly marked as such and explicitly noting that the encounter context is unknown. Rationale:
+that is a true, verifiable statement (git history + `data/archive/2026-09-11/` + the documented
+transform) rather than an invented encounter, and it gives downstream code a uniform shape.
+Rejected: (a) no capture at all — the archive stays the only provenance, kept as the fallback if
+the operator prefers zero synthetic entities; (b) one synthetic capture per row — fabricated
+per-row provenance, the exact failure the program exists to prevent. This closes the W0 open
+policy question ("does `legacy-import` ever get a capture record at all?") without inventing a
+per-row encounter.
+
+## 2026-09-12 — D5 (naming): `verification_status` and `verification_state` are different things, and the mapping is machine-checked
+
+`verification_status` and `verification_state` are declared **DIFFERENT things** rather than one
+renamed to the other: `verification_status` = the 3-valued `quotes.csv` projection;
+`verification_state` = the store's 6-valued research dimension. The mapping must be written down
+and machine-checked — `scripts/check_program_contracts.py` already recomputes the projection from
+the data and must assert the mapping. This closes issue #7 as a **decision, not a rename**.
+Rejected: (a) renaming the CSV column — touches the frozen view, validator, browser and export to
+save one mapping; (b) leaving it as an undocumented status quo — the two spellings keep hardening.
+(The checker assertion itself is implemented by a separate unit; this entry only records the
+decision.)
+
+## 2026-09-12 — D6 (near-duplicate curation): curate the citation-sharing pairs; skip the generic-`source_ref` false positives
+
+Of the 45 near-duplicate candidate pairs in `docs/data/DATA_QUALITY_REPORT.md`, curate the ~22
+pairs that share a **specific citation**, and explicitly skip the ~23 pairs that are the
+validator's generic-`source_ref` false positive (e.g. unrelated rows both labelled 'Oral
+Tradition'). Keep both rows for legitimate variant translations; only merge/remove accidental
+duplication. Sequencing constraint: this writes `quotes.csv`, and W1 makes `quotes.csv`/`sources.csv`
+**READ-ONLY for the whole of W1**, so it runs **AFTER W1 completes**. Rejected: (a) tightening the
+heuristic first — that is W1.4's job, for new candidates; (b) deferring entirely — the legacy
+browser view is what people use today.
+
+## 2026-09-12 — D7 (manifest gap): close the 14 unresolved `source_id` links by adding rows, after W1
+
+Close the 14 unresolved `source_id` links by adding `sources.csv` rows — the identifiable works
+(Mahabharata 5.1517, Huehuetlahtolli, Florentine Codex) plus per-tradition oral rows for Shawnee,
+Cherokee, Nez Perce, Lakota, Tewa, Zuni, Ethiopian and Nguni — then re-link `source_id`. Quote text
+is untouched; the validator runs before and after. Sequenced **AFTER W1** (it writes `sources.csv`,
+read-only during W1). Rejected: (a) only the three works — leaves 9 rows permanently badged;
+(b) leaving all 14 — permanent badge noise, manifest stays incomplete.
+
+## 2026-09-12 — D8 (legacy hygiene): the cheap deterministic subset now, the `_` rows left to the operator
+
+Do the cheap deterministic subset of legacy hygiene: retype the ~10 Roman-numeral Gleanings rows
+and the paraphrase-shaped rows 31/267 out of `item_type = unknown`, and document the 27-value
+tradition list as the controlled list. Leave the 4 rows with a literal `_` placeholder (ids 1, 16,
+314, 320) for the operator, who must supply the real character — guessing stays forbidden by the
+2026-09-11 decision. Do **not** widen `item_type`. Sequenced **AFTER W1** (writes `quotes.csv`).
+Rejected: (a) leaving all hygiene to post-W1 tools; (b) doing the `_` rows now by guessing.
+
+## 2026-09-12 — D9 (H2B-B lane): open the bahai-homepage consume lane against the v1 export
+
+The `bahai-homepage` consume lane (H2B-B) is **OPENED** against the v1 export at
+`exports/bahai-homepage-preview/v1/collection.json` (4 verified rows), rather than widening the
+donor set first. Rationale: it closes the loop the v1 export was built to prove and surfaces the
+real contract questions (issue #4 `source_url`, the D5 spelling above) with four rows instead of
+forty; it lives in a different repo, so Garden's frozen data is undisturbed. This is a **lane
+authorization, not work performed in Garden**. It supersedes the "do not start H2B-B" posture in
+`docs/queue.md`.
+
+## 2026-09-12 — D10 (two small gates): fix the card-view empty state (#17) and move CI off the deprecated Node 20 action majors (#19), before W1.1
+
+Two small gates are authorized for **immediate fix**, both landing BEFORE W1.1 starts so they are
+part of W1's pre-W1 baseline (W1's rule is that the CSVs stay byte-identical and the browser keeps
+working; the browser change must keep the smoke test and validators green):
+
+- **(a) issue #17** — card view has no empty state at zero matches (measured 2026-09-12:
+  `resultChildren=0, resultsText=''` while table view explains itself). Authorized for immediate
+  fix.
+- **(b) issue #19** — move CI off the deprecated Node 20 action majors. Authorized for immediate
+  fix, with live re-verification of the Pages deploy.
+
+Rejected: deferring both into W1 or later — #17 is a browser behaviour change plus a smoke
+assertion, and #19 touches the deploy path, so neither belongs inside a corpus-program unit whose
+job is intake and curation.
+

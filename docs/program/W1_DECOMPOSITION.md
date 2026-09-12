@@ -1,8 +1,12 @@
 # W1 decomposition — intake + human curation vertical slice
 
-**Status: PROPOSED. W1 IS NOT STARTED AND IS NOT AUTHORIZED BY W0.** These cards are the
-bounded decomposition a frontier review needs in order to authorize W1. Nothing here may be
-implemented until that authorization exists.
+**Status: AUTHORIZED IN FULL, 2026-09-12.** Gate A was accepted 2026-09-12, and the operator
+authorized the whole wave (decision D1 in `../DECISIONS.md`). The wave is authorized **without
+merging the per-unit gates**: every per-unit contract below (isolated branch/worktree → one PR →
+independent/foreign QA → merge → stop before the next unit), every dependency in the unit order,
+and the stop point (W1 ends at the Gate B packet; **W2 is not started**) remain in force. These
+cards are the bounded decomposition the authorization applies to; each unit still starts only
+under its own contract.
 
 Goal of W1 (from the roadmap): prove the **central human loop** —
 `manual submission → durable capture → normalized candidate → duplicate hints → operator
