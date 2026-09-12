@@ -29,12 +29,15 @@ and asserts that the doctrine set is internally consistent:
 
 Exits 0 with `RESULT: PASS` when every check holds.
 
-It deliberately does NOT read quotes.csv / sources.csv, and does not import or
-exercise any W1 runtime behaviour -- W1 is not started.
+It reads quotes.csv / sources.csv READ-ONLY, purely to re-derive the row counts the doctrine
+asserts about the current corpus. It writes nothing and does not import or exercise any W1
+runtime behaviour -- W1 is not started.
 """
+import csv
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -59,6 +62,14 @@ SECTION_TO_DIMENSION = {
 }
 AUTHORITIES = {"system", "agent", "operator"}
 HINT_KINDS = {"exact-text", "near-text", "same-reference", "same-passage"}
+#: Gate A's requirement kinds, HARDCODED from
+#: bootstrap/seed/2026-09-12-garden-corpus-program/ACCEPTANCE_GATES.md. Deliberately not read
+#: from the fixture: coverage must be asserted against the gate, not against whatever the
+#: fixture happens to declare.
+GATE_A_KINDS = {"uncited", "verified", "disputed", "unverifiable", "translation-variant"}
+#: Corpus states that constitute promotion. Every transition INTO one of these must have a
+#: named way back out, or a reversed curation decision strands the record forever.
+PROMOTED_CORPUS_STATES = {"eligible", "canonical"}
 INTAKE_STATES = {
     "curation_state": "new",
     "research_state": "not_started",
@@ -352,6 +363,81 @@ def check_walkthrough(scenario, transitions, vocabularies):
             )
 
 
+def check_documented_facts(facts):
+    """Re-derive the doctrine's claims about the current corpus from the data itself."""
+    if not facts:
+        fail("fixture has no documented_csv_facts block")
+        return
+    try:
+        with open(ROOT / "quotes.csv", encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        with open(ROOT / "sources.csv", encoding="utf-8", newline="") as fh:
+            src_rows = list(csv.DictReader(fh))
+    except OSError as exc:
+        fail(f"could not read the canonical CSVs: {exc}")
+        return
+
+    def compare(label, actual, expected):
+        if actual != expected:
+            fail(f"documented fact {label} says {expected!r} but the data says {actual!r}")
+
+    compare("quote_rows", len(rows), facts.get("quote_rows"))
+    compare(
+        "verification_status_counts",
+        {k: v for k, v in sorted(Counter(r["verification_status"] for r in rows).items())},
+        {k: v for k, v in sorted((facts.get("verification_status_counts") or {}).items())},
+    )
+    compare(
+        "verified_ids",
+        sorted(r["id"] for r in rows if r["verification_status"] == "verified"),
+        sorted(facts.get("verified_ids") or []),
+    )
+    compare(
+        "tradition_values",
+        len({r["tradition"] for r in rows}),
+        facts.get("tradition_values"),
+    )
+    compare(
+        "unresolved_glyph_ids",
+        sorted(r["id"] for r in rows if r.get("has_unresolved_glyph") == "true"),
+        sorted(facts.get("unresolved_glyph_ids") or []),
+    )
+    compare(
+        "unresolved_source_link_count",
+        sum(1 for r in rows if not (r.get("source_id") or "").strip()),
+        facts.get("unresolved_source_link_count"),
+    )
+    compare(
+        "item_type_counts",
+        {k: v for k, v in sorted(Counter(r.get("item_type", "") for r in rows).items())},
+        {k: v for k, v in sorted((facts.get("item_type_counts") or {}).items())},
+    )
+    compare("source_rows", len(src_rows), facts.get("source_rows"))
+    print(f"documented corpus facts re-derived from the data: {len(rows)} rows checked")
+
+
+def check_projection_totality(vocabularies, path):
+    """Every research state must appear in the documented projection rule."""
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    marker = "## Projection into the current"
+    start = text.find(marker)
+    if start < 0:
+        fail(f"{path.name} no longer has a projection section")
+        return
+    section = text[start:]
+    rule_rows = "\n".join(
+        line for line in section.splitlines() if line.strip().startswith("| research state")
+    )
+    if not rule_rows:
+        fail(f"{path.name} projection section has no 'research state' mapping row")
+        return
+    for state in sorted(vocabularies.get("research", set())):
+        if state not in rule_rows:
+            fail(f"research state {state!r} is not covered by the documented projection rule")
+
+
 def main():
     transitions, vocabularies = parse_state_model(STATE_MODEL)
     required, methods = parse_required_envelope_fields(ENVELOPE)
@@ -438,9 +524,35 @@ def main():
     if dupes:
         fail(f"canonical test cases covered more than once: {sorted(set(dupes))}")
 
-    for gate in fixture.get("gate_requirement_coverage", []):
+    for gate in GATE_A_KINDS:
         if gate not in seen_gates:
             fail(f"Gate A requirement {gate!r} is not exercised by any scenario")
+    declared = set(fixture.get("gate_requirement_coverage", []) or [])
+    if declared and declared != GATE_A_KINDS:
+        fail(
+            "fixture gate_requirement_coverage disagrees with the Gate A kinds the checker "
+            f"asserts: fixture={sorted(declared)} checker={sorted(GATE_A_KINDS)}"
+        )
+
+    # Every promotion transition must have a way back out.
+    for tid, tr in transitions.items():
+        if tr["dimension"] != "corpus" or tr["to"] not in PROMOTED_CORPUS_STATES:
+            continue
+        escapes = [
+            other
+            for other, otr in transitions.items()
+            if otr["dimension"] == "corpus"
+            and otr["from"] == tr["to"]
+            and otr["to"] not in PROMOTED_CORPUS_STATES
+        ]
+        if not escapes:
+            fail(
+                f"{tid} promotes corpus into {tr['to']!r} with no transition back out "
+                f"(a reversed curation decision would strand the record)"
+            )
+
+    check_documented_facts(fixture.get("documented_csv_facts", {}))
+    check_projection_totality(vocabularies, STATE_MODEL)
 
     for doc_key in ("envelope_doc", "state_model_doc", "verification_contract_doc"):
         doc = ROOT / fixture[doc_key]

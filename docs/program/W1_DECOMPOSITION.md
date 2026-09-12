@@ -25,8 +25,9 @@ The evidence a store must be able to hold, and W1.1 must rule on:
 3. Duplicate hints as rows (kind/target/basis), rebuildable deterministically.
 4. An append-only decision/audit log: who/what, when, from-state, to-state, reason — for every
    curation and work transition.
-5. Curation state, research state (always `not_started` in W1), corpus state (`candidate_only`
-   in W1), and work state per candidate.
+5. Curation state, research state (always `not_started` in W1 for new candidates), corpus
+   state (`candidate_only` until the deterministic `T-P1` fires on acceptance), and work state
+   per candidate.
 6. A query path for "show me the unreviewed queue, newest first" and "show me every rejected
    item with its reason" that stays fast at low thousands of rows.
 7. No network dependency, no server process required for the operator to work, and a
@@ -209,9 +210,10 @@ explicit machine-inferred-vs-asserted marker); commands for accept / reject / ho
 duplicate with a required reason; append-only audit entries implementing `T-C1…T-C12`;
 research state rendered as read-only and always `not_started`.
 
-**Out of scope:** any research action; any promotion to `eligible`/`canonical` except the
-deterministic `T-P1` and the reversal `T-P7`; any UI that implies verification; making the
-browser writable.
+**Out of scope:** any research action; any *operator* promotion decision (`T-P2`…`T-P6`); any UI
+that implies verification; making the browser writable. Note that `T-P1` (`candidate_only` →
+`eligible`) is **not** excluded: it fires deterministically on acceptance and must be recorded
+and audited like any other transition.
 
 **Human gates:** every decision in this unit is the operator's; the unit must not contain a
 code path that sets `accepted` without an operator action.
@@ -269,8 +271,17 @@ re-run acceptance → merge → report, then stop at the Gate B packet.
 
 ## Cross-unit rules for W1
 
-- `quotes.csv` and `sources.csv` are **read-only** for the whole of W1. No row is added,
-  edited, or migrated, and the browser keeps working unchanged.
+- **`quotes.csv` and `sources.csv` are READ-ONLY for the whole of W1.** They are the *frozen
+  legacy view*, not a W1 working set. No row is added, edited, or migrated, and the browser
+  keeps working unchanged. In particular:
+  - the 324 legacy rows are **not re-curated in W1** — they already sit in the Garden working
+    set, and `taste` decisions about them belong to a later curation unit;
+  - so the eligibility rule (`T-P1`) applies to **new candidates** in the store only, and never
+    requires a CSV write. This is what removes the apparent conflict between "read-only CSV"
+    and "eligibility fires on acceptance";
+  - if the operator ever does want to re-open a legacy row, the decision goes into the store
+    keyed by the legacy row id (a side-car ledger), leaving the CSV untouched. Building that
+    ledger is **not** W1 work — it is queued.
 - No promotion path to `canonical` exists in W1; the `T-P*` transitions other than the
   deterministic `T-P1` and the reversals `T-P7`/`T-P8` are W3 work.
 - Every unit follows the repo work-unit loop stated in its own Execution contract section.

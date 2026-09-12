@@ -44,6 +44,17 @@
     "T-W5": "agent", "T-W6": "agent", "T-W7": "operator"
   },
   "expected_authorities_note": "Asserted for EVERY transition in docs/program/STATE_MODEL.md, not only the ones exercised by a scenario, so flipping any authority (including system<->agent flips on transitions no scenario uses) fails scripts/check_program_contracts.py. Changing an authority is therefore a deliberate two-file change.",
+  "documented_csv_facts": {
+    "note": "Facts the doctrine asserts about the current corpus. scripts/check_program_contracts.py re-derives every one of them from quotes.csv/sources.csv (read-only) instead of trusting the prose, so the docs cannot drift from the data silently.",
+    "quote_rows": 324,
+    "verification_status_counts": {"unverified": 320, "verified": 4},
+    "verified_ids": ["3", "12", "15", "26"],
+    "tradition_values": 27,
+    "unresolved_glyph_ids": ["1", "16", "314", "320"],
+    "unresolved_source_link_count": 14,
+    "item_type_counts": {"excerpt": 270, "oral-attribution": 34, "unknown": 20},
+    "source_rows": 18
+  },
   "scenarios": [
     {
       "id": "S1",
@@ -360,6 +371,35 @@
       "end": {"curation_state": "rejected", "research_state": "unverifiable", "corpus_state": "candidate_only", "work_state": "done"},
       "uncertainty_visible": true,
       "notes": "Exercises the reversal rule: the operator accepted this item (T-C1), eligibility fired (T-P1), the wording turned out untraceable (T-R6), and the operator then withdrew acceptance (T-C8). The corpus dimension must follow — T-P7 returns the record to the candidate queue rather than stranding it in 'eligible'. Without T-P7 the corpus state would be permanently wrong, which is why the transition exists and why the checker asserts the end state."
+    },
+    {
+      "id": "S12",
+      "title": "Wording verified but translation identity unknown (no forced lie)",
+      "canonical_case": null,
+      "gate_requirement": "none",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0012",
+        "captured_text": "Do your work, but do not be attached to the fruit of your work.",
+        "captured_attribution": "Krishna",
+        "captured_citation": "Gita 2.47 — translator not recorded",
+        "capture_method": "pasted-text",
+        "source_reference": "quotation site quoting an unnamed rendering",
+        "candidate_text": "Do your work, but do not be attached to the fruit of your work.",
+        "candidate_author": "Krishna",
+        "candidate_source_ref": "Gita 2.47 (translation identity unresolved)",
+        "normalization_notes": "identical to capture; translator not recorded and none invented"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R2", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "published translation of the Bhagavad Gita", "locator": "2.47", "relation": "supports"}]},
+        {"claim": "locus", "status": "verified", "evidence": [{"witness": "published translation of the Bhagavad Gita", "locator": "2.47", "relation": "supports"}]},
+        {"claim": "translation-identity", "status": "needs_more_evidence", "evidence": [{"witness": "the quotation site names no translator", "locator": "unresolved", "relation": "contextualizes"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "needs_more_evidence", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "Answer to the red-team objection that the claim set cannot represent 'the wording is right but we cannot tell whether this translation is the one that was quoted'. It can, without lying in either direction: wording and locus are verified, the translation-identity claim is explicitly needs_more_evidence, and the aggregate rule makes the RECORD needs_more_evidence. Only agent-authority transitions are used — no terminal research outcome is claimed. This is the repo's dominant real case (45 near-duplicate pairs, many of them variant translations of the same verse)."
     }
   ]
 }

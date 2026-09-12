@@ -19,6 +19,13 @@ A passage record carries a **claim set**. At minimum:
 | `locus` | Is it in this work / this edition / at this locator? |
 | `date` | Is this the date/occasion claimed? |
 | `shape` | Is it an exact passage, an excerpt, a paraphrase, a translation, or an oral rendering? |
+| `translation-identity` | When the wording is a translation: *which* translation/edition is this, and is the quotation of the original likely to have used it? |
+
+The second half of `translation-identity` is the case this repo hits constantly. "Wording is
+correct (it matches a published translation) but we cannot tell whether the quoted person was
+using that translation" is representable without lying: the `wording` claim is `verified` and
+the `translation-identity` claim is `needs_more_evidence`, and the aggregate rule above then
+makes the **record** `needs_more_evidence`. Walkthrough S12 exercises exactly this.
 
 Partial verification is the norm, not an exception. "Wording exact; author wrong" is a
 `wording = verified` + `attribution = disputed` record — it is *not* a reason to discard the
@@ -62,6 +69,23 @@ Does **not** accept, on its own:
 - a search-result snippet that was never opened (the snippet is a lead, not evidence);
 - a Wikipedia/encyclopedia article as the *only* witness (it may be used as a lead, and as
   corroborating context at most).
+
+## Evidence tiers
+
+Not every claim can reach a primary witness — oral material and quotations-of-quotations
+often cannot. A contract that offered only "primary or nothing" would be unsatisfiable, so
+every claim records the **strongest tier actually available**, and the tier is part of the
+finding:
+
+| Tier | Evidence | What it can support |
+|---|---|---|
+| `primary` | The primary text/recording itself, with a locator | `verified` for wording, locus, attribution, context |
+| `secondary` | A named edition, collection, or publication that contains the material, with a locator | `verified` for "this is what that edition says"; the chain to the original stays open |
+| `attributed-only` | Reputable attribution with no locatable witness (a documented rendering, a widely printed attribution) | At most `needs_more_evidence`, `disputed`, or `unverifiable` — **never** `verified` for the original utterance |
+
+Recording `attributed-only` honestly is a success condition, not a failure: it is the tier
+that lets an oral rendering be kept and used while still telling the reader what is unproven.
+A claim may not be recorded at a tier stronger than its evidence.
 
 ## Evidence item
 

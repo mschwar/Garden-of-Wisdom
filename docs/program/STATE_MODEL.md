@@ -116,6 +116,22 @@ truth question is answered.
 | T-W6 | work | qa | done | agent | foreign QA recorded; for a wave-gate unit this additionally requires operator acceptance |
 | T-W7 | work | done | active | operator | reopened after acceptance |
 
+## Display precedence
+
+The dimensions are independent, so they can legally disagree. Which one wins on a surface is
+therefore a rule, not an accident:
+
+1. **Curation governs presence.** A record the operator has not accepted is not shown as part
+   of the Garden, however good its evidence.
+2. **Research governs what may be asserted.** Whenever a surface shows a claim, the research
+   state of that claim wins over any implication of curation or corpus state. A `canonical`
+   record that is `unverified` shows as unverified; that combination is legal and expected
+   (320 of the current 324 rows are exactly it).
+3. **Corpus state governs admission, never certainty.** `canonical` means admitted, not proven.
+4. Where two dimensions would suggest different confidence levels, the **less certain** one is
+   displayed. There is no legal combination in which a reader is shown more certainty than the
+   research state supports.
+
 ## Transition invariants
 
 Enforced by `scripts/check_program_contracts.py` over `fixtures/w0_scenarios.json`:

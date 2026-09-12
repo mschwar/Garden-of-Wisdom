@@ -61,9 +61,18 @@ where ~half the pairs are generic-`source_ref` false positives
 |---|---|
 | `external_id` | Id in the source system, when the source has one |
 | `provenance_chain` | Ordered list of witnesses when the encounter is a quotation of a quotation |
+| `attribution_chain` | Ordered roles for material that came through intermediaries or performance: `{speaker, reciter, reporter, collection}` — the roles actually known, others omitted |
+| `placeholder_markers` | Positions/glyphs of characters the capturer could not type (e.g. the literal `_` in the 4 legacy rows), so a later human can fix them against a reference without the capture being edited |
+| `source_link_state` | Tri-state, distinct from a citation's text: `resolved` (linked to a known Source), `unresolved` (a citation exists but matches no Source — the 14 legacy rows), `none` (no citation recorded) |
+| `locator` | Pinpoint for a print/secondary witness: edition, chapter, verse, or page — kept separate from `source_reference` (which says where the encounter happened) |
 | `container` | Where the material lives: book, journal, playlist, series |
 | `period_hint` | Date/era hint for faceting |
 | `rights_note` | Rights/copyright observation, when the source flags it |
+
+`source_link_state` exists because "we could not match this citation to a Source" and "there is
+no citation" are different facts, and collapsing them is how a manifest gap turns into a silent
+guess. `placeholder_markers` exists so the repo's `has_unresolved_glyph` rows can be intaken
+verbatim instead of being "cleaned" to fit an envelope.
 
 ## Validation rules (W1 must implement these as deterministic checks)
 

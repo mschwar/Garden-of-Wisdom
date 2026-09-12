@@ -27,7 +27,8 @@ Canonical doctrine under `docs/program/` (this directory):
 Plus: 8 decision-log entries (`../DECISIONS.md`), queue entries for deferred ideas/debt
 (`../queue.md`), a planning fixture (`fixtures/w0_scenarios.json`), a deterministic
 doctrine-consistency checker (`../../scripts/check_program_contracts.py`), and pointers from
-`../../README.md`, `../RUNBOOK.md`, `../product/PRODUCT_DOCTRINE.md`, `../../AGENTS.md`.
+`../../README.md`, `../RUNBOOK.md`, and `../product/PRODUCT_DOCTRINE.md`. (`AGENTS.md` was
+*not* updated — the write was refused by tool policy; see §Deviations.)
 
 ## Gate A criteria, item by item
 
@@ -131,10 +132,11 @@ reached — proving the dimensions are actually independent.
 
 - `quotes.csv` and `sources.csv` are **byte-identical** to `main` (§Evidence hashes), and were
   never opened for writing by any W0 artifact.
-- `scripts/check_program_contracts.py` reads only `docs/program/STATE_MODEL.md`,
-  `docs/program/CANDIDATE_ENVELOPE.md`, `docs/program/VERIFICATION_CONTRACT.md`, and
-  `docs/program/fixtures/w0_scenarios.json`. It imports nothing from a store and exercises no
-  intake, curation, or research behaviour.
+- `scripts/check_program_contracts.py` reads `docs/program/STATE_MODEL.md`,
+  `docs/program/CANDIDATE_ENVELOPE.md`, `docs/program/VERIFICATION_CONTRACT.md`,
+  `docs/program/fixtures/w0_scenarios.json`, and **read-only** `quotes.csv`/`sources.csv`
+  (to recompute the row-count facts the doctrine asserts, rather than trusting them). It
+  writes nothing, imports no store, and exercises no intake, curation, or research behaviour.
 - No datastore, no migration, no intake surface, no discovery adapter, no browser change, no
   schema change, no rename of `verification_status`.
 - `git show --stat` on this branch touches `README.md`, `docs/**` (`program/`, `DECISIONS.md`,
@@ -161,9 +163,10 @@ Doctrine checker:
 
 ```
 $ python3 scripts/check_program_contracts.py
-parsed 40 transitions, 21 required envelope fields, 11 scenarios
+parsed 40 transitions, 21 required envelope fields, 12 scenarios
 vocabularies: corpus=4; curation=5; research=6; work=5
 authorities asserted: 40/40 transitions
+documented corpus facts re-derived from the data: 324 rows checked
 
 RESULT: PASS (transition chains simulate, claim aggregates agree, envelopes conform)
 ```
@@ -188,6 +191,11 @@ Every case below exits non-zero with a clean `RESULT: FAIL` line and no tracebac
 | `T-W4` deleted from the fixture's `expected_authorities` | `FAIL: T-W4 has no declared authority in the fixture` |
 | `T-P7` (the reversal transition) deleted from `STATE_MODEL.md` | `FAIL: T-P7 … is not in the STATE_MODEL table` + end-state failure |
 | Fixture replaced with malformed JSON | `FAIL: …/w0_scenarios.json is not valid JSON: Expecting property name …` + `RESULT: FAIL` |
+| Every transition out of `eligible` removed (T-P6 **and** T-P7) | `FAIL: T-P1 promotes corpus into 'eligible' with no transition back out (a reversed curation decision would strand the record)` |
+| A research state dropped from the projection row | `FAIL: research state 'needs_more_evidence' is not covered by the documented projection rule` |
+| Projection mapping row deleted | `FAIL: STATE_MODEL.md projection section has no 'research state' mapping row` |
+| `documented_csv_facts` drifted (e.g. `verified_ids` gains id 30, or `quote_rows` 325) | `FAIL: documented fact verified_ids says […] but the data says […]` |
+| `gate_requirement_coverage` in the fixture narrowed | `FAIL: fixture gate_requirement_coverage disagrees with the Gate A kinds the checker asserts` |
 
 Authority coverage after the fix: **all 40 transitions** in `STATE_MODEL.md` have their
 authority asserted by the fixture's `expected_authorities` map, not only the ones a scenario
@@ -196,8 +204,9 @@ unexercised transition, is a deliberate two-file change.
 
 Coverage: all ten canonical test cases of `STATE_MODEL.md` and all five Gate A requirement
 kinds (`uncited`, `verified`, `disputed`, `unverifiable`, `translation-variant`) are exercised,
-each case exactly once — asserted by the checker, not by hand. Scenario S11 is supplementary
-(no canonical case) and exercises the curation-reversal path.
+each case exactly once — asserted by the checker, not by hand. Scenarios S11 (curation
+reversal) and S12 (wording verified, translation identity unresolved) are supplementary, carry
+no canonical case, and exercise the two paths the reviewers identified as gaps.
 
 ## Decisions made (all appended to `../DECISIONS.md`)
 
@@ -254,6 +263,19 @@ read-only throughout W1, and no canonical promotion path exists until W3.
    contracted to update the queue, the second copy was replaced with the W0 close-out entry
    instead of being left as a defect. No content was lost: the first copy is intact and is the
    fuller one.
+
+## Carried-forward risks (doctrine claims W1 must falsify, not silently inherit)
+
+The red-team review of this packet named invariants that documentation alone cannot prove.
+They are recorded as **open risks carried into W1**, not as satisfied claims:
+
+| Risk | Falsified by (W1) |
+|---|---|
+| The reversal rule (`T-C8` → `T-P7`) is legal on paper but untested against a real store | W1.5 acceptance: exercise accept → eligible → reject → `candidate_only` and assert no dimension is stranded |
+| The envelope is proven against fixtures, not against this repo's own awkward rows (`_` placeholders, unresolved source links, oral-tradition chains) | W1.2/W1.3: intake a placeholder row and an unresolved-link row and show the capture is preserved verbatim with the marker recorded |
+| The 3-valued projection is asserted in prose; its totals could drift from the data | Already machine-checked in W0 by the checker's recomputation of row counts from `quotes.csv`; W1 must keep it green |
+| Eligibility vs the read-only CSV for legacy rows | W1 cross-unit rule: legacy rows are a frozen view; new curation applies to new candidates only |
+| Per-claim statuses on a record whose wording is verified but whose translation identity is not | Walkthrough S12 (W0) plus W1.2 validator fixtures |
 
 ## Stop point
 
