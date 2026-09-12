@@ -54,3 +54,27 @@ works at all, not stress-testing edge cases yet. All five resolve cleanly to `so
 ("Official Baha'i Writings"), none carries `has_unresolved_glyph`, none appears in any
 near-duplicate candidate pair (`docs/data/DATA_QUALITY_REPORT.md`), and none is drawn from The
 Hidden Words. Options B and C are deferred to a later, deliberate follow-up export, not rejected.
+
+## 2026-09-11 — Phase 0 frontier review: accept with documented debt
+
+Independent re-check of G0–G3 (encoding bytes, rehab/validate scripts, CSVs vs archived
+originals, live browser). Full write-up: `docs/audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`.
+
+Accepted. No data-integrity reason to revert PR #1. Encoding diagnosis (Mac OS Roman → UTF-8)
+is evidenced, not asserted; 324/324 core fields match the mac_roman-decoded originals; literal
+`_` placeholders were not "fixed." `item_type` is a heuristic queue signal, not an export
+classification — Roman-numeral Gleanings citations (including donor ids 3 and 15) landed in
+`unknown`, and paraphrase-shaped rows 31 and 267 were not typed `paraphrase`. A future H2B
+export must reclassify `item_type` at verification time, map `verification_status` →
+`verification_state`, and record `source_url` then. Do not live-read `quotes.csv` from
+`bahai-homepage`.
+
+## 2026-09-11 — Donor-set near-dupe claim was false for id 3 (supersedes the "none appears" sentence above)
+
+The donor-set entry above said ids 3/12/15/26/30 appear in no near-duplicate candidate pair.
+Validator output flags `3 ~ 283` (text similarity 0.74): “The earth is but one country, and
+mankind its citizens.” (Bahá’u’lláh, Gleanings CXVII) vs “The earth is one home and mankind
+its family.” (‘Abdu’l-Bahá, Selections 255). Different author, different work, similar
+teaching — not a reason to drop id 3 from the donor set, but the “none appears” claim is
+false and must not be used as a verification/export gate. Ids 12, 15, 26, 30 are still
+unflagged.

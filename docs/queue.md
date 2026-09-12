@@ -14,7 +14,10 @@ are picked up or closed, don't just append.
       value.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess.
-- [ ] Review and reclassify the 22 `item_type = unknown` rows.
+- [ ] Review and reclassify the 22 `item_type = unknown` rows. Frontier review noted that
+      ~10 of these are Roman-numeral Gleanings citations (including donor ids 3 and 15) that
+      the digit-or-colon heuristic missed, plus paraphrase-shaped rows 31 and 267 that were
+      never typed `paraphrase`.
 - [ ] Decide whether the 27-value tradition list should be formally documented as the new
       controlled list (this retrofit's README treats it as such) or trimmed/normalized further.
 
@@ -30,9 +33,10 @@ are picked up or closed, don't just append.
 - Authoritative verification or export of any quotes. **Donor-set selection is done** — ids
   [3, 12, 15, 26, 30] approved 2026-09-11 (`docs/DECISIONS.md`) and filled into
   `bootstrap/seed/2026-09-11-garden-2026-retrofit/prompts/02_GARDEN_VERIFY_AND_EXPORT_HOMEPAGE_PREVIEW.txt`'s
-  `APPROVED_GARDEN_IDS`. Running that prompt (verification against the authoritative Bahá'í
-  Reference Library, then export) is the next step, still gated on the `bahai-homepage` H2B
-  collection contract being reviewed/accepted.
+  `APPROVED_GARDEN_IDS`. **Phase 0 frontier review is accepted**
+  (`docs/audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`). Running the verify/export prompt is
+  the next step, still gated on the `bahai-homepage` H2B collection contract being
+  reviewed/accepted. Do not trust current `item_type` values as export classifications.
 - Any `bahai-homepage` export or implementation work.
 - Bulk quote verification.
 
@@ -43,3 +47,5 @@ are picked up or closed, don't just append.
 - [x] G2 data rehabilitation — UTF-8 canonical CSVs, `item_type`/`verification_status`/
       `source_id`/`has_unresolved_glyph` columns, archived originals, `.DS_Store` untracked
 - [x] G3 static quote browser
+- [x] Phase 0 frontier review — accept with documented debt
+      (`docs/audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`)
