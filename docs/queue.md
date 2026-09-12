@@ -34,12 +34,6 @@ Living document — update it as items are picked up or closed, don't just appen
       `path: '.'` (repo root) and Pages "Source" must stay **GitHub Actions**. Rooting the
       artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
-- [ ] Pages deploy acceptance: after the Pages PR merges, confirm all four live URLs return
-      200 (`/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` — curl block in
-      `docs/RUNBOOK.md`) and then close this item. The workflow
-      (`.github/workflows/pages.yml`, `path: '.'`, `github-pages` environment) and the
-      out-of-band Pages setting (`build_type: workflow`) are already in place; only the live
-      check is outstanding.
 
 ## Open — candidate units found during G4 (not scheduled; specs only)
 
@@ -56,6 +50,24 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - [ ] Reconcile `verification_status` (Garden) vs `verification_state` (H2B) before more
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
+
+## Closed — 2026-09-11 Pages deploy
+
+- [x] Deploy the quote browser to GitHub Pages, rooted at the repo root so the relative
+      `../quotes.csv` / `../sources.csv` fetches keep resolving. Workflow:
+      `.github/workflows/pages.yml` (`configure-pages` → `upload-pages-artifact` with
+      `path: '.'` → `deploy-pages`; `pages` concurrency, `github-pages` environment,
+      deploy job guarded to `refs/heads/main`). Pages enabled out of band with
+      `gh api -X POST repos/mschwar/Garden-of-Wisdom/pages -f build_type=workflow`.
+      Root `index.html` added as a redirect shim. PR #10.
+- [x] Acceptance verified 2026-09-11 on the merged commit `6da1e9f` (workflow run
+      [34676486409](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34676486409),
+      conclusion `success`): `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` all
+      **200**; live `quotes.csv`/`sources.csv` byte-identical to the repo (`sha256` match);
+      live headless Chrome renders `324 quotes, 324 shown`, table view 324 rows, 0 console
+      errors; `/` redirects to `browser/index.html`; `/.git/config` and
+      `/.github/workflows/pages.yml` return 404 (not published).
+      Live: https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
 
 ## Explicitly NOT started (do not start without human sign-off)
 
