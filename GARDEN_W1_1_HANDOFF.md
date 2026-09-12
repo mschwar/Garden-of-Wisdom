@@ -12,7 +12,7 @@ after independent/foreign QA.
 | Artifact | Change |
 |---|---|
 | `scripts/garden_store.py` | **New.** The store of record: SQLite (stdlib `sqlite3`, no dependency, no server, no network), the DDL for captures / candidates / candidate↔capture links / duplicate hints / the append-only decision log / the migration ledger, the create-from-empty migration with the idempotency rule, the deterministic `garden.export/1` text export + import, and the `create`/`export`/`dump`/`import`/`verify` CLI. |
-| `scripts/check_garden_store.py` | **New.** The W1.1 acceptance + evidence run: 56 checks, `RESULT: PASS`/`FAIL`, one `FAIL:` line per broken check, no traceback on a broken store, everything in a throwaway temp dir. |
+| `scripts/check_garden_store.py` | **New.** The W1.1 acceptance + evidence run: 59 checks, `RESULT: PASS`/`FAIL`, one `FAIL:` line per broken check, no traceback on a broken store, everything in a throwaway temp dir. |
 | `docs/program/W1_1_STORAGE_AND_SCHEMA.md` | **New.** The eight-requirement comparison, the rejected options with the requirement each failed, the DDL summary, the four vocabularies as implemented, the idempotency rule, the export format, and six doctrine ambiguities found while implementing. |
 | `docs/RUNBOOK.md` | New §"Create and check the corpus store (W1.1)". |
 
@@ -56,7 +56,7 @@ PASS: every rejected item returns with its reason
 PASS: the queue query stays on idx_candidates_queue at 2,000 rows
 PASS: quotes.csv and sources.csv are byte-identical before and after the run
 PASS: the store wrote nothing outside its own directory
-... (56 PASS lines in total)
+... (59 PASS lines in total)
 
 RESULT: PASS (create -> write -> export -> wipe -> re-import is byte-identical)   # exit 0
 ```
@@ -142,8 +142,10 @@ the acceptance script hashes both CSVs itself before and after the run.
 ## Negative controls (a test that cannot fail proves nothing)
 
 Each mutation was applied to a **throwaway copy of the worktree under `/tmp`** (never the repo,
-never the primary checkout), and the acceptance script was re-run there. Seven mutations, seven
-red runs, each with a targeted `FAIL:` line and **no traceback** (`stderr` empty in all seven).
+never the primary checkout), and the acceptance script was re-run there. The authoring session
+recorded seven mutations (seven red runs, each with a targeted `FAIL:` line and **no traceback**,
+`stderr` empty in all seven); the reviewing session added control **f**, which initially did *not*
+go red — see below — and does now.
 
 | # | Mutation (in the `/tmp` copy) | Observed FAIL line(s) |
 |---|---|---|
@@ -154,12 +156,33 @@ red runs, each with a targeted `FAIL:` line and **no traceback** (`stderr` empty
 | d1 | vocabulary guard dropped at the SQL layer: the `curation_state` `CHECK` removed | `FAIL: the SQL layer accepted curation_state = 'maybe' (outside STATE_MODEL.md)` |
 | d2 | vocabulary guard dropped in the API: the `from_state`/`to_state` guard removed | `FAIL: record_decision accepted to_state = 'maybe' (outside STATE_MODEL.md)` · `FAIL: no invalid decision was appended -- 4` |
 | e | append-only dropped: both decision triggers neutralised | `FAIL: decisions accepted UPDATE: the log is not append-only` · `FAIL: decisions accepted DELETE: the log is not append-only` · `FAIL: no decision row changed after the rejected writes` |
+| **f** | **parent QA, added on review:** the `research_state` `CHECK` removed (a *different* column than d1) | **Initially `RESULT: PASS` — a coverage gap, not a control.** Fixed (see below); now: `FAIL: the SQL layer accepted research_state = 'maybe' (outside STATE_MODEL.md)` · `RESULT: FAIL`, exit 1, no traceback |
 
 Control **a2 exists because of a real vacuity trap**: a round-trip alone cannot detect a lost
 `ORDER BY`, since `import` re-inserts records in file order. The acceptance test therefore
 writes `cap-0002`/`cand-0002` *before* `cap-0001`/`cand-0001` and asserts the export order
 directly, which is what turns a2 red. (An earlier version of the suite wrote records in export
 order and would have passed a2 vacuously.)
+
+### Review finding f: only one of the four state columns was guarded (fixed in review)
+
+The authoring session's seven controls did not cover this, and the reviewing session's
+independent QA found it by mutation: **removing the `research_state` `CHECK` constraint left the
+whole acceptance run green**, because section 9 asserted SQL-layer rejection for a single
+sampled column (`curation_state`) while the schema has four independent `CHECK` constraints — one
+per state column. The suite's own docstring also overclaimed ("the four state dimensions …
+rejected by both the API and the SQL layer") when only one column was exercised.
+
+Fixed in review rather than deferred: section 9 now loops over all four columns via
+`STATE_COLUMNS`, so dropping **any** column's `CHECK` turns the run red
+(`the SQL layer rejects curation_state / research_state / corpus_state / work_state = 'maybe'`),
+and the docstring states exactly what is asserted and why one API assertion is sufficient
+(`record_decision` validates `from_state`/`to_state` against `DIMENSIONS[dimension]` on a single
+shared code path, whereas the four `CHECK`s are four separate schema objects). The suite went
+from **56 to 59 checks**; both parent controls (the decision-trigger neutralisation and the
+`research_state` `CHECK` removal) then reproduced red. The unit's author was a different session
+from the reviewer, and the reviewer's mutation was not part of the original evidence — the
+provenance of this fix is stated here rather than folded silently into the author's table.
 
 ## Out of scope, recorded not fixed
 
@@ -242,7 +265,7 @@ each rejected option failed:
 
 Implemented as `scripts/garden_store.py` (DDL + idempotent create-from-empty migration +
 export/import CLI) with `scripts/check_garden_store.py` as the deterministic acceptance run
-(56 checks: create → write → read back → export → wipe → re-import byte-identical, migration
+(59 checks: create → write → read back → export → wipe → re-import byte-identical, migration
 idempotency, capture immutability and decision-log append-only enforced by triggers, the four
 `STATE_MODEL.md` vocabularies re-parsed from the document, and requirement 6's two queries at
 ~2,000 rows). Seven negative controls are recorded in `GARDEN_W1_1_HANDOFF.md`. Details:

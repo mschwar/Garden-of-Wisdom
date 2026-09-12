@@ -20,8 +20,10 @@ acceptance criteria from `docs/program/W1_DECOMPOSITION.md` section "W1.1 - Stor
   7. `decisions` rejects UPDATE and DELETE (append-only enforced, not documented);
   8. `captures` rejects UPDATE and DELETE (immutable enforced);
   9. the four state dimensions carry exactly the vocabularies in
-     `docs/program/STATE_MODEL.md` (curation 5, research 6, corpus 4, work 5) and an
-     out-of-vocabulary value is rejected by both the API and the SQL layer;
+     `docs/program/STATE_MODEL.md` (curation 5, research 6, corpus 4, work 5); an
+     out-of-vocabulary value is rejected by the SQL layer for **every** state column (each
+     column is its own CHECK constraint) and, on the shared API path, by `record_decision` for
+     a decision's target state;
  10. duplicate hints are rows (kind/target/basis) and rebuild deterministically;
  11. requirement 6's two queries answer correctly and stay on the index at ~2,000 rows;
  12. the legacy frozen view is untouched: `quotes.csv` / `sources.csv` are byte-identical
@@ -55,6 +57,7 @@ from garden_store import (  # noqa: E402
     HINT_KINDS,
     SCHEMA_VERSION,
     STORE_FILENAME,
+    STATE_COLUMNS,
     Store,
     StoreError,
     create_store,
@@ -488,15 +491,21 @@ def run_checks(scratch: Path) -> None:
     else:
         ok("STATE_MODEL.md not present in this copy: vocabulary/prose cross-check skipped")
     with Store(store_dir) as store:
-        try:
-            store.conn.execute(
-                "UPDATE candidates SET curation_state = 'maybe' WHERE candidate_id = ?",
-                (CANDIDATE_A,),
-            )
-            store.conn.commit()
-            fail("the SQL layer accepted curation_state = 'maybe' (outside STATE_MODEL.md)")
-        except sqlite3.IntegrityError as exc:
-            ok(f"the SQL layer rejects curation_state = 'maybe' ({str(exc).splitlines()[0]})")
+        # Each state column is a separate schema object, so each needs its own assertion: a
+        # loop over one sampled column (this check's first version tested only curation_state)
+        # left the other three CHECK constraints unguarded — removing the research_state CHECK
+        # left the whole run green. Found by the reviewing session's independent QA, which is
+        # why the loop exists.
+        for dimension, column in STATE_COLUMNS.items():
+            try:
+                store.conn.execute(
+                    f"UPDATE candidates SET {column} = 'maybe' WHERE candidate_id = ?",
+                    (CANDIDATE_A,),
+                )
+                store.conn.commit()
+                fail(f"the SQL layer accepted {column} = 'maybe' (outside STATE_MODEL.md)")
+            except sqlite3.IntegrityError as exc:
+                ok(f"the SQL layer rejects {column} = 'maybe' ({str(exc).splitlines()[0]})")
         try:
             store.record_decision(
                 subject_kind="candidate",
