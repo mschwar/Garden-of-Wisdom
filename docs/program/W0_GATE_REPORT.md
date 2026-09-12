@@ -352,3 +352,18 @@ in this document (§"Gate A criteria", §"Negative controls" authority-coverage 
 `validate_quotes.py`, `validate_homepage_preview_export.py`, and hash outputs above are
 unaffected and still current — re-run and confirmed unchanged as part of this correction. Full
 review: `../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`.
+
+---
+
+### Addendum — 2026-09-12: Gate A remains ACCEPTED; W1 is now authorized IN FULL
+
+Nothing in this report is retracted or rewritten. **Gate A acceptance stands**, and W0 is
+complete. The operator has now authorized **W1 in full** (decision D1 in `../DECISIONS.md`). This
+supersedes the "W1 NOT STARTED" / "W1.1 is still not authorized" posture stated in this report's
+§Stop point and in both dated update blocks above; it does **not** supersede Gate A acceptance.
+
+The wave authorization does **not** merge the per-unit gates: each of W1.1–W1.6 keeps its own
+isolated branch/worktree, its own PR, independent/foreign QA, and its own merge, and the stop
+point is unchanged — **W1 ends at the Gate B packet, and W2 is not started**. The carried-forward
+risks in this report remain **open risks W1 must falsify**, not claims W1 inherits. Live status:
+`W1_DECOMPOSITION.md` (header), `../queue.md` (§"Open — corpus program").

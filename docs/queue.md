@@ -4,21 +4,31 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — data curation
 
-- [ ] Resolve the 14 unresolved `source_id` links (`docs/data/DATA_QUALITY_REPORT.md`). Mostly
-      needs new `sources.csv` rows for small oral traditions (Shawnee, Cherokee, Nez Perce,
-      Lakota, Tewa, Zuni, Ethiopian, Nguni) plus Nahua works and the Mahabharata.
-- [ ] Human review of the 45 near-duplicate candidate pairs to decide: distinct variant
-      translations (keep both) vs. accidental duplication (merge/remove). Note the
-      generic-`"Oral Tradition"`-label false-positive caveat before trusting the list at face
-      value.
+- [ ] **ADOPTED SCOPE (D7) — close the 14 unresolved `source_id` links by adding `sources.csv` rows**
+      for the identifiable works (Mahabharata 5.1517, Huehuetlahtolli, Florentine Codex) plus
+      per-tradition oral rows for the small oral traditions (Shawnee, Cherokee, Nez Perce, Lakota,
+      Tewa, Zuni, Ethiopian, Nguni), then re-link `source_id`. Quote text untouched; validator
+      before and after. **Sequence: runs AFTER W1** — this writes `sources.csv`, which is
+      READ-ONLY for the whole of W1 (`docs/program/W1_DECOMPOSITION.md` §Cross-unit rules). Not
+      done.
+- [ ] **ADOPTED SCOPE (D6) — curate the ~22 near-duplicate pairs that share a *specific citation*;
+      explicitly SKIP the ~23 pairs that are the validator's generic-`source_ref` false positive**
+      (e.g. unrelated rows both labelled `"Oral Tradition"`). Keep both rows for legitimate variant
+      translations; only merge/remove accidental duplication. **Sequence: runs AFTER W1** — this
+      writes `quotes.csv`, which is READ-ONLY for the whole of W1. The 45-pair list and its caveat
+      are in `docs/data/DATA_QUALITY_REPORT.md`. Not done.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
-      human who knows the correct diacritic/modifier character, not a guess.
+      human who knows the correct diacritic/modifier character, not a guess. **D8 (2026-09-12)
+      leaves these 4 rows for the operator** — guessing stays forbidden.
 - [ ] Review and reclassify the remaining `item_type = unknown` rows (20 after G4 reclassified
       donor ids 3 and 15 to `excerpt`). Frontier review noted ~10 Roman-numeral Gleanings
       citations that the digit-or-colon heuristic missed, plus paraphrase-shaped rows 31 and
-      267 that were never typed `paraphrase`.
+      267 that were never typed `paraphrase`. **D8 (2026-09-12) adopts the cheap deterministic
+      subset (~10 Roman-numeral Gleanings rows + rows 31/267), sequenced AFTER W1 (writes
+      `quotes.csv`); `item_type` is not widened.**
 - [ ] Decide whether the 27-value tradition list should be formally documented as the new
       controlled list (this retrofit's README treats it as such) or trimmed/normalized further.
+      **D8 (2026-09-12) decides: document the 27-value list as the controlled list.**
 
 ## Open — infra
 
@@ -30,13 +40,14 @@ Living document — update it as items are picked up or closed, don't just appen
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
       (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
       when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
-- [ ] **Move CI off the deprecated Node 20 action majors.** GitHub annotated the `main` smoke run
+- [ ] **AUTHORIZED — IN PROGRESS (2026-09-12, decision D10b). Move CI off the deprecated Node 20
+      action majors.** GitHub annotated the `main` smoke run
       (`actions/checkout@v4`, `actions/setup-python@v5` still target Node 20 and were forced onto
       Node 24); the Pages actions in `pages.yml` are older majors too. CI is green today, so this
       is future-proofing — but bumping the Pages actions is a deploy-path change and must be
       re-verified live the way the 2026-09-11 acceptance was. Filed as
       [#19](https://github.com/mschwar/Garden-of-Wisdom/issues/19).
-- [ ] **Card view has no empty state** (found while adding filter coverage, out of scope there).
+- [ ] **AUTHORIZED — IN PROGRESS (2026-09-12, decision D10a). Card view has no empty state** (found while adding filter coverage, out of scope there).
       With a search/filter combination that matches nothing, card view renders an empty
       `#results` — 0 children, no message — so the page is just a blank area under a header
       reading "0 shown", while table view explains itself with `td.empty-state`
@@ -45,14 +56,23 @@ Living document — update it as items are picked up or closed, don't just appen
       smoke-test assertion), so it is its own unit, not a test-only edit. Filed as
       [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17).
 
-## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 NOT authorized)
+## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — IN PROGRESS)
 
-- [ ] **W1 is decomposed but not authorized.** Six bounded units (storage decision → envelope
-      contract → CLI submission → normalization/duplicate hints → curation review + audit →
-      Gate B evidence pack) are specified in `docs/program/W1_DECOMPOSITION.md`. Gate A is now
-      accepted (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`); do not start any W1 unit
-      without a separate, explicit operator authorization of **W1.1 only**. See
-      `docs/program/W0_GATE_REPORT.md`.
+- [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
+      specified in `docs/program/W1_DECOMPOSITION.md`:
+      **W1.1** storage decision + minimal schema · **W1.2** candidate-envelope contract + validator ·
+      **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate hints ·
+      **W1.5** curation review + decisions + audit history · **W1.6** end-to-end test pack + Gate B
+      evidence packet.
+      **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
+      dependency is strict.
+      **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
+      gets its own isolated branch/worktree → complete bounded implementation → **one PR** →
+      **independent/foreign QA** → resolve findings → merge → report, then **STOP before the next
+      unit**.
+      **Stop point:** W1 ends at the Gate B packet. **W2 is not started.** See
+      `docs/program/W0_GATE_REPORT.md`. (This entry supersedes the earlier "W1 is decomposed but not
+      authorized" item.)
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
@@ -62,16 +82,18 @@ Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
 - [ ] **D2 — `unverifiable` is not representable in `quotes.csv`.** The 3-valued
       `verification_status` maps every unfinished research state to `unverified`, so a record
       proven unverifiable is indistinguishable from a never-checked row. Issue #5 (Garden id
-      30) is the live instance. Needs a migration unit; do not widen the enum as a side effect
-      of other work.
+      30) is the live instance. **Decided 2026-09-12 (decision D3):** represented in a side-car
+      ledger keyed by legacy row id, after W1.1 — see the authorized section above. Do not widen
+      the enum as a side effect of other work.
 - [ ] **D3 — no row-level verification evidence store.** The four `verified` rows carry their
       evidence only in `exports/bahai-homepage-preview/v1/` and `docs/DECISIONS.md`. Adding
       evidence fields is W2/W3 work; until then, `verified` in the CSV is a pointer to the
       export.
 - [ ] **D4 — capture provenance policy for the 324 legacy rows.** They have no capture record
-      and none is reconstructable (`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md`). Open
-      question: does `legacy-import` ever get a synthetic capture record, or does the frozen
-      archive stay the only provenance? Human decision.
+      and none is reconstructable (`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md`). **Decided
+      2026-09-12 (decision D4):** ONE batch capture record for the 2026-09-11 rehabilitation
+      import, explicitly marked as such and noting the encounter context is unknown — see the
+      authorized section above. Not one synthetic capture per row.
 - [ ] **D5 — `item_type` mixes text shape with provenance shape.** `full-passage`/`excerpt`/
       `paraphrase` are shape; `oral-attribution` is not a text relation. The split is W3 work
       (`docs/program/CLASSIFICATION_AND_FACETS.md`); do not widen the enum meanwhile.
@@ -172,14 +194,32 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       `/.github/workflows/pages.yml` return 404 (not published).
       Live: https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
 
+## Authorized — queued (2026-09-12 decisions; not yet started)
+
+- [ ] **D9 — H2B-B: open the `bahai-homepage` consume lane against the v1 export.** Authorized
+      2026-09-12. The Garden side is a **lane authorization only**; the work happens in
+      `bahai-homepage` against `exports/bahai-homepage-preview/v1/collection.json` (4 verified
+      rows), not by widening the donor set first. Expected to surface issue #4 (`source_url`) and
+      the D5 `verification_status` / `verification_state` contract question. Garden's frozen data is
+      untouched by this lane. This supersedes the earlier "do not start H2B-B" bullet.
+- [ ] **D3 — `unverifiable` side-car ledger (after W1.1).** Authorized 2026-09-12: represent
+      `unverifiable` in a side-car ledger keyed by legacy row id, NOT by widening the 3-valued
+      `quotes.csv` enum. **Sequence: after W1.1 exists**, so there is one store rather than two.
+      Issue #5 / Garden id 30 is the live instance. (Resolves the open question in the debt section
+      below.)
+- [ ] **D4 — ONE batch capture record for the 324 legacy rows.** Authorized 2026-09-12: a single
+      batch capture record for the 2026-09-11 rehabilitation import, explicitly marked as such and
+      noting the encounter context is unknown — not one synthetic capture per row. (Resolves the
+      "human decision" open question in the debt section below.)
+
 ## Explicitly NOT started (do not start without human sign-off)
 
-- **The entire corpus program past W0.** W0 (docs/program) is doctrine only. No W1 unit, no
-  datastore, no intake surface, no discovery adapter, and no canonical promotion path may be
-  started without frontier acceptance of Gate A and explicit authorization of W1.1.
-- Wiring the homepage preview export into `bahai-homepage` (H2B-B). Garden STOP is after the
-  verified export; the consume path is `exports/bahai-homepage-preview/v1/collection.json`.
-- Any other `bahai-homepage` implementation work.
+- **The entire corpus program past W1.** W0 (`docs/program`) is doctrine only; **W1 is now
+  authorized in full** (2026-09-12, decision D1) and in progress. Still **NOT started**: W2 and
+  everything after it, any discovery adapter, and any canonical promotion path (W3). The
+  authorization of W1 does not authorize anything past the Gate B packet.
+- Any `bahai-homepage` implementation work **other than** the D9 consume lane against the v1 export
+  (see the authorized section below).
 - Bulk quote verification beyond the approved donor set.
 - Deferred donor sets B (citation-shape diversity) and C (Hidden Words collision test) from
   the 2026-09-11 donor-set decision.
