@@ -12,6 +12,19 @@ UTF-8, duplicate IDs, missing required fields, invalid controlled values, dangli
 unresolved-glyph rows, counts by `item_type`/`verification_status`) is curation-queue signal,
 not a failure — read `docs/data/DATA_QUALITY_REPORT.md` for how to interpret it.
 
+## Check the corpus-program doctrine set
+
+```
+python3 scripts/check_program_contracts.py
+```
+
+Documentation-only test (no data, no runtime): it parses the transition table out of
+`docs/program/STATE_MODEL.md` and the required envelope fields out of
+`docs/program/CANDIDATE_ENVELOPE.md`, then simulates the ten canonical adversarial scenarios in
+`docs/program/fixtures/w0_scenarios.json` and asserts the state machine, the operator gates,
+the per-claim evidence standard, and the visible-uncertainty rule all hold. Exits 0 with
+`RESULT: PASS`. Run it after editing anything under `docs/program/`.
+
 ## Run the browser locally
 
 ```

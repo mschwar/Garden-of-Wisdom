@@ -35,6 +35,47 @@ Living document — update it as items are picked up or closed, don't just appen
       artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
 
+## Open — corpus program (W0 landed 2026-09-12; W1 NOT authorized)
+
+- [ ] **W1 is decomposed but not authorized.** Six bounded units (storage decision → envelope
+      contract → CLI submission → normalization/duplicate hints → curation review + audit →
+      Gate B evidence pack) are specified in `docs/program/W1_DECOMPOSITION.md`. Do not start
+      any of them without frontier acceptance of the W0 Gate A report and an explicit
+      authorization of **W1.1 only**. See `docs/program/W0_GATE_REPORT.md`.
+
+## Open — debt and open questions discovered during W0 (specs only, not scheduled)
+
+Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
+`docs/program/CLASSIFICATION_AND_FACETS.md`. None of these is authorized work.
+
+- [ ] **D2 — `unverifiable` is not representable in `quotes.csv`.** The 3-valued
+      `verification_status` maps every unfinished research state to `unverified`, so a record
+      proven unverifiable is indistinguishable from a never-checked row. Issue #5 (Garden id
+      30) is the live instance. Needs a migration unit; do not widen the enum as a side effect
+      of other work.
+- [ ] **D3 — no row-level verification evidence store.** The four `verified` rows carry their
+      evidence only in `exports/bahai-homepage-preview/v1/` and `docs/DECISIONS.md`. Adding
+      evidence fields is W2/W3 work; until then, `verified` in the CSV is a pointer to the
+      export.
+- [ ] **D4 — capture provenance policy for the 324 legacy rows.** They have no capture record
+      and none is reconstructable (`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md`). Open
+      question: does `legacy-import` ever get a synthetic capture record, or does the frozen
+      archive stay the only provenance? Human decision.
+- [ ] **D5 — `item_type` mixes text shape with provenance shape.** `full-passage`/`excerpt`/
+      `paraphrase` are shape; `oral-attribution` is not a text relation. The split is W3 work
+      (`docs/program/CLASSIFICATION_AND_FACETS.md`); do not widen the enum meanwhile.
+- [ ] **D7 — `verification_status` (Garden) vs `verification_state` (H2B) naming** (issue #7).
+      Now also entangled with the W0 projection rule; resolve before more export/validator code
+      hardens either spelling.
+- [ ] **Q1 — should `tradition` become multi-valued?** Some labels overlap in practice.
+- [ ] **Q2 — is `domain` genuinely multi-valued, or effectively single per record?**
+- [ ] **Q3 — how is a non-text "source" represented?** (e.g. id 344 `Modern Mayan Greeting`,
+      which is a greeting rather than a work.)
+- [ ] **Q4 — does `culture` add anything beyond `tradition` + `source_type` on this corpus?**
+- [ ] **Q5 — does `shape` replace `item_type`, or does `item_type` stay its projection?**
+- [ ] **Q6 — should period/era be recorded at all**, given how many oral records have no
+      datable origin?
+
 ## Open — candidate units found during G4 (not scheduled; specs only)
 
 Filed as GitHub issues. Do not start without a named contract and owner sign-off.
@@ -71,22 +112,23 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 ## Explicitly NOT started (do not start without human sign-off)
 
-- Homepage wiring of this export (`bahai-homepage` H2B-B). Garden STOP is after the verified
-  export; the consume path is `exports/bahai-homepage-preview/v1/collection.json`.
+- **The entire corpus program past W0.** W0 (docs/program) is doctrine only. No W1 unit, no
+  datastore, no intake surface, no discovery adapter, and no canonical promotion path may be
+  started without frontier acceptance of Gate A and explicit authorization of W1.1.
+- Wiring the homepage preview export into `bahai-homepage` (H2B-B). Garden STOP is after the
+  verified export; the consume path is `exports/bahai-homepage-preview/v1/collection.json`.
 - Any other `bahai-homepage` implementation work.
 - Bulk quote verification beyond the approved donor set.
 - Deferred donor sets B (citation-shape diversity) and C (Hidden Words collision test) from
   the 2026-09-11 donor-set decision.
 
-## Closed — 2026-09-11 Pages deploy
+## Closed — 2026-09-12 W0 (corpus program doctrine)
 
-- [x] Deploy the quote browser to GitHub Pages, rooted at the repo root so the relative
-      `../quotes.csv` / `../sources.csv` fetches keep resolving. Workflow:
-      `.github/workflows/pages.yml` (`configure-pages` → `upload-pages-artifact` with
-      `path: '.'` → `deploy-pages`, `pages` concurrency, `github-pages` environment). Pages
-      enabled with `gh api -X POST repos/mschwar/Garden-of-Wisdom/pages -f build_type=workflow`.
-      Root `index.html` added as a redirect shim to `browser/index.html`. Live:
-      https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
+- [x] W0 doctrine + contracts landed under `docs/program/` — all 12 required outputs (10 docs
+      plus decision-log and queue entries), a planning fixture
+      (`docs/program/fixtures/w0_scenarios.json`, 11 walkthroughs) and a deterministic doctrine
+      checker (`scripts/check_program_contracts.py`, 15 negative controls recorded).
+      Gate A evidence: `docs/program/W0_GATE_REPORT.md`. **W1 NOT STARTED.**
 
 ## Closed — 2026-09-11 G4
 

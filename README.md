@@ -23,6 +23,7 @@ available (see below).
 
 ```
 python3 scripts/validate_quotes.py                     # check data integrity
+python3 scripts/check_program_contracts.py             # check the corpus-program doctrine set
 python3 scripts/validate_homepage_preview_export.py    # check the v1 homepage export
 python3 -m http.server 8000                            # then open http://localhost:8000/browser/
 ```
@@ -105,6 +106,12 @@ append-only rationale on past calls. High-level phases:
   linking, static browser.
 - **Phase 1 (not started)**: human curation pass — resolve near-duplicates, fill manifest
   gaps, reclassify `unknown` item types.
+- **Corpus program (2026-09-12, W0 done)**: doctrine and contracts for a provenance-aware,
+  human-governed corpus — how a messy uncited candidate moves through capture → curation →
+  research → possible canonical outcomes, which transitions need the operator, what counts as
+  evidence, and the bounded W1 decomposition. **Doctrine only; W1 is not started.** See
+  `docs/program/README.md` (start with `docs/program/W0_GATE_REPORT.md` for the Gate A
+  evidence). The corpus lifecycle does not change any current CSV or browser behaviour.
 - **Later, not authorized yet**: verify a small donor set and export it for use by a separate
   project (`bahai-homepage`), without merging the two repos or coupling their schemas. See
   `docs/product/PRODUCT_DOCTRINE.md`.

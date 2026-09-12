@@ -34,3 +34,8 @@ publishing product.
 Phase 0 (this retrofit) rehabilitates data and ships a browser. It does **not** authorize
 verifying quotes at scale or building any homepage export — those are separate, later,
 explicitly-scoped work units.
+
+The corpus program (`docs/program/`) adds provenance, curation, research, and enrichment
+contracts around the corpus. This document remains the **product** authority and is not
+restated there; the program doctrine inherits these non-negotiables by reference and may not
+weaken them. W0 (doctrine) landed 2026-09-12; **W1 implementation is not started**.
