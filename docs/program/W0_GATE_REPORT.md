@@ -135,8 +135,10 @@ reached — proving the dimensions are actually independent.
   intake, curation, or research behaviour.
 - No datastore, no migration, no intake surface, no discovery adapter, no browser change, no
   schema change, no rename of `verification_status`.
-- `git show --stat` on this branch touches docs, `README.md`, `AGENTS.md`, `docs/queue.md`,
-  `docs/DECISIONS.md`, `docs/RUNBOOK.md`, plus the one checker script and one JSON fixture.
+- `git show --stat` on this branch touches `README.md`, `docs/**` (`program/`, `DECISIONS.md`,
+  `queue.md`, `RUNBOOK.md`, `product/PRODUCT_DOCTRINE.md`), plus the one checker script and one
+  JSON fixture. Nothing else — in particular no data, browser, export, or workflow file.
+  (`AGENTS.md` was intentionally left untouched — see §Deviations.)
 
 ## Evidence
 
