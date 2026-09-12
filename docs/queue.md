@@ -30,10 +30,14 @@ Living document — update it as items are picked up or closed, don't just appen
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
       (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
       when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
-- [ ] The smoke test covers search, sort, view switch, copy and layout, but **not** the six
-      filter dropdowns or the "Issues only" toggle — the manual pass those replaced did check
-      "Issues only". Filed as
-      [#13](https://github.com/mschwar/Garden-of-Wisdom/issues/13).
+- [ ] **Card view has no empty state** (found while adding filter coverage, out of scope there).
+      With a search/filter combination that matches nothing, card view renders an empty
+      `#results` — 0 children, no message — so the page is just a blank area under a header
+      reading "0 shown", while table view explains itself with `td.empty-state`
+      ("No matching quotes. Adjust the filters or search."). Measured 2026-09-12:
+      `resultChildren=0, resultsText=''`. Needs a browser behaviour change (and a matching
+      smoke-test assertion), so it is its own unit, not a test-only edit. Filed as
+      [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 NOT authorized)
 
@@ -93,12 +97,31 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
 
+## Closed — 2026-09-12 browser smoke test: filter coverage
+
+- [x] **Issue [#13](https://github.com/mschwar/Garden-of-Wisdom/issues/13) — extend the smoke test
+      to the six filters, the "Issues only" toggle, a combined interaction and the empty-result
+      state.** Test coverage only; no browser behaviour changed. `scripts/smoke_quote_browser.py`
+      grew from 22 to **32** checks: the six dropdowns' option sets are compared with the distinct
+      values in `quotes.csv`, one narrowing value per dropdown is selected and its rendered card
+      count asserted against Python's count for the same predicate, "Issues only" is asserted to
+      narrow to exactly the rows with a non-empty `detectIssues()` (every card badged) *and* to
+      drop rows, one filter+search+sort combination is asserted on both count and length ordering
+      in table view, and a no-match combination is asserted to render the table's `td.empty-state`
+      row with zero cards. Every value and combination the test uses is searched for in the data,
+      and a check that would otherwise pass vacuously (a filter value that narrows nothing, a
+      toggle that drops nothing) now fails loudly. Seven new negative controls, one per broken
+      path, plus three showing the vacuity guards firing — `GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md`.
+      Out of scope, filed as [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17): card
+      view renders no empty state at zero matches (see the infra queue above).
+
 ## Closed — 2026-09-12 quote-browser smoke test + responsiveness
 
 - [x] **Automated browser smoke test** (`scripts/smoke_quote_browser.py` +
       `.github/workflows/browser-smoke.yml`, which runs it on every PR and push to `main`).
       Headless Chromium via Playwright (test-only dependency, `requirements-dev.txt`); every
-      expected count is recomputed from `quotes.csv` rather than hard-coded. 22 checks: static
+      expected count is recomputed from `quotes.csv` rather than hard-coded. 22 checks at the
+      time (the test has since grown to 32 — see the filter-coverage close-out above): static
       layout (both CSVs byte-identical at the paths the page fetches), 324/324 header + card
       counts, search narrowing to the rows that contain the term, length sort ordering both
       directions, `aria-sort` on header click, table row count, copy button round-trip through
