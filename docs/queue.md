@@ -33,7 +33,7 @@ Living document — update it as items are picked up or closed, don't just appen
 - [ ] The smoke test covers search, sort, view switch, copy and layout, but **not** the six
       filter dropdowns or the "Issues only" toggle — the manual pass those replaced did check
       "Issues only". Filed as
-      [#8](https://github.com/mschwar/Garden-of-Wisdom/issues/8).
+      [#13](https://github.com/mschwar/Garden-of-Wisdom/issues/13).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 NOT authorized)
 
