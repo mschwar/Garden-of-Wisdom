@@ -1,7 +1,7 @@
 id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,source_id,has_unresolved_glyph
 1,"A kindly tongue is the lodestone of the heart of men. It is the bread of the spirit, it clotheth the words with meaning, it is the fountain of the light of wisdom and understanding.",Baha'i,Gleanings from the Writings of Bahá_u'lláh,Bahá_u'lláh,"kindness, speech, influence, heart",unknown,unverified,12,true
 2,So powerful is the light of unity that it can illuminate the whole earth.,Baha'i,"Epistle to the Son of the Wolf, p. 14",Bahá’u’lláh,"unity,light,world,humanity",excerpt,unverified,12,false
-3,"The earth is but one country, and mankind its citizens.",Baha'i,"Gleanings, CXVII",Bahá’u’lláh,"unity,humanity,world,citizenship",unknown,unverified,12,false
+3,"The earth is but one country, and mankind its citizens.",Baha'i,"Gleanings, CXVII",Bahá’u’lláh,"unity,humanity,world,citizenship",excerpt,verified,12,false
 4,"Let your vision be world-embracing, rather than confined to your own self.",Baha'i,"Gleanings, CV",Bahá’u’lláh,"vision,world,perspective,selflessness",unknown,unverified,12,false
 5,"Ye are the fruits of one tree, and the leaves of one branch.",Baha'i,"Tablets of Bahá’u’lláh, Words of Paradise",Bahá’u’lláh,"unity,humanity,metaphor,nature",unknown,unverified,12,false
 6,"Let deeds, not words, be your adorning.",Baha'i,"The Hidden Words, Persian 5",Bahá’u’lláh,"action,deeds,character,integrity",excerpt,unverified,12,false
@@ -10,10 +10,10 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 9,"Speak no evil, that thou mayest not hear it spoken unto thee.",Baha'i,"The Hidden Words, Persian 44",Bahá’u’lláh,"speech,gossip,backbiting,karma",excerpt,unverified,12,false
 10,"If you desire mercy, show mercy to the weak.",Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 130",‘Abdu’l-Bahá,"mercy,compassion,action,kindness",excerpt,unverified,12,false
 11,Love is light in whatsoever house it may shine.,Baha'i,"Paris Talks, Oct 10 1911",‘Abdu’l-Bahá,"love,light,home,spirit",excerpt,unverified,12,false
-12,Truthfulness is the foundation of all human virtues.,Baha'i,"The Advent of Divine Justice, p. 22",Bahá’u’lláh,"truthfulness,virtue,foundation,character",excerpt,unverified,12,false
+12,Truthfulness is the foundation of all human virtues.,Baha'i,"Tablet of ‘Abdu’l-Bahá; cited in The Advent of Divine Justice",‘Abdu’l-Bahá,"truthfulness,virtue,foundation,character",excerpt,verified,12,false
 13,O Son of Being! Bring thyself to account each day.,Baha'i,"The Hidden Words, Arabic 31",Bahá’u’lláh,"accountability,reflection,self-improvement,discipline",excerpt,unverified,12,false
 14,Be anxiously concerned with the needs of the age ye live in.,Baha'i,"Gleanings, CV",Bahá’u’lláh,"service,society,relevance,purpose",unknown,unverified,12,false
-15,Regard man as a mine rich in gems of inestimable value.,Baha'i,"Gleanings, CXXII",Bahá’u’lláh,"potential,humanity,virtue,education",unknown,unverified,12,false
+15,Regard man as a mine rich in gems of inestimable value.,Baha'i,"Gleanings, CXXII",Bahá’u’lláh,"potential,humanity,virtue,education",excerpt,verified,12,false
 16,The source of all learning is the knowledge of God.,Baha'i,"Tablets of Bahá’u’lláh, Law_-i-_ikmat",Bahá’u’lláh,"knowledge,learning,god,spirituality",unknown,unverified,12,true
 17,"If thou seekest justice, choose for others what thou choosest for thyself.",Baha'i,"Epistle to the Son of the Wolf, p. 30",Bahá’u’lláh,"justice,empathy,goldenrule,fairness",excerpt,unverified,12,false
 18,"O Son of Spirit! Possess a pure, kindly and radiant heart.",Baha'i,"The Hidden Words, Persian 1",Bahá’u’lláh,"heart,purity,kindness,character",excerpt,unverified,12,false
@@ -24,7 +24,7 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 23,The essence of faith is fewness of words and abundance of deeds.,Baha'i,"Tablets of Bahá’u’lláh, Words of Paradise",Bahá’u’lláh,"faith,action,deeds,integrity",unknown,unverified,12,false
 24,"Arts, crafts and sciences uplift the world of being.",Baha'i,"Epistle to the Son of the Wolf, p. 26",Bahá’u’lláh,"arts,science,work,progress,civilization",excerpt,unverified,12,false
 25,"Arise to serve, and let not the sweetness of repose enchain you.",Baha'i,"Tablets of Bahá’u’lláh, Ishráqát",Bahá’u’lláh,"service,action,sacrifice,detachment",unknown,unverified,12,false
-26,Service to humanity is service to God.,Baha'i,"Paris Talks, Oct 22 1911",‘Abdu’l-Bahá,"service,humanity,god,worship",excerpt,unverified,12,false
+26,Service to humanity is service to God.,Baha'i,"The Promulgation of Universal Peace, 12 April 1912",‘Abdu’l-Bahá,"service,humanity,god,worship",excerpt,verified,12,false
 27,Every day in which you render a service is a blessed day.,Baha'i,"Promulgation of Universal Peace, May 25 1912",‘Abdu’l-Bahá,"service,action,purpose,blessing",excerpt,unverified,12,false
 28,"When a thought of war comes, oppose it by a stronger thought of peace.",Baha'i,"Paris Talks, Feb 23 1913",‘Abdu’l-Bahá,"peace,war,mind,thought",excerpt,unverified,12,false
 29,Love ye all mankind; no one should wish for another what he doth not wish for himself.,Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 201",‘Abdu’l-Bahá,"love,humanity,empathy,goldenrule",excerpt,unverified,12,false

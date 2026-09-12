@@ -21,7 +21,7 @@
 | `author` | string | yes | Attributed speaker/author/collective (e.g. "Diné Oral Tradition"). |
 | `tags` | string | yes | Comma-separated, lowercase, singular-preferred theme tags. |
 | `item_type` | enum | yes (added 2026-09-11) | One of `full-passage`, `excerpt`, `paraphrase`, `oral-attribution`, `unknown`. Heuristically assigned during retrofit — see below. Not hand-verified per row. |
-| `verification_status` | enum | yes (added 2026-09-11) | One of `unverified`, `verified`, `disputed`. Every row is `unverified` as of this retrofit. Only set to `verified` after checking against a real primary source. |
+| `verification_status` | enum | yes (added 2026-09-11) | One of `unverified`, `verified`, `disputed`. As of the retrofit every row was `unverified`. G4 (2026-09-11) set ids 3, 12, 15, 26 to `verified`; do not copy that status to other rows without the same primary-source check. |
 | `source_id` | string | no (added 2026-09-11) | Foreign key into `sources.csv`. Blank means "no confident manifest match" — see `docs/data/DATA_QUALITY_REPORT.md` for the current unresolved list; this is a real manifest gap, not a bug to silently patch with a guess. |
 | `has_unresolved_glyph` | boolean string | yes (added 2026-09-11) | `"true"` if `quote_text`, `author`, or `source_ref` contains a literal `_` standing in for a character the original author couldn't type. Flags rows that need a human with the right keyboard/reference to fix properly. |
 
@@ -34,8 +34,9 @@ Assigned by `scripts/rehabilitate_2026_09_11.py` at retrofit time:
   reference rather than a whole-work citation).
 - `unknown` otherwise.
 
-This is a first-pass signal for the curation queue, not a verified classification. 22 rows are
-currently `unknown`.
+This is a first-pass signal for the curation queue, not a verified classification. G4
+reclassified donor ids 3 and 15 from `unknown` to `excerpt` at verify time; remaining
+`unknown` rows are still a queue item.
 
 ### Controlled list status
 
@@ -69,3 +70,10 @@ to 7; it documents them as the real controlled list going forward (see canonical
    `sources.csv` entry closely enough to link confidently (mostly small oral traditions with no
    manifest row yet, plus `Mahabharata` and one `Various Sutras (paraphrased)` row). Real gap,
    not a linking bug.
+5. **No per-quote `source_url` in Garden.** The H2B collection item requires `source_url`.
+   G4 records it on `exports/bahai-homepage-preview/v1/` only. Adding a CSV column is a later
+   schema change, not implied by verification of four rows.
+
+Downstream consumers must not live-read `quotes.csv`. The homepage-preview seam is
+`exports/bahai-homepage-preview/v1/collection.json` (Garden `verification_status` maps to H2B
+`verification_state`; `tags` CSV string maps to a JSON array).

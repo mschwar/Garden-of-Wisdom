@@ -13,15 +13,18 @@ if you're an agent picking up work here.
 
 ## Status (as of the 2026-09-11 retrofit)
 
-324 quotes across 27 traditions/cultures. Data is canonical UTF-8; every row is currently
-`verification_status = unverified` (none has been checked against a primary source yet — see
-`docs/data/DATA_QUALITY_REPORT.md`). A static browser/audit console is available (see below).
+324 quotes across 27 traditions/cultures. Data is canonical UTF-8. Four homepage-preview
+donors (ids 3, 12, 15, 26) are `verified` as of G4; the other 320 rows remain `unverified`
+(see `docs/data/DATA_QUALITY_REPORT.md` for the retrofit snapshot, and
+`exports/bahai-homepage-preview/v1/` for the export). A static browser/audit console is
+available (see below).
 
 ## Quickstart
 
 ```
-python3 scripts/validate_quotes.py       # check data integrity
-python3 -m http.server 8000              # then open http://localhost:8000/browser/
+python3 scripts/validate_quotes.py                     # check data integrity
+python3 scripts/validate_homepage_preview_export.py    # check the v1 homepage export
+python3 -m http.server 8000                            # then open http://localhost:8000/browser/
 ```
 
 ## Data files
