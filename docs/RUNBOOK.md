@@ -20,6 +20,62 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000/browser/index.html`. See `docs/architecture/QUOTE_BROWSER.md`.
 
+## GitHub Pages (static site)
+
+Published from the repo root by `.github/workflows/pages.yml` on every push to `main` (and by
+manual `workflow_dispatch`, main only — the job is guarded with
+`if: github.ref == 'refs/heads/main'` so a manual run from a branch cannot overwrite the live
+site). Actions-based Pages: `configure-pages` → `upload-pages-artifact` → `deploy-pages`.
+
+URLs once deployed:
+
+- site root (a redirect shim in the repo-root `index.html`) —
+  `https://mschwar.github.io/Garden-of-Wisdom/`
+- the app — `https://mschwar.github.io/Garden-of-Wisdom/browser/index.html`
+- the data the app fetches at runtime — `…/quotes.csv`, `…/sources.csv`
+
+**Precondition that CI assumes but cannot create.** The repo's Pages site must exist with
+`build_type: workflow` (Settings → Pages → Source = **GitHub Actions**, not "Deploy from a
+branch"). `actions/configure-pages`'s `enablement: true` requires an admin PAT — the default
+`GITHUB_TOKEN` cannot do it — so it was enabled once, out of band:
+
+```
+gh api repos/mschwar/Garden-of-Wisdom/pages | jq .build_type     # expect "workflow"
+gh api -X POST repos/mschwar/Garden-of-Wisdom/pages -f build_type=workflow   # only if 404
+```
+
+If that setting is missing or gets flipped, `pages.yml` **fails** rather than mispublishing —
+it does not silently publish a wrong thing.
+
+**Hard contract — Pages must stay rooted at the repo root.** `browser/index.html` fetches
+`../quotes.csv` and `../sources.csv`, both of which live at the repo root, so the published
+site has to be the whole repo (`path: '.'` in the workflow). If anyone repoints the artifact
+at `browser/` (or flips Pages back to "Deploy from a branch" with `/docs` or `/browser` as
+the folder), the page still loads but renders 0 quotes because both fetches 404. The root
+`index.html` is only a redirect shim; it is not the app.
+
+**What actually gets published.** The whole repo root — including `docs/`, `bootstrap/`,
+`exports/`, and the frozen `data/archive/` originals — because the app's
+`../quotes.csv` / `../sources.csv` fetches require the root layout. All of it is already
+public on GitHub, so this adds no exposure. `actions/upload-pages-artifact` always drops
+`.git` and `.github` and, by default (`include-hidden-files: false`), all top-level dotfiles,
+so a committed `.nojekyll` would never reach the artifact. That is fine here: an
+Actions-deployed artifact is served as-is and is never run through Jekyll, so `.nojekyll` is
+not needed.
+
+Verify a deploy (all four must be 200):
+
+```
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/quotes.csv
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/sources.csv
+```
+
+To watch a deploy instead: `gh run list --workflow pages.yml --limit 3` then
+`gh run watch <id>`.
+
+
 ## Re-derive the canonical CSVs from the frozen originals
 
 Only needed if you suspect the canonical `quotes.csv`/`sources.csv` at the repo root have

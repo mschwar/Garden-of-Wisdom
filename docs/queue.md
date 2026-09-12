@@ -30,6 +30,16 @@ Living document — update it as items are picked up or closed, don't just appen
       (e.g. allow selects to shrink / wrap on narrow screens). Flagged by foreign QA on PR #9.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
+- [ ] Guard the Pages deploy contract: `.github/workflows/pages.yml` must keep
+      `path: '.'` (repo root) and Pages "Source" must stay **GitHub Actions**. Rooting the
+      artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
+      live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
+- [ ] Pages deploy acceptance: after the Pages PR merges, confirm all four live URLs return
+      200 (`/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` — curl block in
+      `docs/RUNBOOK.md`) and then close this item. The workflow
+      (`.github/workflows/pages.yml`, `path: '.'`, `github-pages` environment) and the
+      out-of-band Pages setting (`build_type: workflow`) are already in place; only the live
+      check is outstanding.
 
 ## Open — candidate units found during G4 (not scheduled; specs only)
 
@@ -55,6 +65,16 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - Bulk quote verification beyond the approved donor set.
 - Deferred donor sets B (citation-shape diversity) and C (Hidden Words collision test) from
   the 2026-09-11 donor-set decision.
+
+## Closed — 2026-09-11 Pages deploy
+
+- [x] Deploy the quote browser to GitHub Pages, rooted at the repo root so the relative
+      `../quotes.csv` / `../sources.csv` fetches keep resolving. Workflow:
+      `.github/workflows/pages.yml` (`configure-pages` → `upload-pages-artifact` with
+      `path: '.'` → `deploy-pages`, `pages` concurrency, `github-pages` environment). Pages
+      enabled with `gh api -X POST repos/mschwar/Garden-of-Wisdom/pages -f build_type=workflow`.
+      Root `index.html` added as a redirect shim to `browser/index.html`. Live:
+      https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
 
 ## Closed — 2026-09-11 G4
 
