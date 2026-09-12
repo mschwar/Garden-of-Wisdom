@@ -3,7 +3,9 @@
 **Unit:** W1.1 — storage decision + minimal schema (`docs/program/W1_DECOMPOSITION.md` §W1.1),
 the first unit of W1. Authorized by decision D1 (2026-09-12), decided by D2 (storage).
 **Branch:** `w1/storage-schema` (worktree `~/gow-worktrees/w1-1-storage`, off `origin/main`
-`6df549b`). One PR, not merged — the parent lands it after independent/foreign QA.
+`6df549b`). Landed as commit `355648f`, opened as PR
+[#25](https://github.com/mschwar/Garden-of-Wisdom/pull/25) — **not merged**; the parent lands it
+after independent/foreign QA.
 
 ## What landed
 
