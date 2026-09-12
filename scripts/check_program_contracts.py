@@ -31,7 +31,8 @@ Exits 0 with `RESULT: PASS` when every check holds.
 
 It reads quotes.csv / sources.csv READ-ONLY, purely to re-derive the row counts the doctrine
 asserts about the current corpus. It writes nothing and does not import or exercise any W1
-runtime behaviour -- W1 is not started.
+runtime behaviour -- W1 was authorized in full on 2026-09-12 (see docs/DECISIONS.md), and this
+checker remains a W0 doctrine test, not a W1 component.
 """
 import csv
 import json

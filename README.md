@@ -113,7 +113,9 @@ append-only rationale on past calls. High-level phases:
 - **Corpus program (2026-09-12, W0 done)**: doctrine and contracts for a provenance-aware,
   human-governed corpus — how a messy uncited candidate moves through capture → curation →
   research → possible canonical outcomes, which transitions need the operator, what counts as
-  evidence, and the bounded W1 decomposition. **Doctrine only; W1 is not started.** See
+  evidence, and the bounded W1 decomposition. **W1 is authorized in full (2026-09-12)** — see
+  `docs/DECISIONS.md` and `docs/queue.md`. Each W1 unit still lands its own branch, PR and
+  independent QA, and the wave's stop point is the Gate B packet (W2 is not started). See
   `docs/program/README.md` (start with `docs/program/W0_GATE_REPORT.md` for the Gate A
   evidence). The corpus lifecycle does not change any current CSV or browser behaviour.
 - **Later, not authorized yet**: verify a small donor set and export it for use by a separate

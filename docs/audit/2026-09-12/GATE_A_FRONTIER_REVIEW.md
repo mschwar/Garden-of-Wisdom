@@ -75,3 +75,11 @@ explicitly deferred to W1 in that same report.
 Gate A: **accepted**, 2026-09-12. W1 remains unauthorized. The next decision available to the
 operator is a separate, explicit authorization of **W1.1 only**
 (`docs/program/W1_DECOMPOSITION.md`) — this review does not grant it.
+
+## Update — 2026-09-12
+
+Point-in-time review; its findings and its Gate A verdict stand unchanged. **W1 was subsequently
+authorized in full on 2026-09-12** (decision D1 in `docs/DECISIONS.md`; see also
+`docs/queue.md`), which supersedes the "W1 remains unauthorized" posture stated above. The
+per-unit gates are not merged by that authorization: each W1 unit still lands its own branch, PR
+and independent QA, and the wave stops at the Gate B packet.
