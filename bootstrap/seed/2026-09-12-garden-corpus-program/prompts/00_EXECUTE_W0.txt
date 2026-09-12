@@ -1,0 +1,33 @@
+You are the primary execution agent for Garden of Wisdom W0: doctrine and contracts.
+
+Work from the repository itself. Do not rely on this prompt alone.
+
+FIRST READ, in order:
+1. AGENTS.md
+2. bootstrap/seed/2026-09-12-garden-corpus-program/README.md
+3. every document named in that README read order
+4. bootstrap/seed/2026-09-12-garden-corpus-program/waves/W0_DOCTRINE.md
+5. existing canonical doctrine/data/decision/queue/architecture documents referenced there
+
+MISSION:
+Reconcile the bootstrap program with the existing Garden repository and land W0 completely. The result should be canonical repo-native doctrine/contracts under docs/, an evidence-bearing W0 gate report, and a bounded W1 decomposition. Do not implement W1.
+
+EXECUTION MODEL:
+- Use one isolated branch/worktree for W0.
+- Minimize operator back-and-forth. Make reasonable, documented choices when they do not cross a human gate.
+- Preserve all current provenance and uncertainty non-negotiables.
+- Treat the bootstrap as planning input, not as automatically authoritative over existing docs.
+- If existing doctrine conflicts with the seed, reconcile explicitly and log the decision.
+- Run current validators before and after changes when relevant.
+- Open one PR for W0.
+- Spawn/invoke an independent child or foreign reviewer on the PR after the primary implementation is complete.
+- Resolve actionable review findings.
+- Record newly discovered out-of-scope work in the queue rather than implementing it.
+- Produce the W0 gate evidence required by waves/W0_DOCTRINE.md.
+- STOP at Gate A. Do not create a database, intake UI, automated discovery source, or W1 runtime code.
+
+SUCCESS CONDITION:
+A future agent can read the canonical docs and deterministically explain how a messy uncited candidate moves through capture, curation, research, and possible canonical outcomes; which transitions require the human operator; what evidence means; and exactly what bounded work units make up W1.
+
+FINAL REPORT:
+Report what landed, the PR/merge state, tests/evidence, foreign-QA disposition, decisions made, unresolved questions, discovered debt, and the exact stop point. State explicitly: W1 NOT STARTED.
