@@ -273,3 +273,29 @@ near-dupe entry above).
 Verdict: **Gate A accepted**, 2026-09-12. Decided this acceptance does **not** authorize W1.1 —
 that stays a separate, explicit operator decision per `docs/program/CORPUS_PROGRAM_DOCTRINE.md`
 and the W0 report's own stop point.
+
+## 2026-09-12 — Filter coverage is asserted by searching the data for narrowing cases, not by naming a value
+
+Implementing issue #13 (smoke-test coverage for the six filter dropdowns, the "Issues only"
+toggle, a combined interaction and the empty-result state) required choosing which value to
+select in each dropdown. Considered hard-coding a representative value per filter (e.g. a known
+tradition, a known tag) — it reads well in the output and is one line each. Rejected: a
+hard-coded value is exactly the failure mode the existing test was already fixed for once (the
+unguarded `SEARCH_TERM`, foreign-QA finding 3 in `GARDEN_BROWSER_SMOKE_HANDOFF.md`): if a data
+edit removes or renames that value the check either crashes or, worse, passes on an empty set.
+Decided the test **searches `quotes.csv` for a value that actually narrows** (0 < count < total)
+per dropdown, and searches for filter+search combinations that narrow and that match nothing,
+failing with an explicit "would be vacuous" line if the data stops offering one. The six
+dropdowns' *option sets* are also compared against the CSV's distinct values, because a
+count-only check cannot see a dropdown that lost an option it never selected. Cost: the chosen
+value is data-dependent and so varies as the corpus changes — accepted deliberately, since the
+run prints the value it used and every expectation is recomputed from `quotes.csv`.
+
+Also decided here: the card view's missing empty state (zero matches renders a blank `#results`
+while table view explains itself) is a **browser behaviour** change, so it is out of scope for a
+test-only unit and is filed as issue #17 + a queue entry rather than fixed in passing. Teeth for
+the new checks: seven negative controls (one per broken filter/toggle/empty-state/population/sort
+path) plus three controls that show the vacuity guards themselves firing when
+`quotes.csv` stops distinguishing the behaviour — recorded in
+`GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md`.
+

@@ -94,6 +94,16 @@ recomputed from `quotes.csv`/`sources.csv` rather than hard-coded:
   would keep;
 - search narrows the set to exactly the rows containing the term, and sorting by length orders
   the rendered rows (both directions), while clicking a table header sets `aria-sort`;
+- **all six filter dropdowns** — each offers exactly the distinct values present in
+  `quotes.csv` (with `All` as its first option), and selecting a narrowing value renders exactly
+  the rows Python counts with the same predicate `browser/app.js` uses (exact column match, tag
+  membership for `#filter-tag`);
+- **the "Issues only" toggle** — narrows the set to exactly the rows whose `detectIssues()` is
+  non-empty and every rendered card carries an issue badge;
+- **a combined interaction** — a dropdown value plus a search term plus a sort direction,
+  asserted in table view on both the row count and the ordering;
+- **the empty-result state** — a filter/search combination with no matches renders the table
+  view's `td.empty-state` "No matching quotes." row and zero cards;
 - the table view renders one row per filtered quote;
 - the per-card copy button puts that card's quote text on the clipboard;
 - the document does not overflow horizontally at 320/375/768px, in card **and** table view;
@@ -108,14 +118,20 @@ python3 scripts/smoke_quote_browser.py
 ```
 
 It exits 0 with `RESULT: PASS`; any broken check prints a `FAIL:` line naming what broke and
-exits non-zero. A green run prints 22 `PASS:` lines and `RESULT: PASS (0 warning(s))`. Seven
-negative controls are recorded in `GARDEN_BROWSER_SMOKE_HANDOFF.md` — reverting either CSS
+exits non-zero. A green run prints 32 `PASS:` lines and `RESULT: PASS (0 warning(s))`.
+
+The test refuses to pass vacuously: the search term, every filter value it selects, and the
+"Issues only" toggle are each asserted to still *narrow* the data, the combined-interaction and
+empty-result combinations are *searched for* in the data rather than assumed, and if any of them
+stops distinguishing behaviour the run fails with an explicit "would be vacuous" line. Fourteen
+negative controls are recorded — seven in `GARDEN_BROWSER_SMOKE_HANDOFF.md` (reverting either CSS
 responsiveness fix, removing the `#table-wrap` hide, breaking the search filter, repointing the
-data fetch, breaking a copy button, or logging a console error each turns the run red. The test
-also refuses to run vacuously: if its search term no longer matches any row in `quotes.csv` it
-fails immediately, because the search/sort/table checks would otherwise all "pass" on an empty
-result set. CI runs it on every PR and push to `main`
-(`.github/workflows/browser-smoke.yml`).
+data fetch, breaking a copy button, logging a console error) and seven in
+`GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md` (breaking each filter predicate, the tag membership
+rule, the Issues-only toggle, the empty state, a dropdown's population, and the sort direction),
+each of which turns the run red. Three further controls in that handoff show the vacuity guards
+themselves firing when the data stops distinguishing them. CI runs it on every PR and push to
+`main` (`.github/workflows/browser-smoke.yml`).
 
 ### Responsiveness (fixed 2026-09-12)
 
