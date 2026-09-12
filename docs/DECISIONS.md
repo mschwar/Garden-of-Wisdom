@@ -471,3 +471,37 @@ excluded. It is **not** a regression from this bump (the pre-bump artifact from 
 already contained `./.gitignore`). Filed as issue #23 rather than fixed here, because a fix is a
 deploy-path change that needs its own live re-verification.
 
+## 2026-09-12 — D2 executed (W1.1): SQLite + text export, and the requirement each rejected option failed
+
+W1.1 implemented D2 and recorded the comparison it requires. Chosen: **SQLite** (stdlib
+`sqlite3`, no dependency) as the store of record with a committed deterministic text mirror
+(`garden.export/1`). It satisfies all eight storage/access requirements of
+`docs/program/W1_DECOMPOSITION.md` §"Storage and access requirements W1 actually has" with one
+file and one code path, and the export keeps the store diffable in git. Naming the requirement
+each rejected option failed:
+
+- **Plain JSONL/CSV files + git as the store of record** fails **requirement 1** (immutable
+  captures) and **requirement 4** (append-only decision log): with the files as the store, both
+  guarantees become conventions — git records that a capture or an audit row was rewritten but
+  nothing refuses the write.
+- **JSONL files as the store + a rebuildable SQLite index** fails the same two requirements for
+  the same reason (the enforced store is still the files) and adds a second write path plus a
+  rebuild-determinism burden for no W1 gain. It remains the **upgrade path** if the operator
+  later wants the decision log diffable in git from day one.
+- **A server database (PostgreSQL/MySQL/document store)** fails **requirement 7**: the operator
+  must be able to work with no daemon and no network, and a server is a deployment, not a store.
+- **Widening `quotes.csv` with capture/state/decision columns** fails **requirement 1** (no
+  capture row is representable), **requirement 4** (a CSV rewrite is not append-only) and
+  requirement 8's "untouched" clause, and it would mutate the frozen, documented-lossy view —
+  the same reason D5 refuses the rename.
+- **SQLite with no text mirror** fails **requirement 7** (human-readable, diffable) and
+  **requirement 8** (export to text): the export is part of the decision, not an add-on.
+
+Implemented as `scripts/garden_store.py` (DDL + idempotent create-from-empty migration +
+export/import CLI) with `scripts/check_garden_store.py` as the deterministic acceptance run
+(59 checks: create → write → read back → export → wipe → re-import byte-identical, migration
+idempotency, capture immutability and decision-log append-only enforced by triggers, the four
+`STATE_MODEL.md` vocabularies re-parsed from the document, and requirement 6's two queries at
+~2,000 rows). Eight negative controls are recorded in `GARDEN_W1_1_HANDOFF.md` — seven from the unit and one added by the reviewing session, which found the first version guarded only one of the four state columns' `CHECK` constraints (removing the `research_state` `CHECK` left the run green); the loop over all four columns is the fix. Details:
+`docs/program/W1_1_STORAGE_AND_SCHEMA.md`. This executes the D2 decision; it does not
+supersede or amend it.

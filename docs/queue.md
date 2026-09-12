@@ -58,10 +58,10 @@ Living document — update it as items are picked up or closed, don't just appen
 
 - [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
       specified in `docs/program/W1_DECOMPOSITION.md`:
-      **W1.1** storage decision + minimal schema · **W1.2** candidate-envelope contract + validator ·
-      **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate hints ·
-      **W1.5** curation review + decisions + audit history · **W1.6** end-to-end test pack + Gate B
-      evidence packet.
+      **W1.1** storage decision + minimal schema ✅ **DONE** · **W1.2** candidate-envelope contract
+      + validator · **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate
+      hints · **W1.5** curation review + decisions + audit history · **W1.6** end-to-end test pack +
+      Gate B evidence packet.
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -71,6 +71,20 @@ Living document — update it as items are picked up or closed, don't just appen
       **Stop point:** W1 ends at the Gate B packet. **W2 is not started.** See
       `docs/program/W0_GATE_REPORT.md`. (This entry supersedes the earlier "W1 is decomposed but not
       authorized" item.)
+- [x] **W1.1 — storage decision + minimal schema. DONE 2026-09-12** (PR
+      [#25](https://github.com/mschwar/Garden-of-Wisdom/pull/25), merge `c90def3`). SQLite store of
+      record (stdlib `sqlite3`) + deterministic text mirror: `scripts/garden_store.py`, with
+      `scripts/check_garden_store.py` as the acceptance run (**59** checks) and
+      `docs/program/W1_1_STORAGE_AND_SCHEMA.md` for the comparison/DDL. Round-trips byte-identically,
+      the migration is idempotent, capture immutability and decision-log append-only are enforced by
+      triggers rather than documented, and the four state vocabularies are re-parsed from
+      `docs/program/STATE_MODEL.md`. Decision recorded in `docs/DECISIONS.md` ("D2 executed (W1.1)").
+      Independent review found and fixed one real coverage gap — the suite guarded only one of the
+      four state columns' `CHECK` constraints, so removing the `research_state` `CHECK` left the run
+      green; it now loops over all four, with the review control recorded (control `f`) in
+      `GARDEN_W1_1_HANDOFF.md`. `quotes.csv`/`sources.csv` byte-identical (read-only rule held). Also
+      recorded there: six doctrine ambiguities W1.5/W3 must resolve (notably `work_state` having two
+      subjects, and no sanctioned capture-deletion path). **Next: W1.2.**
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
