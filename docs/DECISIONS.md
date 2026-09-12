@@ -197,5 +197,24 @@ must stay visible whenever the record is not fully verified or makes no wording 
 ten canonical cases plus the five Gate A requirement kinds must be covered. Decided this is
 warranted in W0 because a doctrine set with no executable check is a doctrine set that drifts;
 and decided it is *not* implementation because it reads only `docs/program/**`, writes nothing,
-and exercises no intake/curation/research behaviour. Its teeth are demonstrated with five
+and exercises no intake/curation/research behaviour. Its teeth are demonstrated with the
 negative controls recorded in `docs/program/W0_GATE_REPORT.md`.
+
+## 2026-09-12 — W0: curation reversal must move the corpus dimension (T-P7/T-P8 added)
+
+Foreign QA on the W0 branch found a stranded-state bug in the state model: eligibility is a
+deterministic consequence of curation acceptance (`T-P1`), but curation is reversible
+(`T-C8 accepted → rejected`, `T-C9 accepted → duplicate`), and the corpus dimension had no
+transition out of `eligible`. A record the operator withdrew acceptance from would have been
+stuck `eligible` (or `canonical`) forever with no legal transition to correct it — a real
+inconsistency, not a documentation nit. Fixed by adding `T-P7 eligible → candidate_only` and
+`T-P8 canonical → eligible` (both operator-authority), stating the reversal rule in
+`docs/program/STATE_MODEL.md`, asserting the end-state consistency in
+`scripts/check_program_contracts.py` (a record may never end with curation
+`hold`/`rejected`/`duplicate` while the corpus state is `eligible`/`canonical`), and adding
+walkthrough S11 to exercise the path. Also hardened in the same pass, from the same review: the
+checker now asserts the authority of all 40 transitions (not just the ones a scenario uses),
+compares the fixture template and doc required-field list in both directions, re-parses the
+aggregate rule out of `VERIFICATION_CONTRACT.md` so a doc-only edit fails, validates the
+envelope template itself, and reports malformed fixtures as `RESULT: FAIL` instead of a
+traceback.

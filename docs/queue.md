@@ -124,10 +124,10 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 ## Closed — 2026-09-12 W0 (corpus program doctrine)
 
-- [x] W0 doctrine + contracts landed under `docs/program/` (12 required outputs), 8 decision
-      entries, queue/spec entries, a planning fixture
-      (`docs/program/fixtures/w0_scenarios.json`) and a deterministic doctrine checker
-      (`scripts/check_program_contracts.py`, 5 negative controls recorded).
+- [x] W0 doctrine + contracts landed under `docs/program/` — all 12 required outputs (10 docs
+      plus decision-log and queue entries), a planning fixture
+      (`docs/program/fixtures/w0_scenarios.json`, 11 walkthroughs) and a deterministic doctrine
+      checker (`scripts/check_program_contracts.py`, 15 negative controls recorded).
       Gate A evidence: `docs/program/W0_GATE_REPORT.md`. **W1 NOT STARTED.**
 
 ## Closed — 2026-09-11 G4

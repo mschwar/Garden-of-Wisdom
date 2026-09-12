@@ -78,6 +78,17 @@ Promotion requirements, exactly:
   exported.
 - `retired` removes a record from the Garden-facing corpus without deleting its history.
 
+**Reversals (so no dimension is ever stranded).** Curation is reversible (`T-C8`/`T-C9`/`T-C10`/
+`T-C12`), and the corpus dimension must follow it:
+
+- if curation leaves `accepted` while the record is `eligible`, the corpus state must leave
+  `eligible` too — `T-P7` (back to `candidate_only`) or `T-P6` (to `retired`);
+- if curation leaves `accepted` while the record is `canonical`, the corpus state must leave
+  `canonical` — `T-P4` (to `retired`) or `T-P8` (back to `eligible`);
+- a record therefore never ends with `curation ∈ {hold, rejected, duplicate}` and
+  `corpus ∈ {eligible, canonical}`. `scripts/check_program_contracts.py` asserts this
+  end-state consistency on every walkthrough.
+
 | ID | Dimension | From | To | Authority | Conditions |
 |---|---|---|---|---|---|
 | T-P1 | corpus | candidate_only | eligible | system | fires deterministically on `curation = accepted`; audited |
@@ -86,6 +97,8 @@ Promotion requirements, exactly:
 | T-P4 | corpus | canonical | retired | operator | removal from the Garden-facing corpus; history retained |
 | T-P5 | corpus | retired | canonical | operator | re-admission |
 | T-P6 | corpus | eligible | retired | operator | never admitted; history retained |
+| T-P7 | corpus | eligible | candidate_only | operator | curation acceptance withdrawn (`T-C8`/`T-C9`); the record returns to the candidate queue |
+| T-P8 | corpus | canonical | eligible | operator | admission withdrawn but the item is still wanted; uncertainty stays visible |
 
 ## 4. Work state — *where is the execution?*
 

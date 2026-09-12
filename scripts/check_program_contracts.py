@@ -42,6 +42,7 @@ PROGRAM = ROOT / "docs" / "program"
 STATE_MODEL = PROGRAM / "STATE_MODEL.md"
 ENVELOPE = PROGRAM / "CANDIDATE_ENVELOPE.md"
 FIXTURES = PROGRAM / "fixtures" / "w0_scenarios.json"
+VERIFICATION_CONTRACT = PROGRAM / "VERIFICATION_CONTRACT.md"
 
 DIMENSIONS = {"curation", "research", "corpus", "work"}
 STATE_KEY = {
@@ -159,30 +160,83 @@ def parse_required_envelope_fields(path):
     for line in section.splitlines():
         if line.strip().startswith("| `capture_method`"):
             parts = [c.strip() for c in line.strip().strip("|").split("|")]
-            methods = set(tokens(parts[1]))
+            # the enum lives in the last cell of the row, not the second
+            for cell in parts[1:]:
+                methods |= set(tokens(cell))
+    if not methods:
+        fail("could not parse the capture_method enum from CANDIDATE_ENVELOPE.md")
     return required, methods
 
 
+def parse_aggregate_rule(path):
+    """Parse the normative aggregate rule out of VERIFICATION_CONTRACT.md's code block.
+
+    Returns an ordered list of (condition, outcome) pairs, e.g.
+    ('any claim is unverifiable', 'unverifiable').
+    """
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8")
+    marker = "if any claim is unverifiable"
+    start = text.find(marker)
+    if start < 0:
+        fail("VERIFICATION_CONTRACT.md no longer contains the aggregate-rule block")
+        return []
+    end = text.find("```", start)
+    block = text[start : end if end > 0 else len(text)]
+    rule = []
+    for line in block.splitlines():
+        line = line.strip()
+        if "->" not in line:
+            continue
+        cond, _, outcome = line.partition("->")
+        cond = cond.strip()
+        for prefix in ("if ", "elif ", "else "):
+            if cond.startswith(prefix):
+                cond = cond[len(prefix):].strip()
+        cond = cond.strip("()").strip()
+        outcome = outcome.strip().rstrip(":")
+        # the first rule reads "-> record research_state = unverifiable"; keep the value
+        outcome = outcome.split("=")[-1].strip().split()[0] if outcome.split() else outcome
+        rule.append((cond, outcome))
+    return rule
+
+
+#: The rule the checker implements. MUST equal the block parsed out of
+#: VERIFICATION_CONTRACT.md -- a doc edit that changes the rule fails the run.
+AGGREGATE_RULE = [
+    ("any claim is unverifiable", "unverifiable"),
+    ("any claim is disputed", "disputed"),
+    ("any claim is needs_more_evidence", "needs_more_evidence"),
+    ("any claim is in_research", "in_research"),
+    ("any claim is not_started", "not_started"),
+    ("all claims verified", "verified"),
+]
+
+
 def aggregate_research_state(claims):
-    """Rule from VERIFICATION_CONTRACT.md."""
+    """Rule from VERIFICATION_CONTRACT.md, asserted against AGGREGATE_RULE."""
     statuses = [c["status"] for c in claims]
     if not statuses:
         return "not_started"
-    if "unverifiable" in statuses:
-        return "unverifiable"
-    if "disputed" in statuses:
-        return "disputed"
-    if "needs_more_evidence" in statuses:
-        return "needs_more_evidence"
-    if "in_research" in statuses:
-        return "in_research"
-    if "not_started" in statuses:
-        return "not_started"
-    return "verified"
+    for cond, outcome in AGGREGATE_RULE:
+        if cond == "any claim is unverifiable" and "unverifiable" in statuses:
+            return outcome
+        if cond == "any claim is disputed" and "disputed" in statuses:
+            return outcome
+        if cond == "any claim is needs_more_evidence" and "needs_more_evidence" in statuses:
+            return outcome
+        if cond == "any claim is in_research" and "in_research" in statuses:
+            return outcome
+        if cond == "any claim is not_started" and "not_started" in statuses:
+            return outcome
+        if cond == "all claims verified":
+            return outcome
+    return "not_started"
 
 
 def check_envelope(scenario, envelope, required, methods):
-    sid = scenario["id"]
+    sid = scenario.get("id", "<unnamed scenario>")
     for field in required:
         if field not in envelope:
             fail(f"{sid}: envelope missing required field {field!r}")
@@ -190,11 +244,12 @@ def check_envelope(scenario, envelope, required, methods):
             fail(f"{sid}: envelope field {field!r} is empty (use a sentinel: unknown/und/none)")
     if methods and envelope.get("capture_method") not in methods:
         fail(f"{sid}: capture_method {envelope.get('capture_method')!r} not in {sorted(methods)}")
+    start = scenario.get("start", {})
     for key, expected in INTAKE_STATES.items():
         if envelope.get(key) != expected:
             fail(f"{sid}: envelope {key} must be {expected!r} at intake, got {envelope.get(key)!r}")
-        if scenario["start"].get(key) != expected:
-            fail(f"{sid}: scenario.start {key} must be {expected!r} at intake, got {scenario['start'].get(key)!r}")
+        if start.get(key) != expected:
+            fail(f"{sid}: scenario.start {key} must be {expected!r} at intake, got {start.get(key)!r}")
     if not str(envelope.get("normalization_notes", "")).strip():
         fail(f"{sid}: normalization_notes must assert what normalization did (or 'identical to capture')")
     for hint in envelope.get("duplicate_hints", []):
@@ -205,8 +260,18 @@ def check_envelope(scenario, envelope, required, methods):
 
 
 def check_walkthrough(scenario, transitions, vocabularies):
-    sid = scenario["id"]
-    state = dict(scenario["start"])
+    sid = scenario.get("id", "<unnamed scenario>")
+    for key in ("start", "end", "transitions", "operator_transitions"):
+        if key not in scenario:
+            fail(f"{sid}: scenario is missing the required key {key!r}")
+            return
+    start = dict(scenario["start"])
+    end = dict(scenario["end"])
+    for key, expected in INTAKE_STATES.items():
+        if start.get(key) != expected:
+            fail(f"{sid}: scenario.start {key} must be {expected!r} at intake, got {start.get(key)!r}")
+            return
+    state = start
     used_operator = set()
     research_ran = False
 
@@ -232,8 +297,23 @@ def check_walkthrough(scenario, transitions, vocabularies):
             research_ran = True
         state[key] = tr["to"]
 
-    if state != scenario["end"]:
-        fail(f"{sid}: chain ends in {state} but scenario.end declares {scenario['end']}")
+    if state != end:
+        fail(f"{sid}: chain ends in {state} but scenario.end declares {end}")
+
+    # End-state consistency: the corpus dimension must agree with the curation decision.
+    if end["corpus_state"] in ("eligible", "canonical") and end["curation_state"] != "accepted":
+        fail(
+            f"{sid}: corpus_state {end['corpus_state']!r} requires curation 'accepted', "
+            f"but the record ends {end['curation_state']!r}"
+        )
+    if end["curation_state"] in ("rejected", "duplicate", "hold") and end["corpus_state"] in (
+        "eligible",
+        "canonical",
+    ):
+        fail(
+            f"{sid}: a {end['curation_state']!r} curation decision must not leave the record "
+            f"{end['corpus_state']!r} (no reversal transition was taken)"
+        )
 
     declared_operator = set(scenario["operator_transitions"])
     if used_operator != declared_operator:
@@ -281,12 +361,63 @@ def main():
         print("\nRESULT: FAIL")
         return sys.exit(1)
 
-    fixture = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    try:
+        fixture = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        fail(f"{FIXTURES.relative_to(ROOT)} is not valid JSON: {exc}")
+        print("\nRESULT: FAIL")
+        return sys.exit(1)
+    if not isinstance(fixture, dict):
+        fail(f"{FIXTURES.relative_to(ROOT)} must contain a JSON object")
+        print("\nRESULT: FAIL")
+        return sys.exit(1)
+
     template = fixture.get("envelope_template", {})
     scenarios = fixture.get("scenarios", [])
 
+    # The doc's required-field table and the fixture's template must agree exactly,
+    # in both directions: a field dropped from (or added to) either side fails.
+    doc_required = set(required)
+    template_fields = set(template)
+    if doc_required != template_fields:
+        fail(
+            "CANDIDATE_ENVELOPE.md required fields and the fixture template disagree: "
+            f"doc-only={sorted(doc_required - template_fields)} "
+            f"template-only={sorted(template_fields - doc_required)}"
+        )
+
+    # The aggregate rule implemented here must equal the one written in the doc.
+    doc_rule = parse_aggregate_rule(VERIFICATION_CONTRACT)
+    if doc_rule and doc_rule != AGGREGATE_RULE:
+        fail(
+            "VERIFICATION_CONTRACT.md aggregate rule and the checker's rule disagree: "
+            f"doc={doc_rule} checker={AGGREGATE_RULE}"
+        )
+
+    # Every transition's authority must be asserted, not just the operator ones.
+    expected_authorities = fixture.get("expected_authorities", {})
+    for tid, tr in transitions.items():
+        if tid not in expected_authorities:
+            fail(f"{tid} has no declared authority in the fixture (expected_authorities)")
+        elif expected_authorities[tid] != tr["authority"]:
+            fail(
+                f"{tid} authority in STATE_MODEL.md is {tr['authority']!r} but the fixture "
+                f"declares {expected_authorities[tid]!r}"
+            )
+    for tid in expected_authorities:
+        if tid not in transitions:
+            fail(f"fixture declares authority for unknown transition {tid}")
+
     print(f"parsed {len(transitions)} transitions, {len(required)} required envelope fields, {len(scenarios)} scenarios")
     print(f"vocabularies: " + "; ".join(f"{d}={len(v)}" for d, v in sorted(vocabularies.items())))
+    print(f"authorities asserted: {len(expected_authorities)}/{len(transitions)} transitions")
+
+    # The template itself must be a conforming envelope (otherwise an invalid value in it
+    # would be invisible whenever every scenario overrides that field).
+    template_probe = dict(template)
+    template_probe["id"] = "<envelope_template>"
+    template_probe["start"] = {k: template.get(k) for k in INTAKE_STATES}
+    check_envelope(template_probe, template, required, methods)
 
     seen_cases = []
     seen_gates = set()
@@ -302,7 +433,8 @@ def main():
     missing_cases = [c for c in CANONICAL_CASES if c not in seen_cases]
     if missing_cases:
         fail(f"canonical test cases not covered by any scenario: {missing_cases}")
-    dupes = [c for c in seen_cases if seen_cases.count(c) > 1]
+    counted = [c for c in seen_cases if c]
+    dupes = [c for c in counted if counted.count(c) > 1]
     if dupes:
         fail(f"canonical test cases covered more than once: {sorted(set(dupes))}")
 

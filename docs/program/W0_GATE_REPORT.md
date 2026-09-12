@@ -20,6 +20,8 @@ Canonical doctrine under `docs/program/` (this directory):
 | `WORK_LANES.md` | 7. permanent work-lane definitions |
 | `CLASSIFICATION_AND_FACETS.md` | 8. faceted classification posture + 6 explicit open ontology questions |
 | `W1_DECOMPOSITION.md` | 9. bounded W1 work units |
+| `../DECISIONS.md` (8 entries appended) | 10. decision-log entries for material choices |
+| `../queue.md` (W1 status + debt/open questions) | 11. queue entries for deferred ideas/debt |
 | this file | 12. W0 evidence-gate report |
 
 Plus: 8 decision-log entries (`../DECISIONS.md`), queue entries for deferred ideas/debt
@@ -159,25 +161,43 @@ Doctrine checker:
 
 ```
 $ python3 scripts/check_program_contracts.py
-parsed 38 transitions, 21 required envelope fields, 10 scenarios
+parsed 40 transitions, 21 required envelope fields, 11 scenarios
 vocabularies: corpus=4; curation=5; research=6; work=5
+authorities asserted: 40/40 transitions
 
 RESULT: PASS (transition chains simulate, claim aggregates agree, envelopes conform)
 ```
 
-Negative controls (run on a throwaway copy — a checker that cannot fail proves nothing):
+Negative controls (run on a throwaway copy — a checker that cannot fail proves nothing).
+Every case below exits non-zero with a clean `RESULT: FAIL` line and no traceback:
 
 | Mutation | Observed |
 |---|---|
 | S3 attribution claim forced to `verified` while the record stays `disputed` | `FAIL: S3: record research_state 'disputed' disagrees with the aggregate of its claims ('verified')` |
-| `T-R5` authority flipped `operator → agent` in `STATE_MODEL.md` | `FAIL: S3/S4/S5: operator_transitions […] do not match the operator-authority transitions actually used` |
+| `T-R5` authority flipped `operator → agent` (a transition a scenario uses) | `FAIL: S3/S4/S5: operator_transitions […] do not match the operator-authority transitions actually used` |
+| `T-R8` authority flipped `operator → agent` (a transition **no** scenario uses) | `FAIL: T-R8 authority in STATE_MODEL.md is 'agent' but the fixture declares 'operator'` |
+| `T-P1` authority flipped `system → agent`; `T-R1` flipped `agent → system` | `FAIL: T-P1/T-R1 authority … but the fixture declares …` |
+| Aggregate rule in `VERIFICATION_CONTRACT.md` rewritten to the least-conservative reading | `FAIL: VERIFICATION_CONTRACT.md aggregate rule and the checker's rule disagree` |
+| `captured_by` deleted from the envelope doc's required-field table | `FAIL: CANDIDATE_ENVELOPE.md required fields and the fixture template disagree: doc-only=[] template-only=['captured_by']` |
+| `captured_by` deleted from the fixture template | same failure, opposite direction |
 | S6 `normalization_notes` blanked | `FAIL: S6: envelope field 'normalization_notes' is empty` |
+| Invalid `capture_method` in the fixture **template** | `FAIL: <envelope_template>: capture_method 'mind-meld' not in [...]` |
 | S2 verified wording claim with its evidence list emptied | `FAIL: S2: claim 'wording' is verified with no evidence item` |
 | Canonical case `paraphrase` deleted | `FAIL: canonical test cases not covered by any scenario: ['paraphrase']` |
+| A scenario's `start` block deleted | `FAIL: … missing the required key 'start'` (previously a `KeyError` traceback) |
+| `T-W4` deleted from the fixture's `expected_authorities` | `FAIL: T-W4 has no declared authority in the fixture` |
+| `T-P7` (the reversal transition) deleted from `STATE_MODEL.md` | `FAIL: T-P7 … is not in the STATE_MODEL table` + end-state failure |
+| Fixture replaced with malformed JSON | `FAIL: …/w0_scenarios.json is not valid JSON: Expecting property name …` + `RESULT: FAIL` |
+
+Authority coverage after the fix: **all 40 transitions** in `STATE_MODEL.md` have their
+authority asserted by the fixture's `expected_authorities` map, not only the ones a scenario
+happens to use — so flipping any authority, including a `system ↔ agent` flip on an
+unexercised transition, is a deliberate two-file change.
 
 Coverage: all ten canonical test cases of `STATE_MODEL.md` and all five Gate A requirement
 kinds (`uncited`, `verified`, `disputed`, `unverifiable`, `translation-variant`) are exercised,
-each case exactly once — asserted by the checker, not by hand.
+each case exactly once — asserted by the checker, not by hand. Scenario S11 is supplementary
+(no canonical case) and exercises the curation-reversal path.
 
 ## Decisions made (all appended to `../DECISIONS.md`)
 

@@ -30,6 +30,20 @@
     "work_state": "queued"
   },
   "gate_requirement_coverage": ["uncited", "verified", "disputed", "unverifiable", "translation-variant"],
+  "expected_authorities": {
+    "T-C1": "operator", "T-C2": "operator", "T-C3": "operator", "T-C4": "operator",
+    "T-C5": "operator", "T-C6": "operator", "T-C7": "operator", "T-C8": "operator",
+    "T-C9": "operator", "T-C10": "operator", "T-C11": "operator", "T-C12": "operator",
+    "T-R1": "agent", "T-R2": "agent", "T-R3": "agent",
+    "T-R4": "operator", "T-R5": "operator", "T-R6": "operator", "T-R7": "operator",
+    "T-R8": "operator", "T-R9": "operator", "T-R10": "operator", "T-R11": "operator",
+    "T-R12": "operator", "T-R13": "operator",
+    "T-P1": "system", "T-P2": "operator", "T-P3": "operator", "T-P4": "operator",
+    "T-P5": "operator", "T-P6": "operator", "T-P7": "operator", "T-P8": "operator",
+    "T-W1": "agent", "T-W2": "agent", "T-W3": "agent", "T-W4": "agent",
+    "T-W5": "agent", "T-W6": "agent", "T-W7": "operator"
+  },
+  "expected_authorities_note": "Asserted for EVERY transition in docs/program/STATE_MODEL.md, not only the ones exercised by a scenario, so flipping any authority (including system<->agent flips on transitions no scenario uses) fails scripts/check_program_contracts.py. Changing an authority is therefore a deliberate two-file change.",
   "scenarios": [
     {
       "id": "S1",
@@ -319,6 +333,33 @@
       "end": {"curation_state": "accepted", "research_state": "verified", "corpus_state": "eligible", "work_state": "done"},
       "uncertainty_visible": true,
       "notes": "No 'wording' claim exists on this record at all, which is exactly why every surface showing it must mark it as a paraphrase (uncertainty_visible = true). This is the contract-level fix for the repo's id 267, where a paraphrase-shaped row carries no shape marker."
+    },
+    {
+      "id": "S11",
+      "title": "Reversal — acceptance withdrawn after eligibility (no dimension is left stranded)",
+      "canonical_case": null,
+      "gate_requirement": "none",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0011",
+        "captured_text": "A jug fills drop by drop.",
+        "captured_attribution": "The Buddha",
+        "captured_citation": "Dhammapada, v. 122",
+        "capture_method": "manual-entry",
+        "source_reference": "quoted during a conversation, citation recalled",
+        "candidate_text": "A jug fills drop by drop.",
+        "candidate_author": "The Buddha",
+        "normalization_notes": "identical to capture"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R6", "T-C8", "T-P7", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R6", "T-C8", "T-P7"],
+      "claims": [
+        {"claim": "wording", "status": "unverifiable", "evidence": []},
+        {"claim": "attribution", "status": "unverifiable", "evidence": []}
+      ],
+      "end": {"curation_state": "rejected", "research_state": "unverifiable", "corpus_state": "candidate_only", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "Exercises the reversal rule: the operator accepted this item (T-C1), eligibility fired (T-P1), the wording turned out untraceable (T-R6), and the operator then withdrew acceptance (T-C8). The corpus dimension must follow — T-P7 returns the record to the candidate queue rather than stranding it in 'eligible'. Without T-P7 the corpus state would be permanently wrong, which is why the transition exists and why the checker asserts the end state."
     }
   ]
 }

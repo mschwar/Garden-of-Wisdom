@@ -12,6 +12,9 @@ Gate B passes only if a representative batch of messy manual submissions can be 
 reviewed while preserving originals, provenance, decision history, and duplicate hints, and
 **no curation action implies verification**.
 
+Unit order: `W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6`. W1.4 may overlap W1.3; every other
+dependency is strict. Cards follow the seed's `WORK_UNIT_TEMPLATE.md` section order.
+
 ## Storage and access requirements W1 actually has
 
 The evidence a store must be able to hold, and W1.1 must rule on:
@@ -46,6 +49,12 @@ including why not "plain CSV files" if that option is rejected.
 **Why it exists:** every other W1 unit writes to a store; choosing it in code before ruling on
 it would harden an architecture W0 deliberately left open.
 
+**Inputs / dependencies:** `docs/program/SYSTEM_MODEL.md` §Storage posture;
+`docs/program/STATE_MODEL.md` (the four dimensions and their vocabularies);
+`docs/program/W1_DECOMPOSITION.md` §Storage and access requirements (this file, above);
+`docs/DECISIONS.md` (the no-datastore decision this unit supersedes);
+`docs/data/DATA_CONTRACT.md` (what must stay untouched). No prior unit.
+
 **In scope:** the storage decision with a written comparison against the eight requirements
 above; schema/DDL for captures, candidates, duplicate hints, decisions (append-only),
 and the four state dimensions; a create-from-empty migration and an idempotency rule; a
@@ -63,6 +72,10 @@ option failed.
 **Evidence required:** test output for the round-trip; the migration run from an empty
 directory; the decision entry.
 
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report. Stop before W1.2.
+
 **Stop condition:** schema exists and round-trips. No intake surface, no review surface.
 
 ---
@@ -73,6 +86,12 @@ directory; the decision entry.
 
 **Why it exists:** the envelope is the single seam every future source must pass through; it
 must be enforced by a deterministic validator before any surface can produce one.
+
+**Inputs / dependencies:** W1.1 (store + schema); `docs/program/CANDIDATE_ENVELOPE.md`
+(the contract, 21 required fields, 6 validation rules);
+`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md` (immutability + sentinel vocabulary);
+`docs/program/fixtures/w0_scenarios.json` (the eleven walkthroughs whose envelopes are already
+contract-conforming and can seed the validator fixtures).
 
 **In scope:** implementation of the `garden.candidate-envelope/1` contract
 (`CANDIDATE_ENVELOPE.md`) as a serialized form plus a validator implementing validation
@@ -89,6 +108,10 @@ losslessly.
 
 **Evidence required:** validator output over the fixture set (pass and fail cases).
 
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report. Stop before W1.3.
+
 **Stop condition:** validator green on fixtures; no UI.
 
 ---
@@ -99,6 +122,10 @@ losslessly.
 
 **Why it exists:** the loop must start with a cheap, low-friction way for the operator to
 submit a messy candidate.
+
+**Inputs / dependencies:** W1.1 (store); W1.2 (envelope + validator);
+`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md` (what must be preserved verbatim);
+`docs/RUNBOOK.md` (how commands in this repo are documented and run).
 
 **In scope:** a CLI that accepts a pasted text + optional attribution/citation/source URL and
 creates a capture **and** its candidate envelope; explicit capture-method selection; the raw
@@ -117,6 +144,10 @@ required field is rejected with the field named.
 **Evidence required:** CLI transcripts for a valid and an invalid submission; the stored
 record dumped back out.
 
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report. Stop before W1.4.
+
 **Stop condition:** submissions persist. No review commands.
 
 ---
@@ -127,6 +158,11 @@ record dumped back out.
 
 **Why it exists:** the review surface is only pleasant if obviously-identical items arrive
 grouped, while the current repo's near-duplicate report shows how easily hints become noise.
+
+**Inputs / dependencies:** W1.2 (envelope); W1.3 (submissions to normalize);
+`docs/program/CANDIDATE_ENVELOPE.md` §Duplicate hints (kind/target/basis);
+`docs/data/DATA_QUALITY_REPORT.md` (the 45 near-duplicate pairs and the generic-`source_ref`
+false-positive caveat that the hints must not reproduce).
 
 **In scope:** deterministic normalization (whitespace/quoting-mark/diacritic-form handling)
 that records a note for every change; duplicate-hint kinds `exact-text`, `near-text`,
@@ -146,6 +182,10 @@ actually specific; every hint carries a basis string; hints never appear in
 **Evidence required:** hint output for a fixture batch including the known
 `"Oral Tradition"` false-positive shape and the id 3 ~ 283 near-text pair.
 
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report. Stop before W1.5.
+
 **Stop condition:** hints generate deterministically. No decisions.
 
 ---
@@ -157,26 +197,39 @@ actually specific; every hint carries a basis string; hints never appear in
 **Why it exists:** this is the loop's payoff, and the place where conflating taste with truth
 would do the most damage.
 
+**Inputs / dependencies:** W1.1 (decisions log + states); W1.2 (envelopes to review);
+W1.4 (hints shown in the queue); `docs/program/STATE_MODEL.md` §1 Curation state
+(`T-C1…T-C12` and their authorities) and §Transition invariants;
+`docs/program/W0_GATE_REPORT.md` (the required scenario walkthrough the surface must not
+contradict).
+
 **In scope:** a queue view (text-first; newest-first; showing captured verbatim text, the
 normalized proposal, the normalization notes, duplicate hints with their basis, and an
 explicit machine-inferred-vs-asserted marker); commands for accept / reject / hold /
 duplicate with a required reason; append-only audit entries implementing `T-C1…T-C12`;
 research state rendered as read-only and always `not_started`.
 
-**Out of scope:** any research action; any promotion to `eligible`/`canonical`; any UI that
-implies verification; making the browser writable.
+**Out of scope:** any research action; any promotion to `eligible`/`canonical` except the
+deterministic `T-P1` and the reversal `T-P7`; any UI that implies verification; making the
+browser writable.
 
 **Human gates:** every decision in this unit is the operator's; the unit must not contain a
 code path that sets `accepted` without an operator action.
 
 **Acceptance criteria:** each of the twelve curation transitions is exercisable and produces
 an audit entry with actor, timestamp, from, to, reason; rejecting an item keeps the capture
-and the candidate readable; no command in the surface writes `research_state`; a test asserts
-that no curation action can set research state to anything but `not_started`.
+and the candidate readable; the reversal path (`T-C8` then `T-P7`, or `T-C9` then `T-P7`) is
+exercisable and leaves no dimension stranded; no command in the surface writes
+`research_state`; a test asserts that no curation action can set research state to anything
+but `not_started`.
 
 **Evidence required:** a full transcript over a batch of ≥10 messy candidates covering
 accept/hold/reject/duplicate and one reversal; the resulting audit log; the diff showing
 `quotes.csv` untouched (`sha256` before/after).
+
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report. Stop before W1.6.
 
 **Stop condition:** review loop works end to end. No promotion, no research.
 
@@ -187,6 +240,10 @@ accept/hold/reject/duplicate and one reversal; the resulting audit log; the diff
 **Primary lane:** Platform/governance.
 
 **Why it exists:** the wave gate needs a reproducible artifact, not a narrative.
+
+**Inputs / dependencies:** W1.1–W1.5 complete; `docs/program/W0_GATE_REPORT.md` (the Gate A
+packet this one must mirror in shape); `bootstrap/seed/2026-09-12-garden-corpus-program/ACCEPTANCE_GATES.md`
+§Gate B (the pass conditions); `docs/RUNBOOK.md` (where the new command is documented).
 
 **In scope:** a deterministic end-to-end test that submits a messy batch, ingests, normalizes,
 hints, reviews, and asserts that originals/provenance/decision history survived and that no
@@ -202,6 +259,10 @@ byte-identical to pre-W1; the evidence packet names every test and artifact.
 
 **Evidence required:** test output; the CSVs' before/after hashes; the packet.
 
+**Execution contract:** one isolated branch/worktree → complete bounded implementation → one
+PR → independent/foreign QA → resolve findings → record discovered work in `docs/queue.md` →
+re-run acceptance → merge → report, then stop at the Gate B packet.
+
 **Stop condition:** Gate B packet submitted. **W2 is not started.**
 
 ---
@@ -211,7 +272,5 @@ byte-identical to pre-W1; the evidence packet names every test and artifact.
 - `quotes.csv` and `sources.csv` are **read-only** for the whole of W1. No row is added,
   edited, or migrated, and the browser keeps working unchanged.
 - No promotion path to `canonical` exists in W1; the `T-P*` transitions other than the
-  deterministic `T-P1` (and the terminal `T-P3`) are W3 work.
-- Every unit follows the repo work-unit loop: isolated branch/worktree → implementation →
-  evidence → one PR → independent foreign QA → resolve findings → queue discovered work →
-  re-run acceptance → merge → report.
+  deterministic `T-P1` and the reversals `T-P7`/`T-P8` are W3 work.
+- Every unit follows the repo work-unit loop stated in its own Execution contract section.
