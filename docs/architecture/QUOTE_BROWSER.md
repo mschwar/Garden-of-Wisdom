@@ -25,14 +25,18 @@ the same relative fetches resolve correctly. See the deployment section below.
 
 ## Deployment (GitHub Pages)
 
-Live URL: **https://mschwar.github.io/Garden-of-Wisdom/browser/index.html**
-(root **https://mschwar.github.io/Garden-of-Wisdom/** is a redirect shim in the repo-root
-`index.html`).
+Site URLs (deployed from `main` by `.github/workflows/pages.yml`):
 
-Published by `.github/workflows/pages.yml` on every push to `main`. The workflow uploads the
-**repo root** (`path: '.'`, which `actions/upload-pages-artifact` publishes with `.git` and
-`.github` excluded) and deploys it with `actions/deploy-pages` under the `github-pages`
-environment. Pages "Source" is set to **GitHub Actions**, not "Deploy from a branch".
+- app — `https://mschwar.github.io/Garden-of-Wisdom/browser/index.html`
+- site root — `https://mschwar.github.io/Garden-of-Wisdom/`, a redirect shim in the repo-root
+  `index.html` that forwards to the app
+
+The workflow publishes the **repo root** (`path: '.'`; `actions/upload-pages-artifact` drops
+`.git` and `.github`, plus top-level dotfiles by default) via `actions/deploy-pages` under the
+`github-pages` environment. It runs on push to `main` and on manual `workflow_dispatch` from
+`main` (the job is guarded so a dispatch from another branch is a no-op). Pages "Source" must
+be **GitHub Actions**, not "Deploy from a branch" — that setting is created out of band
+(`GITHUB_TOKEN` cannot enable it) and the workflow assumes it; see `docs/RUNBOOK.md`.
 
 **Why the site root cannot change:** `browser/index.html` fetches `../quotes.csv` and
 `../sources.csv` relative to itself, and both files live at the repo root. Publishing only

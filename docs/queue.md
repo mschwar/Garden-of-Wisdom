@@ -34,6 +34,12 @@ Living document — update it as items are picked up or closed, don't just appen
       `path: '.'` (repo root) and Pages "Source" must stay **GitHub Actions**. Rooting the
       artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
+- [ ] Pages deploy acceptance: after the Pages PR merges, confirm all four live URLs return
+      200 (`/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` — curl block in
+      `docs/RUNBOOK.md`) and then close this item. The workflow
+      (`.github/workflows/pages.yml`, `path: '.'`, `github-pages` environment) and the
+      out-of-band Pages setting (`build_type: workflow`) are already in place; only the live
+      check is outstanding.
 
 ## Open — candidate units found during G4 (not scheduled; specs only)
 

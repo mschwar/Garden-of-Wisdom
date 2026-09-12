@@ -1,17 +1,27 @@
 name: Deploy static site to GitHub Pages
 
-# The whole repo root is published, NOT just browser/. browser/index.html
-# fetches "../quotes.csv" and "../sources.csv" at load time, and both live at
-# the repo root, so the Pages site MUST be rooted at "/" or those relative
-# fetches 404. Do not change `path:` to a subdirectory (see docs/RUNBOOK.md).
+# Publishes the WHOLE REPO ROOT to GitHub Pages, not just browser/.
+#
+# browser/index.html fetches "../quotes.csv" and "../sources.csv" at load time and both
+# CSVs live at the repo root, so the Pages site must be rooted at "/" or those fetches
+# 404 and the page loads with 0 quotes instead of 324. Do NOT change `path:` to a
+# subdirectory. See docs/RUNBOOK.md ("GitHub Pages").
+#
+# PRECONDITION, set out of band and *not* created by this workflow: the repository's
+# Pages site must already exist with `build_type: workflow` (Settings -> Pages ->
+# Source = "GitHub Actions", NOT "Deploy from a branch"). Verify with:
+#   gh api repos/mschwar/Garden-of-Wisdom/pages | jq .build_type   # => "workflow"
+# This cannot be created here: actions/configure-pages' `enablement: true` needs an
+# admin PAT, not the default GITHUB_TOKEN. If the site is missing or its build_type was
+# flipped, this workflow FAILS (deploy-pages errors) rather than publishing anything.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# Allow one concurrent deployment, and let an in-progress deploy finish so a
-# mid-flight Pages deployment is never cancelled.
+# One concurrent deployment; let an in-flight deploy finish so a Pages deployment is
+# never cancelled mid-flight.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -24,6 +34,10 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Guard: workflow_dispatch can be started from ANY branch, but only main may
+    # publish. Without this, a manual run from a feature branch would overwrite the
+    # live site with that branch's content. (push already filters to main.)
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -34,8 +48,9 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # Uploads the repo root. actions/upload-pages-artifact always excludes
-      # .git and .github, so "." is safe here; no staging copy is needed.
+      # Uploads the repo root. actions/upload-pages-artifact always excludes .git and
+      # .github (and top-level dotfiles, since include-hidden-files defaults to false),
+      # so "." is safe here; no staging copy is needed.
       - name: Upload Pages artifact (repo root)
         uses: actions/upload-pages-artifact@v3
         with:

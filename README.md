@@ -91,7 +91,9 @@ a database classification choice, not a theological claim about authorship.
 A static, dependency-free quote browser lives in `browser/`. See
 `docs/architecture/QUOTE_BROWSER.md` for features and how to run it. It makes uncertainty
 visible: every card shows its `item_type`, `verification_status`, and any data-quality issues
-rather than presenting every row as settled scripture.
+rather than presenting every row as settled scripture. It is also published on GitHub Pages
+from the repo root: <https://mschwar.github.io/Garden-of-Wisdom/browser/index.html> (the bare
+site root redirects there).
 
 ## Roadmap
 
