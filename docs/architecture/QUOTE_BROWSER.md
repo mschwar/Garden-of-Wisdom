@@ -20,8 +20,26 @@ only requirement is that `browser/index.html` can `fetch()` `../quotes.csv` and
 `../sources.csv` relative to itself, which needs an actual HTTP server, not a `file://` URL,
 because `fetch()` on `file://` is blocked by the browser.)
 
-This also works unmodified from GitHub Pages later: point Pages at the repo root and the same
-relative fetches resolve correctly.
+This also works unmodified from GitHub Pages: the live site is rooted at the repo root, so
+the same relative fetches resolve correctly. See the deployment section below.
+
+## Deployment (GitHub Pages)
+
+Live URL: **https://mschwar.github.io/Garden-of-Wisdom/browser/index.html**
+(root **https://mschwar.github.io/Garden-of-Wisdom/** is a redirect shim in the repo-root
+`index.html`).
+
+Published by `.github/workflows/pages.yml` on every push to `main`. The workflow uploads the
+**repo root** (`path: '.'`, which `actions/upload-pages-artifact` publishes with `.git` and
+`.github` excluded) and deploys it with `actions/deploy-pages` under the `github-pages`
+environment. Pages "Source" is set to **GitHub Actions**, not "Deploy from a branch".
+
+**Why the site root cannot change:** `browser/index.html` fetches `../quotes.csv` and
+`../sources.csv` relative to itself, and both files live at the repo root. Publishing only
+`browser/` as the site root would make those fetches 404 and the page would load with zero
+quotes. The artifact path must stay `'.'` (repo root) and the equivalent live check is that
+`https://mschwar.github.io/Garden-of-Wisdom/quotes.csv` returns 200. This mirrors the local
+`python3 -m http.server` layout exactly — same relative paths, no separate build.
 
 ## Features implemented
 

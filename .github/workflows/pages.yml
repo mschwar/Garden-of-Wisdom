@@ -1,0 +1,46 @@
+name: Deploy static site to GitHub Pages
+
+# The whole repo root is published, NOT just browser/. browser/index.html
+# fetches "../quotes.csv" and "../sources.csv" at load time, and both live at
+# the repo root, so the Pages site MUST be rooted at "/" or those relative
+# fetches 404. Do not change `path:` to a subdirectory (see docs/RUNBOOK.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow one concurrent deployment, and let an in-progress deploy finish so a
+# mid-flight Pages deployment is never cancelled.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # Uploads the repo root. actions/upload-pages-artifact always excludes
+      # .git and .github, so "." is safe here; no staging copy is needed.
+      - name: Upload Pages artifact (repo root)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
