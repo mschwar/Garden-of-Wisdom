@@ -28,10 +28,9 @@ relative fetches resolve correctly.
 - Global text search across quote text, author, source, and tags.
 - Sort by ID, tradition, author, source, or quote length, ascending or descending.
 - Filters: tradition, author, source, tag, item type, verification status.
-- "Issues only" toggle — currently shows all 324 rows, because every row is
-  `verification_status = unverified` right now (see `docs/data/DATA_QUALITY_REPORT.md`). This
-  is correct, not a bug: nothing has been verified yet. It becomes a meaningful filter once
-  some rows are marked `verified` in a later phase.
+- "Issues only" toggle — hides rows whose only issue would have been `unverified` once they
+  are `verified` and have no other flags. After G4, four donor rows (ids 3, 12, 15, 26) are
+  `verified`; the toggle therefore drops those four unless they carry another issue badge.
 - Visible total count and filtered count in the header.
 - Per-card issue badges (unresolved glyph, unresolved source link, unknown item type,
   unverified) so uncertainty is visible on the card itself, not just in a hidden field.

@@ -78,3 +78,25 @@ its family.” (‘Abdu’l-Bahá, Selections 255). Different author, different 
 teaching — not a reason to drop id 3 from the donor set, but the “none appears” claim is
 false and must not be used as a verification/export gate. Ids 12, 15, 26, 30 are still
 unflagged.
+
+## 2026-09-11 — G4: verify approved donors; export four; reject id 30; correct two locators
+
+Executed Prompt 02 against the accepted H2B-A contract (bahai-homepage D27). Approved set
+stayed `[3, 12, 15, 26, 30]`.
+
+Accepted, wording exact on bahai.org: 3 (Gleanings CXVII), 12 (Tablet of ‘Abdu’l-Bahá),
+15 (Gleanings CXXII), 26 (Promulgation of Universal Peace, 12 April 1912). All four classified
+`excerpt` and `verified` in `quotes.csv`. Export:
+`exports/bahai-homepage-preview/v1/collection.json`.
+
+Rejected: id 30 — sentence not found; Paris Talks has no 2 December 1911 meeting. Left
+`unverified`; omitted from the collection (no paraphrase as scripture).
+
+Explicit CSV corrections, quote text untouched: id 12 author `Bahá’u’lláh` → `‘Abdu’l-Bahá`
+and `source_ref` retargeted from ADJ p. 22 to the tablet (ADJ is the secondary print
+witness); id 26 `source_ref` retargeted from Paris Talks 22 Oct 1911 (the “Sun of Truth”
+talk, which does not contain the sentence) to PUP 12 April 1912. Ids 3 and 15 only changed
+`item_type` `unknown` → `excerpt` (Roman-numeral heuristic miss).
+
+Did not add a `source_url` column to Garden; URLs live on the export. Did not rename
+`verification_status` to `verification_state`; mapped at export time.

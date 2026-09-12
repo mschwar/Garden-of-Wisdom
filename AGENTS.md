@@ -11,9 +11,9 @@ intent and non-goals.
 ## What data is authoritative vs provisional
 
 - `quotes.csv` and `sources.csv` at repo root are the **current working data** — canonical
-  UTF-8, but every row's `verification_status` is `unverified` as of the 2026-09-11 retrofit.
-  Nothing here has been checked word-for-word against a primary source yet. Treat quote
-  wording as *probably close, not confirmed*.
+  UTF-8. As of the 2026-09-11 retrofit every row was `unverified`. A later G4 pass verified
+  four homepage-preview donors (ids 3, 12, 15, 26); the other 320 rows remain `unverified`.
+  Treat unverified wording as *probably close, not confirmed*.
 - `data/archive/2026-09-11/*.original.csv` are the **frozen legacy bytes** exactly as they
   existed before the retrofit (Mac OS Roman encoded, mojibake and all). Never edit these.
   They exist so any transformation can be audited or redone from the true original.
@@ -24,6 +24,9 @@ intent and non-goals.
 
 - `python3 scripts/validate_quotes.py` — deterministic data validator. Run before and after
   any change to `quotes.csv` or `sources.csv`. See `docs/RUNBOOK.md`.
+- `python3 scripts/export_homepage_preview.py` then
+  `python3 scripts/validate_homepage_preview_export.py` — regenerate and check the v1
+  homepage-preview collection under `exports/bahai-homepage-preview/v1/`.
 - `python3 -m http.server 8000` from repo root, then open `http://localhost:8000/browser/` —
   runs the quote browser locally. No build step.
 

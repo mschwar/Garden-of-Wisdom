@@ -1,7 +1,6 @@
 # Work Queue
 
-Status as of the 2026-09-11 Phase 0 retrofit. This is a living document — update it as items
-are picked up or closed, don't just append.
+Living document — update it as items are picked up or closed, don't just append.
 
 ## Open — data curation
 
@@ -14,10 +13,10 @@ are picked up or closed, don't just append.
       value.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess.
-- [ ] Review and reclassify the 22 `item_type = unknown` rows. Frontier review noted that
-      ~10 of these are Roman-numeral Gleanings citations (including donor ids 3 and 15) that
-      the digit-or-colon heuristic missed, plus paraphrase-shaped rows 31 and 267 that were
-      never typed `paraphrase`.
+- [ ] Review and reclassify the remaining `item_type = unknown` rows (20 after G4 reclassified
+      donor ids 3 and 15 to `excerpt`). Frontier review noted ~10 Roman-numeral Gleanings
+      citations that the digit-or-colon heuristic missed, plus paraphrase-shaped rows 31 and
+      267 that were never typed `paraphrase`.
 - [ ] Decide whether the 27-value tradition list should be formally documented as the new
       controlled list (this retrofit's README treats it as such) or trimmed/normalized further.
 
@@ -28,17 +27,36 @@ are picked up or closed, don't just append.
 - [ ] No automated browser test exists yet; only a manual Claude-in-Chrome smoke test was run
       this phase.
 
-## Explicitly NOT started (out of Phase 0 scope, do not start without human sign-off)
+## Open — candidate units found during G4 (not scheduled; specs only)
 
-- Authoritative verification or export of any quotes. **Donor-set selection is done** — ids
-  [3, 12, 15, 26, 30] approved 2026-09-11 (`docs/DECISIONS.md`) and filled into
-  `bootstrap/seed/2026-09-11-garden-2026-retrofit/prompts/02_GARDEN_VERIFY_AND_EXPORT_HOMEPAGE_PREVIEW.txt`'s
-  `APPROVED_GARDEN_IDS`. **Phase 0 frontier review is accepted**
-  (`docs/audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`). Running the verify/export prompt is
-  the next step, still gated on the `bahai-homepage` H2B collection contract being
-  reviewed/accepted. Do not trust current `item_type` values as export classifications.
-- Any `bahai-homepage` export or implementation work.
-- Bulk quote verification.
+Filed as GitHub issues. Do not start without a named contract and owner sign-off.
+
+- [ ] Audit remaining Bahá’í rows for the id-12 / id-26 class of error: wrong author, or
+      right sentence attributed to the wrong work/date. G4 only touched the approved donor
+      set. [#6](https://github.com/mschwar/Garden-of-Wisdom/issues/6)
+- [ ] Resolve unverifiable Garden id 30 (`Prayer is the key of the doors of mercy.` /
+      `Paris Talks, Dec 2 1911`). Rejected from the v1 export; still sitting `unverified` in
+      `quotes.csv`. [#5](https://github.com/mschwar/Garden-of-Wisdom/issues/5)
+- [ ] Add an optional `source_url` column to `quotes.csv` once more rows are verified. v1
+      records URLs only on the export. [#4](https://github.com/mschwar/Garden-of-Wisdom/issues/4)
+- [ ] Reconcile `verification_status` (Garden) vs `verification_state` (H2B) before more
+      export/validator code hardens either spelling. H2B D27 already flagged this.
+      [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
+
+## Explicitly NOT started (do not start without human sign-off)
+
+- Homepage wiring of this export (`bahai-homepage` H2B-B). Garden STOP is after the verified
+  export; the consume path is `exports/bahai-homepage-preview/v1/collection.json`.
+- Any other `bahai-homepage` implementation work.
+- Bulk quote verification beyond the approved donor set.
+- Deferred donor sets B (citation-shape diversity) and C (Hidden Words collision test) from
+  the 2026-09-11 donor-set decision.
+
+## Closed — 2026-09-11 G4
+
+- [x] Prompt 02 / G4 verified homepage-preview export — ids 3, 12, 15, 26 accepted; 30
+      rejected. Artifacts under `exports/bahai-homepage-preview/v1/`. Handoff:
+      `GARDEN_HOMEPAGE_PREVIEW_EXPORT_HANDOFF.md`.
 
 ## Closed — 2026-09-11 Phase 0
 

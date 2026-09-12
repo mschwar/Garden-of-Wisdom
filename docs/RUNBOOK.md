@@ -33,6 +33,20 @@ python3 scripts/rehabilitate_2026_09_11.py
 
 Re-run `scripts/validate_quotes.py` afterward.
 
+## Homepage-preview export (G4)
+
+Regenerate and validate the versioned collection consumed by `bahai-homepage`
+(do not live-read `quotes.csv` from that repo):
+
+```
+python3 scripts/export_homepage_preview.py
+python3 scripts/validate_homepage_preview_export.py
+```
+
+Artifacts live under `exports/bahai-homepage-preview/v1/`. The exporter hard-fails
+if an accepted donor’s `quote_text` has drifted from the verified snapshot in
+`mapping.json`. See `GARDEN_HOMEPAGE_PREVIEW_EXPORT_HANDOFF.md`.
+
 ## Adding a new quote
 
 1. Append a row to `quotes.csv` with all 10 columns filled in. Set `verification_status` to
