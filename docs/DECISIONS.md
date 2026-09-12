@@ -420,3 +420,54 @@ Rejected: deferring both into W1 or later — #17 is a browser behaviour change 
 assertion, and #19 touches the deploy path, so neither belongs inside a corpus-program unit whose
 job is intake and curation.
 
+## 2026-09-12 — The empty-result message is one constant, and the empty-state check compares the two views to each other
+
+Fixing issue #17 required choosing where the message lives now that two views render it.
+Considered leaving the table's literal in `renderTableRows()` and adding a second literal for the
+card branch — smallest diff, and the new check could have asserted each against its own copy.
+Rejected: two literals is exactly the drift the issue is about, and a per-view assertion would keep
+passing after a one-sided edit. Decided on a single `EMPTY_STATE_MESSAGE` constant referenced by
+both branches, with the smoke check asserting the card-view text EQUALS the table view's (with a
+substring anchor on "No matching quotes." so the run output stays pinned). Presentation follows the
+table's existing `.empty-state` conventions plus `grid-column: 1 / -1`; an empty result must not
+introduce horizontal overflow at 320px, measured rather than assumed. Teeth: two negative controls,
+each turning the run red with a targeted FAIL line and no traceback.
+
+## 2026-09-12 — CI moves to the current action majors; the repo-root artifact path is left alone
+
+Issue #19 authorized moving CI off the deprecated Node 20 action majors. Decided to bump **all
+five** actions in both workflows — `actions/checkout` v4→v7, `actions/setup-python` v5→v7,
+`actions/configure-pages` v5→v6, `actions/upload-pages-artifact` v3→v5, `actions/deploy-pages`
+v4→v5 — rather than only the two GitHub had annotated (`checkout`, `setup-python`): the
+re-verification cost is identical once the deploy path is exercised live, and the three Pages
+actions were several majors behind as well, so leaving them would have queued the same work again
+without changing the risk.
+
+The release notes were read before choosing the target majors, and they matter: `upload-pages-artifact`
+v4 dropped dotfiles from the published artifact and v5 only **adds** an opt-in `include-hidden-files`
+input (default false), so the repo-root dotfile-exclusion claim still reads true in intent; and
+`deploy-pages` v5.0.0 moved to Node 24.
+
+Acceptance signal, deliberately the same shape as the 2026-09-11 live acceptance: the Node 20
+deprecation annotation **disappeared** from PR [#22](https://github.com/mschwar/Garden-of-Wisdom/pull/22)
+check run [34715295423](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715295423)
+(success), then a green `main` smoke run
+[34715362562](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715362562) and a green Pages
+deploy run [34715362601](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715362601), with
+full live acceptance passed (`/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` all 200; live
+CSV `sha256`s identical to the repo).
+
+Deliberately **not** touched: `path: '.'`, the `pages` concurrency group, the `github-pages`
+environment and the `refs/heads/main` deploy guard. Those are the repo-root contract the page's
+relative `../quotes.csv` / `../sources.csv` fetches depend on, and #19 is a version bump, not a
+deploy-path redesign.
+
+Honest note on evidence: the authoring child **timed out before producing its handoff**, so the
+parent verified the work and authored the handoff. Self-reports are not evidence here — the runs
+above were re-checked directly against the GitHub API, not taken from the child's summary. That
+verification also surfaced a separate, pre-existing defect: the Pages artifact publishes the
+repo-root `.gitignore` (live, 200) despite the workflow comment claiming top-level dotfiles are
+excluded. It is **not** a regression from this bump (the pre-bump artifact from run 34713537851
+already contained `./.gitignore`). Filed as issue #23 rather than fixed here, because a fix is a
+deploy-path change that needs its own live re-verification.
+

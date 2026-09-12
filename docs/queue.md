@@ -40,21 +40,19 @@ Living document — update it as items are picked up or closed, don't just appen
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
       (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
       when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
-- [ ] **AUTHORIZED — IN PROGRESS (2026-09-12, decision D10b). Move CI off the deprecated Node 20
-      action majors.** GitHub annotated the `main` smoke run
-      (`actions/checkout@v4`, `actions/setup-python@v5` still target Node 20 and were forced onto
-      Node 24); the Pages actions in `pages.yml` are older majors too. CI is green today, so this
-      is future-proofing — but bumping the Pages actions is a deploy-path change and must be
-      re-verified live the way the 2026-09-11 acceptance was. Filed as
-      [#19](https://github.com/mschwar/Garden-of-Wisdom/issues/19).
-- [ ] **AUTHORIZED — IN PROGRESS (2026-09-12, decision D10a). Card view has no empty state** (found while adding filter coverage, out of scope there).
-      With a search/filter combination that matches nothing, card view renders an empty
-      `#results` — 0 children, no message — so the page is just a blank area under a header
-      reading "0 shown", while table view explains itself with `td.empty-state`
-      ("No matching quotes. Adjust the filters or search."). Measured 2026-09-12:
-      `resultChildren=0, resultsText=''`. Needs a browser behaviour change (and a matching
-      smoke-test assertion), so it is its own unit, not a test-only edit. Filed as
-      [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17).
+- [ ] **OPEN — Pages artifact publishes top-level dotfiles.** Issue
+      [#23](https://github.com/mschwar/Garden-of-Wisdom/issues/23): `/.gitignore` is live and
+      returns **200**, even though the comment in `.github/workflows/pages.yml` claims top-level
+      dotfiles are excluded. **Not a regression from #19** — the pre-bump artifact from run
+      34713537851 already contained `./.gitignore` (the only diff between the two artifacts is the
+      two new handoff files). Only three dotfiles are tracked repo-wide:
+      `.github/workflows/browser-smoke.yml` and `.github/workflows/pages.yml` (both correctly
+      **404** — they are not at the artifact root) and `.gitignore` (**published**). The acceptance
+      checklist in `docs/RUNBOOK.md` only probes `/.git/config`, which is why this was missed.
+      Candidate mechanism — the action's `--exclude=.[^/]*` pattern cannot match the `./`-prefixed
+      names this tar invocation emits — is a **hypothesis to confirm on the runner, not a proven
+      cause.** Filed rather than fixed (the fix is a deploy-path change needing its own live
+      re-verification).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — IN PROGRESS)
 
@@ -78,6 +76,11 @@ Living document — update it as items are picked up or closed, don't just appen
 
 Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
 `docs/program/CLASSIFICATION_AND_FACETS.md`. None of these is authorized work.
+
+> **Namespace note (2026-09-12):** the `D1`–`D8` labels below are the **W0 debt IDs** from
+> `docs/program/W0_GATE_REPORT.md` and are **not** the same namespace as the 2026-09-12 decision
+> IDs `D1`–`D10`. When referring to a *decision*, cite its dated entry in `docs/DECISIONS.md` by
+> title, never by a bare `D<n>`.
 
 - [ ] **D2 — `unverifiable` is not representable in `quotes.csv`.** The 3-valued
       `verification_status` maps every unfinished research state to `unverified`, so a record
@@ -124,6 +127,40 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - [ ] Reconcile `verification_status` (Garden) vs `verification_state` (H2B) before more
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
+
+## Closed — 2026-09-12 card-view empty state
+
+- [x] Issue [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17) — card view now renders an
+      empty state when the filtered set is empty. The "No matching quotes. Adjust the filters or
+      search." string moved into one constant in `browser/app.js` (`EMPTY_STATE_MESSAGE`) used by
+      both views, so card (`#results .empty-state`) and table (`td.empty-state`) cannot drift; the
+      card-view message spans the grid and adds no overflow at 320px. The
+      smoke test's `check_empty_state` now asserts the card-view element exists *and* carries the
+      table view's exact text (views compared with each other), taking
+      `scripts/smoke_quote_browser.py` from 32 to **33** checks; two negative controls in
+      `GARDEN_CARD_EMPTY_STATE_HANDOFF.md`. PR
+      [#21](https://github.com/mschwar/Garden-of-Wisdom/pull/21). No data changed.
+
+## Closed — 2026-09-12 CI action majors bumped off deprecated Node 20
+
+- [x] Issue [#19](https://github.com/mschwar/Garden-of-Wisdom/issues/19) — all five action majors
+      bumped in both workflows (`actions/checkout` v4→v7, `actions/setup-python` v5→v7,
+      `actions/configure-pages` v5→v6, `actions/upload-pages-artifact` v3→v5,
+      `actions/deploy-pages` v4→v5). PR
+      [#22](https://github.com/mschwar/Garden-of-Wisdom/pull/22) check run
+      [34715295423](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715295423)
+      **success** with the Node 20 deprecation annotation **gone**; on `main` after merge, smoke run
+      [34715362562](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715362562)
+      **success** and Pages deploy run
+      [34715362601](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34715362601)
+      **success**; live acceptance passed (`/`, `/browser/index.html`, `/quotes.csv`,
+      `/sources.csv` all **200**; live CSV `sha256`s identical to the repo). `path: '.'`, the pages
+      concurrency group, the `github-pages` environment and the `refs/heads/main` guard are all
+      unchanged. **The authoring child timed out before writing its handoff, so the parent verified
+      the unit and completed it** — which is why `GARDEN_CI_ACTION_BUMPS_HANDOFF.md` is
+      parent-authored. The verification surfaced a separate pre-existing defect, filed as
+      [#23](https://github.com/mschwar/Garden-of-Wisdom/issues/23) (see the open infra section
+      above).
 
 ## Closed — 2026-09-12 browser smoke test: filter coverage
 
@@ -230,12 +267,14 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       plus decision-log and queue entries), a planning fixture
       (`docs/program/fixtures/w0_scenarios.json`, 12 walkthroughs) and a deterministic doctrine
       checker (`scripts/check_program_contracts.py`, 20 negative controls recorded).
-      Gate A evidence: `docs/program/W0_GATE_REPORT.md`. **W1 NOT STARTED.**
+      Gate A evidence: `docs/program/W0_GATE_REPORT.md`. **W1 was NOT started at W0's close**
+      (since superseded — W1 authorized in full 2026-09-12; see the corpus-program section above).
 - [x] Gate A frontier review: **accepted**, 2026-09-12
       (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`). Fixed three evidence-hygiene defects
       in the Gate A package (stale scenario/transition counts, undercounted decision-log
-      entries) found during review; no doctrine content changed. **W1.1 is still not
-      authorized** — that remains a separate, explicit operator decision.
+      entries) found during review; no doctrine content changed. **W1.1 was still not
+      authorized at that point** — since authorized in full 2026-09-12 (decision D1), which
+      remains a separate, explicit operator decision from Gate A acceptance.
 
 ## Closed — 2026-09-11 G4
 

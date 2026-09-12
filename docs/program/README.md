@@ -1,9 +1,11 @@
 # Garden Corpus Program — canonical doctrine
 
 Status as of 2026-09-12 (**W0 complete, Gate A accepted** — frontier review:
-`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`): doctrine and contracts only.
-**W1 is NOT started; W1.1 is NOT authorized.** No datastore, intake surface, discovery
-adapter, or W1 runtime code exists in this repo.
+`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`): doctrine and contracts landed. **W1 is
+authorized in full** (2026-09-12 — see `../DECISIONS.md` and `../queue.md`). The wave is
+in progress; each W1 unit keeps its own branch, PR and independent QA, and the stop point is
+the Gate B packet. No datastore, intake surface, discovery adapter, or W1 runtime code exists
+in this repo yet.
 
 This directory is the canonical home for Garden *corpus-program* doctrine: doctrine, the
 entity/state model, provenance and evidence contracts, lane definitions, classification
@@ -35,7 +37,7 @@ weakens a product non-negotiable. See `CORPUS_PROGRAM_DOCTRINE.md` §"Reconcilia
 6. `VERIFICATION_CONTRACT.md` — what makes a factual claim `verified`
 7. `WORK_LANES.md` — permanent lane definitions
 8. `CLASSIFICATION_AND_FACETS.md` — faceted classification posture and open ontology questions
-9. `W1_DECOMPOSITION.md` — bounded W1 work units (proposed; not started)
+9. `W1_DECOMPOSITION.md` — bounded W1 work units (authorized in full 2026-09-12; in progress)
 10. `W0_GATE_REPORT.md` — Gate A evidence, decisions, unresolved questions, exact stop point
 
 The bootstrap seed that W0 reconciled lives in
