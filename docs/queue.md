@@ -87,7 +87,9 @@ Living document — update it as items are picked up or closed, don't just appen
       recorded there: six doctrine ambiguities W1.5/W3 must resolve (notably `work_state` having two
       subjects, and no sanctioned capture-deletion path). **Next: W1.2.**
 - [x] **W1.2 — candidate-envelope contract + validator. DONE 2026-09-12** (branch
-      `w1/envelope-validator`, PR pending review). `scripts/garden_envelope.py` implements
+      `w1/envelope-validator`, PR
+      [#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26), not merged — the parent lands it
+      after independent/foreign QA). `scripts/garden_envelope.py` implements
       `garden.candidate-envelope/1` (`docs/program/CANDIDATE_ENVELOPE.md`) as a canonical
       serialized JSON form (sorted keys, UTF-8, `allow_nan=False`) plus a deterministic validator
       for rules 1–6, each violation reporting `rule-1` … `rule-6`. Sentinel handling for

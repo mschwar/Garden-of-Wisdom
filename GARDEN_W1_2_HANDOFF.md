@@ -4,7 +4,10 @@
 §W1.2), the second unit of W1, building on W1.1's store. Authorized in full by decision D1
 (2026-09-12); the contract itself was already ruled in W0 (`docs/program/CANDIDATE_ENVELOPE.md`).
 **Branch:** `w1/envelope-validator` (worktree `~/gow-worktrees/w1-2-envelope`, off `origin/main`
-`cbf1d5d`). Opened as a PR — **not merged**; the parent lands it after independent/foreign QA.
+`cbf1d5d`). Landed as commit `2b1d412` (implementation + docs; this file gained the commit sha and
+PR number in the follow-up commit `HEAD`), opened as PR
+[#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26) — **not merged**; the parent lands it
+after independent/foreign QA.
 
 ## What landed
 
