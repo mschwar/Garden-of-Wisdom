@@ -28,8 +28,9 @@ never hard-coded counts):
      is asserted to actually drop rows (so a toggle that stopped subtracting cannot pass);
   6. combined interaction — a dropdown value plus a search term plus a sort, asserted in table
      view (count and length ordering);
-  7. empty result — a filter/search combination with no matches renders the table view's
-     `td.empty-state` "No matching quotes." row and no cards;
+  7. empty result — a filter/search combination with no matches renders "No matching quotes."
+     in **both** views: the table view's `td.empty-state` row and a `#results .empty-state`
+     element in card view, with the two messages compared to each other; plus no cards;
   8. view switch — card view leaves no empty table container behind, table view renders one
      row per filtered quote, and clicking a sortable header flips `aria-sort`;
   9. copy — the per-card "Copy quote" button puts that card's quote text on the clipboard;
@@ -447,7 +448,13 @@ def check_combined_interaction(page, expected_quotes: list[dict[str, str]]) -> N
 
 
 def check_empty_state(page, expected_quotes: list[dict[str, str]]) -> None:
-    """A filter/search combination with no matches must render the table's empty-state row."""
+    """A filter/search combination with no matches must explain itself in both views.
+
+    Card view used to render nothing at all at zero matches (issue #17): a blank area under a
+    header reading "0 shown", where table view showed its empty-state row. Both views must now
+    carry the *same* message, so the two texts are compared with each other rather than each
+    being checked against a copy of the string — a one-sided edit cannot pass here.
+    """
     terms = candidate_search_terms(expected_quotes)
     for column, selector in FILTER_CONTROLS:
         for value in values_for(expected_quotes, column):
@@ -472,11 +479,29 @@ def check_empty_state(page, expected_quotes: list[dict[str, str]]) -> None:
                 if empty.count() != 1:
                     fail(f"{context}: table view rendered {empty.count()} empty-state cells, expected 1")
                     return
-                text = (empty.first.text_content() or "").strip()
-                if EMPTY_STATE_TEXT not in text:
-                    fail(f"{context}: empty-state text was {text!r}, expected it to contain {EMPTY_STATE_TEXT!r}")
+                table_text = (empty.first.text_content() or "").strip()
+                if EMPTY_STATE_TEXT not in table_text:
+                    fail(f"{context}: empty-state text was {table_text!r}, expected it to contain {EMPTY_STATE_TEXT!r}")
                     return
-                ok(f"{context} renders the empty-state row {text!r}")
+                ok(f"{context} renders the table's empty-state row {table_text!r}")
+                # Card view must explain the same empty result, with the identical message.
+                page.select_option("#view-mode", "cards")
+                page.wait_for_timeout(150)
+                card_empty = page.locator("#results .empty-state")
+                if card_empty.count() != 1:
+                    fail(
+                        f"{context}: card view rendered {card_empty.count()} empty-state elements, "
+                        "expected 1 (issue #17: card view must not leave the result area blank)"
+                    )
+                    return
+                card_text = (card_empty.first.text_content() or "").strip()
+                if card_text != table_text:
+                    fail(
+                        f"{context}: card view says {card_text!r}, table view says {table_text!r} — "
+                        "the two views share one message and must not drift"
+                    )
+                    return
+                ok(f"{context} renders the same empty state in card view {card_text!r}")
                 return
     fail(
         "no filter + search combination yields zero matches — the empty-state check would be "

@@ -49,16 +49,18 @@ repo-root layout contract the Pages deploy depends on), the header/card/table co
 count parsed out of `quotes.csv`, search narrows the rows and sorting orders them, each of the six
 filter dropdowns offers exactly the values in the CSV and selects down to the rows Python counts,
 the "Issues only" toggle drops exactly the rows with no issues, a filter+search+sort combination
-is counted and ordered correctly, a no-match combination renders the table's "No matching quotes."
-empty-state row, the copy button puts the card's own text on the clipboard, the page lays out
+is counted and ordered correctly, a no-match combination renders "No matching quotes." in both
+views (the table's empty-state row and a card-view empty-state message carrying the identical
+text), the copy button puts the card's own text on the clipboard, the page lays out
 without horizontal overflow at 320/375/768px in both card and table view, and there are no console
 errors, page errors, or failed requests. Pass `--base-url http://127.0.0.1:8000` to test a server
 you already have running. No expected number is hard-coded — every count is recomputed from the
 CSVs, and checks that would otherwise pass vacuously (a search term or filter value that no longer
 narrows anything, a toggle that drops nothing) fail loudly instead.
 
-A green run prints 32 `PASS:` lines. Fourteen negative controls are recorded — seven in
-`GARDEN_BROWSER_SMOKE_HANDOFF.md`, seven in `GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md`.
+A green run prints 33 `PASS:` lines. Sixteen negative controls are recorded — seven in
+`GARDEN_BROWSER_SMOKE_HANDOFF.md`, seven in `GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md`, two in
+`GARDEN_CARD_EMPTY_STATE_HANDOFF.md`.
 
 CI runs the same script on every PR and on every push to `main`
 (`.github/workflows/browser-smoke.yml`), together with the three validators below.
