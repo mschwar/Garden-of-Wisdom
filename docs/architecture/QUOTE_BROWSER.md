@@ -39,6 +39,17 @@ relative fetches resolve correctly.
 - Expandable "Provenance & details" panel per card showing `item_type`,
   `verification_status`, linked `source_id`, and the linked `sources.csv` title/notes when
   resolved.
+- **Cards / Table view toggle** (`#view-mode`). Table mode renders the same filtered/sorted
+  rows as a dense, sortable table:
+  - Every column header (`ID`, `Tradition`, `Author`, `Source`, `Tags`, `Type`,
+    `Verification`, `Length`, `Quote text`) is click-to-sort; clicking the active column
+    flips direction. The active column shows a ▲/▼ indicator and the choice is mirrored back
+    to the "Sort by" dropdown.
+  - Verification status is shown as a color-coded pill (`verified` green, else neutral).
+  - Issue badges render inline above each quote so problematic rows stand out while scanning.
+  - Per-row `Copy`, `+Attr`, and `JSON` action buttons match the card actions.
+  - The table sits in a `max-height` scroll container with a sticky header row and horizontal
+    scrolling, so headers stay visible while scanning all rows on narrow screens.
 
 ## Not implemented (deliberately, per Phase 0 scope)
 

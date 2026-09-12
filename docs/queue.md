@@ -22,10 +22,10 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — infra
 
+- [ ] Add an automated browser smoke test for the quote browser (manual Claude-in-Chrome and
+      headless-Chrome smoke checks have been run, but no committed test exists).
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
-- [ ] No automated browser test exists yet; only a manual Claude-in-Chrome smoke test was run
-      this phase.
 
 ## Open — candidate units found during G4 (not scheduled; specs only)
 

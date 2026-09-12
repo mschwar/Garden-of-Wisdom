@@ -49,6 +49,7 @@ const state = {
   issuesOnly: false,
   sortField: "id",
   sortDir: "asc",
+  view: "cards",
 };
 
 function detectIssues(q) {
@@ -133,12 +134,124 @@ function copyText(text) {
   navigator.clipboard.writeText(text).then(() => toast("Copied")).catch(() => toast("Copy failed"));
 }
 
+// Mark the currently active sort column header with an arrow indicator.
+function updateSortIndicators() {
+  document.querySelectorAll("#quote-table th").forEach((th) => {
+    th.classList.remove("sorted-asc", "sorted-desc");
+    const field = th.dataset.sort;
+    if (field === state.sortField || (field === "length" && state.sortField === "length")) {
+      th.classList.add(state.sortDir === "asc" ? "sorted-asc" : "sorted-desc");
+    }
+  });
+}
+
+// Build a small action button with the given label and click handler.
+function actionButton(label, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "table-action";
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+// Render a quote as a table row. Reuses the same issues/copy primitives as cards.
+function renderTableRows(rows) {
+  const tbody = document.querySelector("#quote-table tbody");
+  tbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  rows.forEach((q) => {
+    const tr = document.createElement("tr");
+    tr.dataset.id = q.id;
+
+    const idCell = document.createElement("td");
+    idCell.className = "td-id";
+    idCell.textContent = `#${q.id}`;
+    tr.appendChild(idCell);
+
+    tr.appendChild(textCell(q.tradition, "tradition"));
+    tr.appendChild(textCell(q.author, "author"));
+    tr.appendChild(textCell(q.source_ref, "source"));
+
+    const tagsCell = document.createElement("td");
+    tagsCell.className = "td-tags";
+    tagsCell.textContent = q.tags;
+    tr.appendChild(tagsCell);
+
+    tr.appendChild(textCell(q.item_type, "type"));
+
+    const verifCell = document.createElement("td");
+    verifCell.className = "td-verif";
+    const verifPill = document.createElement("span");
+    verifPill.className = q.verification_status === "verified" ? "verif verified" : "verif unverified";
+    verifPill.textContent = q.verification_status;
+    verifCell.appendChild(verifPill);
+    tr.appendChild(verifCell);
+
+    const lenCell = document.createElement("td");
+    lenCell.className = "td-len";
+    lenCell.textContent = String(q.quote_text.length);
+    tr.appendChild(lenCell);
+
+    const quoteCell = document.createElement("td");
+    quoteCell.className = "td-quote";
+    const issues = detectIssues(q);
+    if (issues.length) {
+      const badges = document.createElement("span");
+      badges.className = "inline-badges";
+      issues.forEach((issue) => {
+        const b = document.createElement("span");
+        b.className = "badge issue";
+        b.textContent = issue;
+        badges.appendChild(b);
+      });
+      quoteCell.appendChild(badges);
+    }
+    const block = document.createElement("blockquote");
+    block.className = "quote-text";
+    block.textContent = q.quote_text;
+    quoteCell.appendChild(block);
+    tr.appendChild(quoteCell);
+
+    const actionCell = document.createElement("td");
+    actionCell.className = "td-actions";
+    actionCell.appendChild(actionButton("Copy", () => copyText(q.quote_text)));
+    actionCell.appendChild(actionButton("+Attr", () =>
+      copyText(`"${q.quote_text}" — ${q.author}, ${q.source_ref}`)
+    ));
+    actionCell.appendChild(actionButton("JSON", () => copyText(JSON.stringify(q, null, 2))));
+    tr.appendChild(actionCell);
+
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+}
+
+// Create a plain data cell, falling back to "—" for empty values.
+function textCell(value, className) {
+  const td = document.createElement("td");
+  if (className) td.className = `td-${className}`;
+  td.textContent = value || "—";
+  return td;
+}
+
 function render() {
   const rows = applyFilters();
   document.getElementById("total-count").textContent = state.quotes.length;
   document.getElementById("filtered-count").textContent = rows.length;
 
+  const table = document.getElementById("quote-table");
   const container = document.getElementById("results");
+  if (state.view === "table") {
+    container.style.display = "none";
+    table.hidden = false;
+    renderTableRows(rows);
+    updateSortIndicators();
+    return;
+  }
+  table.hidden = true;
+  container.style.display = "";
+
   const template = document.getElementById("card-template");
   container.innerHTML = "";
   const frag = document.createDocumentFragment();
@@ -237,6 +350,28 @@ function wireControls() {
     state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
     e.target.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
     render();
+  });
+  document.getElementById("view-mode").addEventListener("change", (e) => {
+    state.view = e.target.value;
+    render();
+  });
+  document.querySelectorAll("#quote-table th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => {
+      const field = th.dataset.sort;
+      if (state.sortField === field) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.sortField = field;
+        state.sortDir = "asc";
+      }
+      // Mirror the choice back to the sort dropdown + button.
+      const dropdown = document.getElementById("sort-field");
+      if (dropdown.value !== field) dropdown.value = field;
+      const dirBtn = document.getElementById("sort-dir");
+      dirBtn.dataset.dir = state.sortDir;
+      dirBtn.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
+      render();
+    });
   });
 }
 

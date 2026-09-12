@@ -205,3 +205,82 @@ header h1 { margin: 0 0 4px; font-size: 1.5rem; }
   border-radius: 8px;
   font-size: 0.85rem;
 }
+
+/* ---- Table view ---- */
+#table-wrap {
+  width: 100%;
+  overflow: auto;
+  max-height: 75vh;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+#quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  font-size: 0.85rem;
+}
+#quote-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: var(--pill-bg);
+  cursor: pointer;
+  user-select: none;
+}
+#quote-table th[data-sort]::after {
+  content: "";
+  margin-left: 4px;
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+#quote-table th.sorted-asc[data-sort]::after { content: "▲"; }
+#quote-table th.sorted-desc[data-sort]::after { content: "▼"; }
+#quote-table td {
+  padding: 8px 10px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+#quote-table tbody tr:nth-child(even) { background: var(--bg); }
+#quote-table tbody tr:hover { background: var(--pill-bg); }
+#quote-table .td-id { color: var(--muted); white-space: nowrap; }
+#quote-table .td-quote { min-width: 320px; max-width: 640px; }
+#quote-table .quote-text { margin: 4px 0 0; }
+#quote-table .inline-badges { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+#quote-table .td-verif { white-space: nowrap; }
+#quote-table .td-actions { white-space: nowrap; }
+.verif {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+}
+.verif.verified { color: #1e7a3a; border-color: #1e7a3a; background: #e8f6ec; }
+.verif.unverified { color: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  .verif.verified { color: #7fd99b; border-color: #2f9e52; background: #16351f; }
+}
+#quote-table .table-action {
+  font-size: 0.7rem;
+  padding: 3px 7px;
+  margin-right: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+#quote-table .table-action:hover { border-color: var(--accent); }
+@media (max-width: 900px) {
+  #quote-table { font-size: 0.78rem; }
+  #quote-table .td-quote { min-width: 220px; max-width: 380px; }
+}
