@@ -41,6 +41,10 @@ function parseCSV(text) {
     .map((r) => Object.fromEntries(header.map((h, idx) => [h, r[idx]])));
 }
 
+// Single source of truth for the "nothing matched" message: card view and table view both
+// render it, so the two views cannot drift into disagreeing about an empty result.
+const EMPTY_STATE_MESSAGE = "No matching quotes. Adjust the filters or search.";
+
 const state = {
   quotes: [],
   sources: {},
@@ -181,7 +185,7 @@ function renderTableRows(rows) {
     const td = document.createElement("td");
     td.colSpan = 10;
     td.className = "empty-state";
-    td.textContent = "No matching quotes. Adjust the filters or search.";
+    td.textContent = EMPTY_STATE_MESSAGE;
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
@@ -287,6 +291,16 @@ function render() {
   const template = document.getElementById("card-template");
   container.innerHTML = "";
   const frag = document.createDocumentFragment();
+
+  // An empty result has to explain itself in card view too, with the same message table view
+  // uses — otherwise the page is just a blank area under a header reading "0 shown".
+  if (rows.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-state";
+    empty.textContent = EMPTY_STATE_MESSAGE;
+    container.appendChild(empty);
+    return;
+  }
 
   rows.forEach((q) => {
     const node = template.content.cloneNode(true);

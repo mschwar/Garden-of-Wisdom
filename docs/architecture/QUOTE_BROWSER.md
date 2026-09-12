@@ -72,6 +72,12 @@ quotes. The artifact path must stay `'.'` (repo root) and the equivalent live ch
   - Per-row `Copy`, `+Attr`, and `JSON` action buttons match the card actions.
   - The table sits in a `max-height` scroll container with a sticky header row and horizontal
     scrolling, so headers stay visible while scanning all rows on narrow screens.
+- **Empty state in both views.** When the search/filter combination matches nothing, both views
+  say so with the same message — `No matching quotes. Adjust the filters or search.` — rendered
+  as the table's `td.empty-state` row and as a full-width `#results .empty-state` message in
+  card view. The string lives in one constant in `browser/app.js`
+  (`EMPTY_STATE_MESSAGE`), so the two views cannot drift into disagreeing about an empty
+  result; before this, card view rendered a blank area under a header reading "0 shown".
 
 ## Not implemented (deliberately, per Phase 0 scope)
 
@@ -102,8 +108,10 @@ recomputed from `quotes.csv`/`sources.csv` rather than hard-coded:
   non-empty and every rendered card carries an issue badge;
 - **a combined interaction** — a dropdown value plus a search term plus a sort direction,
   asserted in table view on both the row count and the ordering;
-- **the empty-result state** — a filter/search combination with no matches renders the table
-  view's `td.empty-state` "No matching quotes." row and zero cards;
+- **the empty-result state** — a filter/search combination with no matches renders
+  `No matching quotes. Adjust the filters or search.` in **both** views: the table view's
+  `td.empty-state` row and a `#results .empty-state` element in card view, the two messages
+  compared with each other, and zero cards;
 - the table view renders one row per filtered quote;
 - the per-card copy button puts that card's quote text on the clipboard;
 - the document does not overflow horizontally at 320/375/768px, in card **and** table view;
@@ -118,20 +126,22 @@ python3 scripts/smoke_quote_browser.py
 ```
 
 It exits 0 with `RESULT: PASS`; any broken check prints a `FAIL:` line naming what broke and
-exits non-zero. A green run prints 32 `PASS:` lines and `RESULT: PASS (0 warning(s))`.
+exits non-zero. A green run prints 33 `PASS:` lines and `RESULT: PASS (0 warning(s))`.
 
 The test refuses to pass vacuously: the search term, every filter value it selects, and the
 "Issues only" toggle are each asserted to still *narrow* the data, the combined-interaction and
 empty-result combinations are *searched for* in the data rather than assumed, and if any of them
-stops distinguishing behaviour the run fails with an explicit "would be vacuous" line. Fourteen
+stops distinguishing behaviour the run fails with an explicit "would be vacuous" line. Sixteen
 negative controls are recorded — seven in `GARDEN_BROWSER_SMOKE_HANDOFF.md` (reverting either CSS
 responsiveness fix, removing the `#table-wrap` hide, breaking the search filter, repointing the
-data fetch, breaking a copy button, logging a console error) and seven in
+data fetch, breaking a copy button, logging a console error), seven in
 `GARDEN_FILTER_SMOKE_COVERAGE_HANDOFF.md` (breaking each filter predicate, the tag membership
 rule, the Issues-only toggle, the empty state, a dropdown's population, and the sort direction),
-each of which turns the run red. Three further controls in that handoff show the vacuity guards
-themselves firing when the data stops distinguishing them. CI runs it on every PR and push to
-`main` (`.github/workflows/browser-smoke.yml`).
+and two in `GARDEN_CARD_EMPTY_STATE_HANDOFF.md` (card view dropping its empty state, and the
+card/table messages being edited apart), each of which turns the run red. Three further controls
+in the filter-coverage handoff show the vacuity guards themselves firing when the data stops
+distinguishing them. CI runs it on every PR and push to `main`
+(`.github/workflows/browser-smoke.yml`).
 
 ### Responsiveness (fixed 2026-09-12)
 
