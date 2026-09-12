@@ -1,0 +1,51 @@
+name: Quote browser smoke test
+
+# Drives the real page in headless Chromium: it must load 324 quotes, filter, sort, copy,
+# and lay out without horizontal overflow at phone/tablet widths. This is the automated
+# replacement for the manual Claude-in-Chrome checks recorded in
+# docs/architecture/QUOTE_BROWSER.md, and the guard on the repo-root layout the Pages
+# deploy depends on (the page fetches ../quotes.csv, so rooting the site at browser/ would
+# render zero quotes — the smoke test fails loudly if that happens).
+#
+# It is independent of the Pages deploy: this workflow never publishes anything.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run the browser smoke test
+        run: python scripts/smoke_quote_browser.py
+
+      - name: Check the data validators still pass
+        run: |
+          python scripts/validate_quotes.py
+          python scripts/check_program_contracts.py
+          python scripts/validate_homepage_preview_export.py

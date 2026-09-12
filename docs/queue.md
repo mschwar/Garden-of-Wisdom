@@ -22,18 +22,18 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — infra
 
-- [ ] Add an automated browser smoke test for the quote browser (manual Claude-in-Chrome and
-      headless-Chrome smoke checks have been run, but no committed test exists).
-- [ ] At ~375px viewport the page overflows horizontally because `#controls select{min-width:140px}`
-      (the `#filter-source` dropdown renders ~390px). Reproduces in both card and table views;
-      the table view's `#table-wrap` already handles its own overflow. Fix the controls row
-      (e.g. allow selects to shrink / wrap on narrow screens). Flagged by foreign QA on PR #9.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
 - [ ] Guard the Pages deploy contract: `.github/workflows/pages.yml` must keep
       `path: '.'` (repo root) and Pages "Source" must stay **GitHub Actions**. Rooting the
       artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
+      (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
+      when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
+- [ ] The smoke test covers search, sort, view switch, copy and layout, but **not** the six
+      filter dropdowns or the "Issues only" toggle — the manual pass those replaced did check
+      "Issues only". Filed as
+      [#8](https://github.com/mschwar/Garden-of-Wisdom/issues/8).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 NOT authorized)
 
@@ -92,6 +92,37 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - [ ] Reconcile `verification_status` (Garden) vs `verification_state` (H2B) before more
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
+
+## Closed — 2026-09-12 quote-browser smoke test + responsiveness
+
+- [x] **Automated browser smoke test** (`scripts/smoke_quote_browser.py` +
+      `.github/workflows/browser-smoke.yml`, which runs it on every PR and push to `main`).
+      Headless Chromium via Playwright (test-only dependency, `requirements-dev.txt`); every
+      expected count is recomputed from `quotes.csv` rather than hard-coded. 22 checks: static
+      layout (both CSVs byte-identical at the paths the page fetches), 324/324 header + card
+      counts, search narrowing to the rows that contain the term, length sort ordering both
+      directions, `aria-sort` on header click, table row count, copy button round-trip through
+      the clipboard, no horizontal overflow at 320/375/768px in both views, and zero console /
+      page errors / failed requests. Seven negative controls recorded in the handoff (each
+      re-breaks one behaviour and turns the run red with `RESULT: FAIL`, no traceback). Closes
+      the D8 debt from `docs/program/W0_GATE_REPORT.md`. Local run instructions:
+      `docs/RUNBOOK.md` §"Smoke-test the browser".
+- [x] **Horizontal overflow at phone widths** (flagged by foreign QA on PR #9). Root cause was
+      mis-stated in this queue: it was *not* `min-width: 140px` on the selects. Measured in
+      Chromium at 375px, the `<select>` intrinsic width follows its longest `<option>`, so
+      `#filter-source` (longest `source_ref` = 61 chars) rendered **390px** wide — and `Author`
+      276px — inside a 341px container, pushing the document to 421px. Fixed by allowing the
+      control row's labels to shrink (`min-width: 0; max-width: 100%`) and capping the selects
+      at `max-width: 100%`. The new test then found a **second, independent** cause the PR #9
+      note never mentioned: `.tags` is a comma-joined list with no spaces
+      (`love,neighbor,goldenrule`), i.e. one ~280px unbreakable token that escaped the card and
+      overflowed at 320px; fixed with `overflow-wrap: anywhere` and a wrapping `.meta-row`.
+      Reasoning: `docs/architecture/QUOTE_BROWSER.md` §Responsiveness.
+- [x] **Stray 2px bordered box under the cards** — a third defect the new test surfaced: in card
+      view `#quote-table` was hidden but its wrapper `#table-wrap` (which owns the border and
+      scroll container) was not, so an empty 2px-tall bordered box sat at the end of the page on
+      every load. Fixed in `browser/app.js` `render()`; the smoke test asserts the switch hides
+      and shows both containers.
 
 ## Closed — 2026-09-11 Pages deploy
 

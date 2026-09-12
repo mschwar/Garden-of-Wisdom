@@ -269,14 +269,19 @@ function render() {
 
   const table = document.getElementById("quote-table");
   const container = document.getElementById("results");
+  // #table-wrap carries the border/scroll container, so it has to be hidden with the table —
+  // otherwise it collapses to a 2px empty bordered box under the cards.
+  const tableWrap = document.getElementById("table-wrap");
   if (state.view === "table") {
     container.style.display = "none";
+    tableWrap.hidden = false;
     table.hidden = false;
     renderTableRows(rows);
     updateSortIndicators();
     return;
   }
   table.hidden = true;
+  tableWrap.hidden = true;
   container.style.display = "";
 
   const template = document.getElementById("card-template");

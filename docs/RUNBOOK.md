@@ -20,9 +20,10 @@ python3 scripts/check_program_contracts.py
 
 Documentation-only test (no data, no runtime): it parses the transition table out of
 `docs/program/STATE_MODEL.md` and the required envelope fields out of
-`docs/program/CANDIDATE_ENVELOPE.md`, then simulates the ten canonical adversarial scenarios in
-`docs/program/fixtures/w0_scenarios.json` and asserts the state machine, the operator gates,
-the per-claim evidence standard, and the visible-uncertainty rule all hold. Exits 0 with
+`docs/program/CANDIDATE_ENVELOPE.md`, then simulates the twelve scenarios in
+`docs/program/fixtures/w0_scenarios.json` (the ten canonical adversarial cases plus the two
+supplementary walkthroughs S11/S12) and asserts the state machine, the operator gates, the
+per-claim evidence standard, and the visible-uncertainty rule all hold. Exits 0 with
 `RESULT: PASS`. Run it after editing anything under `docs/program/`.
 
 ## Run the browser locally
@@ -32,6 +33,27 @@ python3 -m http.server 8000
 ```
 
 Open `http://localhost:8000/browser/index.html`. See `docs/architecture/QUOTE_BROWSER.md`.
+
+## Smoke-test the browser
+
+```
+python3 -m pip install -r requirements-dev.txt      # Playwright (test-only dependency)
+python3 -m playwright install chromium
+python3 scripts/smoke_quote_browser.py
+```
+
+Drives the real page in headless Chromium against a throwaway server rooted at the repo root,
+then exits 0 with `RESULT: PASS` / non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
+check. It asserts: the two CSVs are served byte-identical at the paths the page fetches (the
+repo-root layout the Pages deploy depends on), the header/card/table counts equal the row count
+parsed out of `quotes.csv`, search and sorting narrow and order the rows as expected, the copy
+button puts the card's own text on the clipboard, the page lays out without horizontal overflow
+at 320/375/768px in both card and table view, and there are no console errors, page errors, or
+failed requests. Pass `--base-url http://127.0.0.1:8000` to test a server you already have
+running. No expected number is hard-coded — every count is recomputed from the CSVs.
+
+CI runs the same script on every PR and on every push to `main`
+(`.github/workflows/browser-smoke.yml`), together with the three validators below.
 
 ## GitHub Pages (static site)
 

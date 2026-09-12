@@ -72,6 +72,11 @@ header h1 { margin: 0 0 4px; font-size: 1.5rem; }
   gap: 3px;
   font-size: 0.75rem;
   color: var(--muted);
+  /* Allow the label to shrink below its intrinsic width: a <select> sizes itself to its
+     longest <option> (the Source dropdown's longest option is 61 chars ≈ 390px), which
+     otherwise overflows the viewport on narrow screens. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .control-row select {
@@ -81,6 +86,7 @@ header h1 { margin: 0 0 4px; font-size: 1.5rem; }
   background: var(--bg);
   color: var(--fg);
   min-width: 140px;
+  max-width: 100%;
 }
 
 .checkbox-label {
@@ -149,8 +155,17 @@ header h1 { margin: 0 0 4px; font-size: 1.5rem; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.tags {
+  /* Tags are a comma-joined list with no spaces ("love,neighbor,goldenrule"), i.e. one
+     unbreakable token that would otherwise push the card past the viewport edge on phones. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .tradition-pill {

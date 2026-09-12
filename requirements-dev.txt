@@ -1,0 +1,8 @@
+# Dev/test-only dependencies. Nothing here is needed to *use* the repo — the CSVs, the
+# browser, and every script under scripts/ except the browser smoke test are stdlib-only.
+#
+# The browser smoke test drives a real Chromium via Playwright:
+#     python3 -m pip install -r requirements-dev.txt
+#     python3 -m playwright install chromium
+#     python3 scripts/smoke_quote_browser.py
+playwright==1.55.0

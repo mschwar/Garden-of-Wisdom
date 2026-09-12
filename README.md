@@ -25,8 +25,12 @@ available (see below).
 python3 scripts/validate_quotes.py                     # check data integrity
 python3 scripts/check_program_contracts.py             # check the corpus-program doctrine set
 python3 scripts/validate_homepage_preview_export.py    # check the v1 homepage export
+python3 scripts/smoke_quote_browser.py                 # drive the browser in headless Chromium
 python3 -m http.server 8000                            # then open http://localhost:8000/browser/
 ```
+
+The smoke test needs a one-time `python3 -m pip install -r requirements-dev.txt` and
+`python3 -m playwright install chromium`; it is the only command above that is not stdlib-only.
 
 ## Data files
 

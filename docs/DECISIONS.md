@@ -200,6 +200,38 @@ and decided it is *not* implementation because it reads only `docs/program/**`, 
 and exercises no intake/curation/research behaviour. Its teeth are demonstrated with the
 negative controls recorded in `docs/program/W0_GATE_REPORT.md`.
 
+## 2026-09-12 — Quote-browser smoke test: Playwright as a test-only dependency, expectations derived from the CSVs
+
+Considered (a) driving the system Chrome over raw CDP from a dependency-free Node script, (b) a
+DOM shim such as jsdom, (c) Playwright. Rejected (a): hand-rolled CDP + WebSocket plumbing in a
+repo whose whole value is trustworthiness adds protocol code nobody will maintain. Rejected (b):
+jsdom cannot answer the questions that actually matter here — real layout (the phone-width
+overflow), real clipboard, real console/network errors. Chose (c), pinned in
+`requirements-dev.txt`: the test must exercise the real rendered page. The app itself stays
+dependency-free — `requirements-dev.txt` is dev-only and every script under `scripts/` except
+this test remains stdlib-only. Consequences: CI needs a browser, so the smoke test runs in its
+own workflow (`.github/workflows/browser-smoke.yml`, on PRs and pushes to `main`) instead of the
+Pages deploy job; and no count is hard-coded — expected rows, search hits and table rows are
+recomputed from `quotes.csv` with the same parsing rule `browser/app.js` uses, so a data change
+cannot silently pass. Teeth demonstrated with seven negative controls (breaking the search
+filter, the data fetch path, a copy button, the console, or any of the three layout fixes each
+turns the run into `RESULT: FAIL` with no traceback).
+
+## 2026-09-12 — The queue's stated cause of the phone-width overflow was wrong; the measured cause is recorded
+
+The queue item filed from PR #9 said the ~375px overflow came from `#controls select{min-width:140px}`.
+Measured in headless Chromium at 375px, `min-width` was not the driver: a `<select>`'s intrinsic
+width follows its longest `<option>`, and the Source dropdown's longest `source_ref` is 61
+characters, so that control laid out at **390px** (Author: 276px) inside a 341px content box,
+producing a 421px document. Fixed by letting the label shrink (`min-width: 0; max-width: 100%`)
+and capping the select (`max-width: 100%`). The defect was real; the explanation was not, and it
+is corrected in `docs/queue.md` and `docs/architecture/QUOTE_BROWSER.md`. The new test then
+exposed two further defects nobody had reported: the comma-joined `.tags` string is one
+unbreakable ~280px token that escaped the card at 320px, and card view left `#table-wrap` (the
+border/scroll container) visible while hiding the table inside it, i.e. an empty 2px bordered box
+at the end of the page. Both fixed in this unit. All three are covered by the smoke test. No data,
+CSV, or export file was touched.
+
 ## 2026-09-12 — W0: curation reversal must move the corpus dimension (T-P7/T-P8 added)
 
 Foreign QA on the W0 branch found a stranded-state bug in the state model: eligibility is a

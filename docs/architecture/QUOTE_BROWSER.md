@@ -82,13 +82,49 @@ quotes. The artifact path must stay `'.'` (repo root) and the equivalent live ch
 - No auth, no backend, no write-back from the browser into the CSVs — this is a read-only
   audit tool by design (`docs/product/PRODUCT_DOCTRINE.md` non-negotiables).
 
-## Manual smoke test performed
+## Automated smoke test
 
-Loaded via a local `python3 -m http.server` and driven with Claude in Chrome:
-- Confirmed initial load shows 324/324 with no console errors.
-- Confirmed search for "Dhammapada" filters to 29 matching cards with correct content.
-- Confirmed "Issues only" checkbox toggles the filtered count.
-- Confirmed a copy button click produces no console errors.
+`scripts/smoke_quote_browser.py` drives the real page in headless Chromium (Playwright) against
+a throwaway static server rooted at the repo root. It asserts, with every expected count
+recomputed from `quotes.csv`/`sources.csv` rather than hard-coded:
 
-No automated browser test was added in this phase (see `docs/queue.md` — "browser smoke test"
-is listed as a deviation, not a completed item).
+- `/browser/index.html`, `/quotes.csv`, `/sources.csv` all serve 200, and both CSVs are
+  byte-identical to the working tree (the repo-root layout contract above);
+- header counts and the rendered card count equal the number of rows `browser/app.js`'s parser
+  would keep;
+- search narrows the set to exactly the rows containing the term, and sorting by length orders
+  the rendered rows (both directions), while clicking a table header sets `aria-sort`;
+- the table view renders one row per filtered quote;
+- the per-card copy button puts that card's quote text on the clipboard;
+- the document does not overflow horizontally at 320/375/768px, in card **and** table view;
+- zero console errors, page errors, and failed requests.
+
+Run it with (from the repo root):
+
+```
+python3 -m pip install -r requirements-dev.txt
+python3 -m playwright install chromium
+python3 scripts/smoke_quote_browser.py
+```
+
+It exits 0 with `RESULT: PASS`; any broken check prints a `FAIL:` line naming what broke and
+exits non-zero. Six negative controls are recorded in the unit's handoff — reverting either CSS
+responsiveness fix, breaking the search filter, repointing the data fetch, breaking a copy
+button, or logging a console error each turns the run red. CI runs it on every PR and push to
+`main` (`.github/workflows/browser-smoke.yml`).
+
+### Responsiveness (fixed 2026-09-12)
+
+At phone widths the page used to scroll horizontally. Two independent causes, both measured in
+Chromium at 375px:
+
+1. A `<select>` sizes itself to its longest `<option>`, and the Source dropdown's longest
+   `source_ref` is 61 characters — the control rendered **390px** wide (Author: 276px) inside a
+   341px container, overflowing the document to 421px. Fixed by letting the control row's
+   labels shrink (`min-width: 0; max-width: 100%`) and capping the selects (`max-width: 100%`).
+   The old queue note blamed `min-width: 140px`; that was not the cause.
+2. `.tags` renders a comma-joined tag list with no spaces (`love,neighbor,goldenrule`), i.e. one
+   unbreakable token ~280px wide that escaped the card and added its own overflow at 320px.
+   Fixed with `overflow-wrap: anywhere` plus allowing `.meta-row` to wrap.
+
+`docs/queue.md` carried the first as a known defect; the second was found by the new test.
