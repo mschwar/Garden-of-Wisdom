@@ -15,7 +15,8 @@ never hard-coded counts):
   1. layout contract — `/browser/index.html`, `/quotes.csv`, `/sources.csv` all return 200,
      with the two CSVs byte-identical to the working tree;
   2. load — the header counts and the rendered card count equal the row count parsed out of
-     `quotes.csv` by the same rule `browser/app.js` uses;
+     `quotes.csv` by the same rule `browser/app.js` uses (and `SEARCH_TERM` is asserted to still
+     match at least one row, so the search/sort checks can never pass vacuously);
   3. search — typing a term narrows the rendered set to exactly the rows whose
      text/author/source/tags contain it;
   4. view switch — card view leaves no empty table container behind, table view renders one
@@ -224,7 +225,6 @@ def check_viewport_overflow(browser, base_url: str, expected_count: int, widths:
                     ok(f"no horizontal overflow at {width_px}px ({view} view)")
         finally:
             page.close()
-            page.close()
 
 
 def run(base_url: str, expected_quotes: list[dict[str, str]]) -> None:
@@ -234,6 +234,14 @@ def run(base_url: str, expected_quotes: list[dict[str, str]]) -> None:
 
     expected_total = len(expected_quotes)
     expected_search = sum(1 for row in expected_quotes if matches_search(row, SEARCH_TERM))
+    if expected_search == 0:
+        # Fail before the browser starts: with zero matches, the search/sort/table checks
+        # would all pass trivially on an empty result set, silently vacating coverage.
+        fail(
+            f"SEARCH_TERM {SEARCH_TERM!r} matches no row in quotes.csv — the search, sort and "
+            "table checks would pass vacuously; update SEARCH_TERM to a term the data still contains"
+        )
+        return
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
@@ -256,6 +264,7 @@ def run(base_url: str, expected_quotes: list[dict[str, str]]) -> None:
             fail(f"initial load: #results text was {body[:200]!r}")
             browser.close()
             return
+        ok(f"initial load renders all {expected_total} quotes with no error state")
 
         total_shown = int(page.text_content("#total-count") or "0")
         filtered_shown = int(page.text_content("#filtered-count") or "0")

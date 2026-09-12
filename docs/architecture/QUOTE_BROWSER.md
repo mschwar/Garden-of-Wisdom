@@ -108,10 +108,14 @@ python3 scripts/smoke_quote_browser.py
 ```
 
 It exits 0 with `RESULT: PASS`; any broken check prints a `FAIL:` line naming what broke and
-exits non-zero. Six negative controls are recorded in the unit's handoff — reverting either CSS
-responsiveness fix, breaking the search filter, repointing the data fetch, breaking a copy
-button, or logging a console error each turns the run red. CI runs it on every PR and push to
-`main` (`.github/workflows/browser-smoke.yml`).
+exits non-zero. A green run prints 22 `PASS:` lines and `RESULT: PASS (0 warning(s))`. Seven
+negative controls are recorded in `GARDEN_BROWSER_SMOKE_HANDOFF.md` — reverting either CSS
+responsiveness fix, removing the `#table-wrap` hide, breaking the search filter, repointing the
+data fetch, breaking a copy button, or logging a console error each turns the run red. The test
+also refuses to run vacuously: if its search term no longer matches any row in `quotes.csv` it
+fails immediately, because the search/sort/table checks would otherwise all "pass" on an empty
+result set. CI runs it on every PR and push to `main`
+(`.github/workflows/browser-smoke.yml`).
 
 ### Responsiveness (fixed 2026-09-12)
 
