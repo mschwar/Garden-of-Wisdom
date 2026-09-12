@@ -1,0 +1,79 @@
+{
+  "collection_id": "garden-homepage-preview",
+  "label": "Garden of Wisdom (preview)",
+  "version": 1,
+  "schema_version": 1,
+  "description": "Tiny verified Bahá’í preview export from Garden of Wisdom, produced to exercise the bahai-homepage H2B collection contract. Not Hidden Words, and not the full Garden Bahá’í subset.",
+  "producer": "garden-of-wisdom",
+  "provenance_note": "Verified 2026-09-11 against the Bahá’í Reference Library at bahai.org. Garden legacy ids are retained as upstream_id. See PROVENANCE.md in this directory.",
+  "rights_note": "Texts are copyright © Bahá’í International Community. Personal non-commercial use with attribution is permitted; commercial use requires prior permission. See https://www.bahai.org/legal.",
+  "default_eligibility": {
+    "max_words": 75
+  },
+  "items": [
+    {
+      "item_id": "garden-3",
+      "text": "The earth is but one country, and mankind its citizens.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXVII",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/6",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [
+        "unity",
+        "humanity",
+        "world",
+        "citizenship"
+      ],
+      "upstream_id": "3"
+    },
+    {
+      "item_id": "garden-12",
+      "text": "Truthfulness is the foundation of all human virtues.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "Tablet of ‘Abdu’l-Bahá; cited in The Advent of Divine Justice",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/additional-tablets-extracts-talks/826608209/826608209.xhtml",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [
+        "truthfulness",
+        "virtue",
+        "foundation",
+        "character"
+      ],
+      "upstream_id": "12"
+    },
+    {
+      "item_id": "garden-15",
+      "text": "Regard man as a mine rich in gems of inestimable value.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXII",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/6",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [
+        "potential",
+        "humanity",
+        "virtue",
+        "education"
+      ],
+      "upstream_id": "15"
+    },
+    {
+      "item_id": "garden-26",
+      "text": "Service to humanity is service to God.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "The Promulgation of Universal Peace, 12 April 1912 (Studio of Miss Phillips, New York)",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/promulgation-universal-peace/promulgation-universal-peace.xhtml",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [
+        "service",
+        "humanity",
+        "god",
+        "worship"
+      ],
+      "upstream_id": "26"
+    }
+  ]
+}

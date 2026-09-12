@@ -1,0 +1,69 @@
+{
+  "approved_garden_ids": [3, 12, 15, 26, 30],
+  "verified_on": "2026-09-11",
+  "donors": [
+    {
+      "garden_id": "3",
+      "verdict": "accept",
+      "verified_text": "The earth is but one country, and mankind its citizens.",
+      "export_author": "Bahá’u’lláh",
+      "export_source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXVII",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/6",
+      "item_type": "excerpt",
+      "tags": ["unity", "humanity", "world", "citizenship"],
+      "garden_field_corrections": {
+        "item_type": "unknown → excerpt"
+      },
+      "evidence": "Exact sentence in Gleanings CXVII on the Bahá’í Reference Library (HTML part 6 and the official PDF). Longer section; Garden records the closing sentence only."
+    },
+    {
+      "garden_id": "12",
+      "verdict": "accept",
+      "verified_text": "Truthfulness is the foundation of all human virtues.",
+      "export_author": "‘Abdu’l-Bahá",
+      "export_source_ref": "Tablet of ‘Abdu’l-Bahá; cited in The Advent of Divine Justice",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/additional-tablets-extracts-talks/826608209/826608209.xhtml",
+      "item_type": "excerpt",
+      "tags": ["truthfulness", "virtue", "foundation", "character"],
+      "garden_field_corrections": {
+        "author": "Bahá’u’lláh → ‘Abdu’l-Bahá",
+        "source_ref": "The Advent of Divine Justice, p. 22 → Tablet of ‘Abdu’l-Bahá; cited in The Advent of Divine Justice"
+      },
+      "evidence": "Exact opening sentence of the ‘truthfulness’ clause in a Tablet of ‘Abdu’l-Bahá published as Additional Tablets, Extracts and Talks. Official footnote: Shoghi Effendi’s translation of this clause appears in The Advent of Divine Justice. Trustworthiness compilation cites ADJ p. 26 (1984), not p. 22. Garden had the wrong author and a secondary, edition-dependent page."
+    },
+    {
+      "garden_id": "15",
+      "verdict": "accept",
+      "verified_text": "Regard man as a mine rich in gems of inestimable value.",
+      "export_author": "Bahá’u’lláh",
+      "export_source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXII",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/6",
+      "item_type": "excerpt",
+      "tags": ["potential", "humanity", "virtue", "education"],
+      "garden_field_corrections": {
+        "item_type": "unknown → excerpt"
+      },
+      "evidence": "Exact sentence in Gleanings CXXII on the Bahá’í Reference Library (HTML part 6 and the official PDF), introduced by ‘The Great Being saith:’. Longer section; Garden records that sentence only."
+    },
+    {
+      "garden_id": "26",
+      "verdict": "accept",
+      "verified_text": "Service to humanity is service to God.",
+      "export_author": "‘Abdu’l-Bahá",
+      "export_source_ref": "The Promulgation of Universal Peace, 12 April 1912 (Studio of Miss Phillips, New York)",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/promulgation-universal-peace/promulgation-universal-peace.xhtml",
+      "item_type": "excerpt",
+      "tags": ["service", "humanity", "god", "worship"],
+      "garden_field_corrections": {
+        "source_ref": "Paris Talks, Oct 22 1911 → The Promulgation of Universal Peace, 12 April 1912"
+      },
+      "evidence": "Exact sentence in the 12 April 1912 talk at the Studio of Miss Phillips, New York, in The Promulgation of Universal Peace. Paris Talks 22 October 1911 is ‘The Sun of Truth’ and does not contain this sentence."
+    },
+    {
+      "garden_id": "30",
+      "verdict": "reject",
+      "verified_text": null,
+      "reason": "Garden text ‘Prayer is the key of the doors of mercy.’ was not found in Paris Talks or elsewhere on the Bahá’í Reference Library. Paris Talks’ last 1911 Paris meeting is 1 December (‘The Last Meeting’); there is no 2 December 1911 talk. Closest official wording is ‘Meditation is the key for opening the doors of mysteries’ (London, 12 January 1913). Cannot be emitted as exact scripture."
+    }
+  ]
+}
