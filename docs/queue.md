@@ -103,7 +103,8 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       counts, search narrowing to the rows that contain the term, length sort ordering both
       directions, `aria-sort` on header click, table row count, copy button round-trip through
       the clipboard, no horizontal overflow at 320/375/768px in both views, and zero console /
-      page errors / failed requests. Seven negative controls recorded in the handoff (each
+      page errors / failed requests. Seven negative controls recorded in
+      `GARDEN_BROWSER_SMOKE_HANDOFF.md` (each
       re-breaks one behaviour and turns the run red with `RESULT: FAIL`, no traceback). Closes
       the D8 debt from `docs/program/W0_GATE_REPORT.md`. Local run instructions:
       `docs/RUNBOOK.md` §"Smoke-test the browser".
