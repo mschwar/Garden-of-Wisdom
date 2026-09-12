@@ -35,13 +35,14 @@ Living document — update it as items are picked up or closed, don't just appen
       artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
 
-## Open — corpus program (W0 landed 2026-09-12; W1 NOT authorized)
+## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 NOT authorized)
 
 - [ ] **W1 is decomposed but not authorized.** Six bounded units (storage decision → envelope
       contract → CLI submission → normalization/duplicate hints → curation review + audit →
-      Gate B evidence pack) are specified in `docs/program/W1_DECOMPOSITION.md`. Do not start
-      any of them without frontier acceptance of the W0 Gate A report and an explicit
-      authorization of **W1.1 only**. See `docs/program/W0_GATE_REPORT.md`.
+      Gate B evidence pack) are specified in `docs/program/W1_DECOMPOSITION.md`. Gate A is now
+      accepted (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`); do not start any W1 unit
+      without a separate, explicit operator authorization of **W1.1 only**. See
+      `docs/program/W0_GATE_REPORT.md`.
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
@@ -126,9 +127,14 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 - [x] W0 doctrine + contracts landed under `docs/program/` — all 12 required outputs (10 docs
       plus decision-log and queue entries), a planning fixture
-      (`docs/program/fixtures/w0_scenarios.json`, 11 walkthroughs) and a deterministic doctrine
-      checker (`scripts/check_program_contracts.py`, 15 negative controls recorded).
+      (`docs/program/fixtures/w0_scenarios.json`, 12 walkthroughs) and a deterministic doctrine
+      checker (`scripts/check_program_contracts.py`, 20 negative controls recorded).
       Gate A evidence: `docs/program/W0_GATE_REPORT.md`. **W1 NOT STARTED.**
+- [x] Gate A frontier review: **accepted**, 2026-09-12
+      (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`). Fixed three evidence-hygiene defects
+      in the Gate A package (stale scenario/transition counts, undercounted decision-log
+      entries) found during review; no doctrine content changed. **W1.1 is still not
+      authorized** — that remains a separate, explicit operator decision.
 
 ## Closed — 2026-09-11 G4
 

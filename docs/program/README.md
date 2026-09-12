@@ -1,8 +1,9 @@
 # Garden Corpus Program — canonical doctrine
 
-Status as of 2026-09-12 (**W0 complete, Gate A submitted**): doctrine and contracts only.
-**W1 is NOT started.** No datastore, intake surface, discovery adapter, or W1 runtime code
-exists in this repo.
+Status as of 2026-09-12 (**W0 complete, Gate A accepted** — frontier review:
+`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`): doctrine and contracts only.
+**W1 is NOT started; W1.1 is NOT authorized.** No datastore, intake surface, discovery
+adapter, or W1 runtime code exists in this repo.
 
 This directory is the canonical home for Garden *corpus-program* doctrine: doctrine, the
 entity/state model, provenance and evidence contracts, lane definitions, classification

@@ -20,7 +20,7 @@ Canonical doctrine under `docs/program/` (this directory):
 | `WORK_LANES.md` | 7. permanent work-lane definitions |
 | `CLASSIFICATION_AND_FACETS.md` | 8. faceted classification posture + 6 explicit open ontology questions |
 | `W1_DECOMPOSITION.md` | 9. bounded W1 work units |
-| `../DECISIONS.md` (8 entries appended) | 10. decision-log entries for material choices |
+| `../DECISIONS.md` (9 entries appended) | 10. decision-log entries for material choices |
 | `../queue.md` (W1 status + debt/open questions) | 11. queue entries for deferred ideas/debt |
 | this file | 12. W0 evidence-gate report |
 
@@ -224,6 +224,14 @@ no canonical case, and exercise the two paths the reviewers identified as gaps.
 6. Faceted classification; `tradition` stays single-valued and un-collapsed for now.
 7. No datastore is chosen in W0; SQLite is a W1 hypothesis with explicit requirements.
 8. W0 ships a documentation-consistency checker, not runtime.
+9. Curation acceptance is reversible, so the corpus dimension needs a reversal path out of
+   `eligible`/`canonical`: added `T-P7 eligible → candidate_only` and
+   `T-P8 canonical → eligible` (both operator-authority), and hardened the checker to assert
+   the authority of all 40 transitions (not only the ones a scenario exercises), compare the
+   envelope doc and fixture template in both directions, re-parse the aggregate rule out of
+   `VERIFICATION_CONTRACT.md`, validate the envelope template itself, and fail cleanly on a
+   malformed fixture instead of a traceback. Found by foreign QA on the W0 branch; walkthrough
+   `S11` exercises the path.
 
 ## Unresolved questions / debt (queued, not implemented)
 
@@ -283,6 +291,12 @@ They are recorded as **open risks carried into W1**, not as satisfied claims:
 datastore, no migration, no adapter, no promotion path exists.** The next authorized action is
 an operator/frontier decision on Gate A, followed (if accepted) by authorization of W1.1 only.
 
+**Update — 2026-09-12, Gate A frontier review: ACCEPTED.** See
+`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md` for the independent check and verdict. Three
+evidence-hygiene defects found in this report during that review are fixed above and in the
+correction block below; none reached doctrine substance. **W1.1 is still not authorized** —
+Gate A acceptance and W1.1 authorization remain two separate operator decisions.
+
 ---
 
 ### Post-change acceptance run (appended by the W0 acceptance step)
@@ -314,3 +328,27 @@ $ shasum -a 256 quotes.csv sources.csv
 $ diff <(git show main:quotes.csv) quotes.csv ; diff <(git show main:sources.csv) sources.csv  # both silent => byte-identical
 byte-identical to main: yes
 ```
+
+### Correction — 2026-09-12, Gate A frontier review
+
+The block above reports "parsed 38 transitions ... 10 scenarios". That was captured *before*
+the `T-P7`/`T-P8` stranded-state fix (`../DECISIONS.md`, decision 9) landed on this same branch
+and was never refreshed. Re-running the identical command on `main` today:
+
+```
+$ python3 scripts/check_program_contracts.py
+parsed 40 transitions, 21 required envelope fields, 12 scenarios
+vocabularies: corpus=4; curation=5; research=6; work=5
+authorities asserted: 40/40 transitions
+documented corpus facts re-derived from the data: 324 rows checked
+
+RESULT: PASS (transition chains simulate, claim aggregates agree, envelopes conform)
+exit=0
+```
+
+40 transitions and 12 scenarios (`S1`–`S12`) match `STATE_MODEL.md` and
+`fixtures/w0_scenarios.json` exactly, and match every other reference to these counts elsewhere
+in this document (§"Gate A criteria", §"Negative controls" authority-coverage note). The
+`validate_quotes.py`, `validate_homepage_preview_export.py`, and hash outputs above are
+unaffected and still current — re-run and confirmed unchanged as part of this correction. Full
+review: `../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`.

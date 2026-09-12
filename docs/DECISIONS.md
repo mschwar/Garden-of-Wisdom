@@ -218,3 +218,26 @@ compares the fixture template and doc required-field list in both directions, re
 aggregate rule out of `VERIFICATION_CONTRACT.md` so a doc-only edit fails, validates the
 envelope template itself, and reports malformed fixtures as `RESULT: FAIL` instead of a
 traceback.
+
+## 2026-09-12 — Gate A frontier review: accept, with three evidence-hygiene defects fixed
+
+Independent review (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`) re-ran the doctrine
+checker and both existing validators, recomputed `quotes.csv`/`sources.csv` hashes, and
+cross-checked every count claim in `docs/program/W0_GATE_REPORT.md` and `docs/queue.md`
+against the actual fixture, doc, and decision-log contents. All eight Gate A criteria
+(`bootstrap/seed/2026-09-12-garden-corpus-program/ACCEPTANCE_GATES.md`) are satisfied.
+
+Found and fixed three stale-number defects, all caused by the `T-P7`/`T-P8` stranded-state fix
+(decision above) landing after the numbers were first written and never being refreshed: the
+Gate A report's appended acceptance-run block still showed the pre-fix 38 transitions/10
+scenarios instead of 40/12; the report undercounted its own decision-log entries as 8 instead
+of 9 and never listed decision 9; and `docs/queue.md`'s closed-W0 summary said "11 walkthroughs"
+and "15 negative controls" instead of 12 and 20. None reached doctrine substance, the
+transition table, the envelope contract, or the checker's behavior — decided the correction
+belongs as a dated addendum to the existing report (not a silent rewrite of its evidence
+blocks), consistent with how this log already treats a falsified prior claim (the donor-set
+near-dupe entry above).
+
+Verdict: **Gate A accepted**, 2026-09-12. Decided this acceptance does **not** authorize W1.1 —
+that stays a separate, explicit operator decision per `docs/program/CORPUS_PROGRAM_DOCTRINE.md`
+and the W0 report's own stop point.
