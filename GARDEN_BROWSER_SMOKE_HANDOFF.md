@@ -104,6 +104,21 @@ run always prints `RESULT:`.
   recorded). The command is documented in `README.md` and `docs/RUNBOOK.md` instead; a human who
   approves the write can add one line to `AGENTS.md`.
 
+## Foreign QA (independent pass, 2026-09-12)
+
+A subagent that did not author the unit reviewed the merged work adversarially, re-ran the smoke
+test and the three validators on a fresh `git archive` checkout, and falsified the three fix
+claims by reverting each one in `/tmp` copies (reproducing the exact 421px `LABEL`, 355px
+`SPAN.tags` and 2px `#table-wrap` signatures). Verdict: **PASS WITH NITS**. Four findings, all
+resolved in the follow-up commit:
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1 | `docs/architecture/QUOTE_BROWSER.md` said "six negative controls" and its list omitted the `#table-wrap` revert, contradicting `docs/DECISIONS.md` and the queue, which both said seven. | Fixed — the doc now says seven and lists the `#table-wrap` mutation. |
+| 2 | Duplicate `page.close()` in `check_viewport_overflow`'s `finally` block (idempotent in practice, but a copy-paste defect). | Fixed — one call. |
+| 3 | `SEARCH_TERM = "Dhammapada"` was not guarded: if a data change ever removed every Dhammapada row, `expected_search` would be 0 and the search, sort, table-row and `aria-sort` checks would all pass trivially on an empty set — the one path where the "no silent weakening" guarantee did not hold. | Fixed — the test now fails immediately with `SEARCH_TERM … matches no row in quotes.csv` (negative control: setting the term to `zzzz-no-such-term` produces exactly that `FAIL` and `RESULT: FAIL` before the browser starts). |
+| 4 | The docs claimed 22 checks but a green run printed 21 `PASS:` lines (the initial-load wait printed no `PASS`). | Fixed — the load now prints its own `PASS`, so a green run prints 22 `PASS:` lines and the documented count is the observable one. |
+
 ## Next authorized action
 
 **Nothing in this lane.** The queue's remaining open infra items are the duplicate-review view
