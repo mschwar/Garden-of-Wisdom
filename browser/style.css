@@ -233,8 +233,20 @@ header h1 { margin: 0 0 4px; font-size: 1.5rem; }
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   background: var(--pill-bg);
-  cursor: pointer;
   user-select: none;
+}
+#quote-table th[data-sort] {
+  cursor: pointer;
+}
+#quote-table th[data-sort]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+#quote-table .empty-state {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  padding: 24px;
 }
 #quote-table th[data-sort]::after {
   content: "";

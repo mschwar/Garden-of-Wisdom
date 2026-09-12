@@ -134,15 +134,32 @@ function copyText(text) {
   navigator.clipboard.writeText(text).then(() => toast("Copied")).catch(() => toast("Copy failed"));
 }
 
-// Mark the currently active sort column header with an arrow indicator.
+// Mark the currently active sort column header with an arrow indicator and aria-sort.
 function updateSortIndicators() {
   document.querySelectorAll("#quote-table th").forEach((th) => {
     th.classList.remove("sorted-asc", "sorted-desc");
-    const field = th.dataset.sort;
-    if (field === state.sortField || (field === "length" && state.sortField === "length")) {
+    if (th.dataset.sort === state.sortField) {
       th.classList.add(state.sortDir === "asc" ? "sorted-asc" : "sorted-desc");
+      th.setAttribute("aria-sort", state.sortDir === "asc" ? "ascending" : "descending");
+    } else {
+      th.removeAttribute("aria-sort");
     }
   });
+}
+
+// Sort by the given field, mirroring the choice to the dropdown + direction button.
+function sortByField(field) {
+  if (state.sortField === field) {
+    state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+  } else {
+    state.sortField = field;
+    state.sortDir = "asc";
+  }
+  const dropdown = document.getElementById("sort-field");
+  if (dropdown.value !== field) dropdown.value = field;
+  const dirBtn = document.getElementById("sort-dir");
+  dirBtn.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
+  render();
 }
 
 // Build a small action button with the given label and click handler.
@@ -159,6 +176,16 @@ function actionButton(label, onClick) {
 function renderTableRows(rows) {
   const tbody = document.querySelector("#quote-table tbody");
   tbody.innerHTML = "";
+  if (rows.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 10;
+    td.className = "empty-state";
+    td.textContent = "No matching quotes. Adjust the filters or search.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
   const frag = document.createDocumentFragment();
   rows.forEach((q) => {
     const tr = document.createElement("tr");
@@ -356,21 +383,14 @@ function wireControls() {
     render();
   });
   document.querySelectorAll("#quote-table th[data-sort]").forEach((th) => {
-    th.addEventListener("click", () => {
-      const field = th.dataset.sort;
-      if (state.sortField === field) {
-        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-      } else {
-        state.sortField = field;
-        state.sortDir = "asc";
+    th.tabIndex = 0;
+    th.setAttribute("role", "button");
+    th.addEventListener("click", () => sortByField(th.dataset.sort));
+    th.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        sortByField(th.dataset.sort);
       }
-      // Mirror the choice back to the sort dropdown + button.
-      const dropdown = document.getElementById("sort-field");
-      if (dropdown.value !== field) dropdown.value = field;
-      const dirBtn = document.getElementById("sort-dir");
-      dirBtn.dataset.dir = state.sortDir;
-      dirBtn.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
-      render();
     });
   });
 }

@@ -52,6 +52,9 @@
         <option value="tradition">Tradition</option>
         <option value="author">Author</option>
         <option value="source_ref">Source</option>
+        <option value="tags">Tags</option>
+        <option value="item_type">Type</option>
+        <option value="verification_status">Verification</option>
         <option value="length">Length</option>
       </select>
     </label>
@@ -62,19 +65,19 @@
 <main id="results"></main>
 
 <div id="table-wrap">
-  <table id="quote-table" hidden>
+  <table id="quote-table" hidden aria-label="Quotes — filtered and sortable">
     <thead>
       <tr>
-        <th data-sort="id">ID</th>
-        <th data-sort="tradition">Tradition</th>
-        <th data-sort="author">Author</th>
-        <th data-sort="source_ref">Source</th>
-        <th data-sort="tags">Tags</th>
-        <th data-sort="item_type">Type</th>
-        <th data-sort="verification_status">Verification</th>
-        <th data-sort="length">Length</th>
-        <th>Quote text</th>
-        <th class="th-actions">Actions</th>
+        <th scope="col" data-sort="id">ID</th>
+        <th scope="col" data-sort="tradition">Tradition</th>
+        <th scope="col" data-sort="author">Author</th>
+        <th scope="col" data-sort="source_ref">Source</th>
+        <th scope="col" data-sort="tags">Tags</th>
+        <th scope="col" data-sort="item_type">Type</th>
+        <th scope="col" data-sort="verification_status">Verification</th>
+        <th scope="col" data-sort="length">Length</th>
+        <th scope="col">Quote text</th>
+        <th scope="col" class="th-actions">Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
