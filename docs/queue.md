@@ -59,10 +59,11 @@ Living document — update it as items are picked up or closed, don't just appen
 - [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
       specified in `docs/program/W1_DECOMPOSITION.md`:
       **W1.1** storage decision + minimal schema ✅ **DONE** · **W1.2** candidate-envelope contract
-      + validator ✅ **DONE** · **W1.3** manual capture/submission CLI · **W1.4** normalization +
-      duplicate
+      + validator · **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate
       hints · **W1.5** curation review + decisions + audit history · **W1.6** end-to-end test pack +
       Gate B evidence packet.
+      **Unit status (updated, appended — the lines above are left byte-identical): W1.1 ✅ DONE ·
+      W1.2 ✅ DONE (see the close-out bullet below) · next: W1.3.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
