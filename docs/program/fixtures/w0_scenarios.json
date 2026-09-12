@@ -1,0 +1,324 @@
+{
+  "schema": "garden.w0-scenarios/1",
+  "purpose": "Machine-readable form of the W0 state model: the ten canonical adversarial cases from docs/program/STATE_MODEL.md, walked deterministically from capture through curation, research, and corpus outcome. Verified by scripts/check_program_contracts.py, which simulates each transition chain against the transition table in docs/program/STATE_MODEL.md and re-derives the record-level research state from the per-claim statuses.",
+  "envelope_doc": "docs/program/CANDIDATE_ENVELOPE.md",
+  "state_model_doc": "docs/program/STATE_MODEL.md",
+  "verification_contract_doc": "docs/program/VERIFICATION_CONTRACT.md",
+  "work_state_note": "work_state in each scenario tracks the EXECUTION unit that handled the candidate (ingestion/research work), never the candidate's truth. It therefore follows the uniform queued -> active -> qa -> done path in every scenario.",
+  "sentinel_note": "Legacy/absent values use explicit sentinels: 'unknown', 'und', 'none', 'legacy-import'. A required field is never omitted.",
+  "envelope_template": {
+    "intake_schema_version": "garden.candidate-envelope/1",
+    "capture_id": "cap-2026-09-12-0001",
+    "captured_text": "PLACEHOLDER",
+    "captured_attribution": "unknown",
+    "captured_citation": "none",
+    "capture_method": "manual-entry",
+    "captured_at": "2026-09-12T09:14:11-06:00",
+    "captured_by": "operator",
+    "language": "en",
+    "source_reference": "none",
+    "context_notes": "none",
+    "raw_artifact_ref": "none",
+    "candidate_text": "PLACEHOLDER",
+    "candidate_author": "unknown",
+    "candidate_source_ref": "none",
+    "normalization_notes": "identical to capture",
+    "duplicate_hints": [],
+    "curation_state": "new",
+    "research_state": "not_started",
+    "corpus_state": "candidate_only",
+    "work_state": "queued"
+  },
+  "gate_requirement_coverage": ["uncited", "verified", "disputed", "unverifiable", "translation-variant"],
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "Uncited, possibly misattributed passage seen on a quote card",
+      "canonical_case": "unverifiable",
+      "gate_requirement": "uncited",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0001",
+        "captured_text": "We are the ones we have been waiting for.",
+        "captured_attribution": "unknown",
+        "captured_citation": "attributed — quote card, no source",
+        "capture_method": "screenshot",
+        "source_reference": "https://example-quotes.example/we-are-the-ones",
+        "context_notes": "Shared in a group chat; the card shows no author and no work.",
+        "candidate_text": "We are the ones we have been waiting for.",
+        "candidate_author": "unknown",
+        "normalization_notes": "identical to capture; no attribution invented",
+        "duplicate_hints": [
+          {"kind": "same-reference", "target": "319", "basis": "same generic source_ref 'Oral Tradition' — weak, kept as a hint only"}
+        ]
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R6", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R6"],
+      "claims": [
+        {"claim": "wording", "status": "unverifiable", "evidence": []},
+        {"claim": "attribution", "status": "unverifiable", "evidence": []}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "unverifiable", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "Operator wants it retained, so it is eligible — but nothing supports the wording or the implied attribution, and the record says so. Wording is not softened and no author is invented. This is the honest terminal state, not a failure."
+    },
+    {
+      "id": "S2",
+      "title": "Exact genuine quote, checked against a primary witness",
+      "canonical_case": "exact-quote",
+      "gate_requirement": "verified",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0002",
+        "captured_text": "The earth is but one country, and mankind its citizens.",
+        "captured_attribution": "Bahá’u’lláh",
+        "captured_citation": "Gleanings, CXVII",
+        "capture_method": "pasted-text",
+        "source_reference": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+        "candidate_text": "The earth is but one country, and mankind its citizens.",
+        "candidate_author": "Bahá’u’lláh",
+        "candidate_source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXVII",
+        "normalization_notes": "identical to capture; citation expanded to the full work title",
+        "duplicate_hints": [
+          {"kind": "near-text", "target": "283", "basis": "0.74 text similarity within tradition — different author and work, NOT a duplicate"}
+        ]
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R4", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R4"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "Official Bahá’í Writings, Gleanings from the Writings of Bahá’u’lláh (bahai.org authoritative text)", "locator": "Gleanings CXVII", "relation": "supports"}]},
+        {"claim": "attribution", "status": "verified", "evidence": [{"witness": "Official Bahá’í Writings — Gleanings CXVII", "locator": "Gleanings CXVII", "relation": "supports"}]},
+        {"claim": "locus", "status": "verified", "evidence": [{"witness": "Official Bahá’í Writings — Gleanings CXVII", "locator": "Gleanings CXVII", "relation": "supports"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "verified", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": false,
+      "notes": "Mirrors the G4 precedent: primary witness + locator + recorded adjudication. The near-text hint against id 283 is retained as a hint and explicitly not treated as a duplicate — same teaching, different author and work."
+    },
+    {
+      "id": "S3",
+      "title": "Wording exact but the author is wrong — canonical while disputed",
+      "canonical_case": "wrong-author",
+      "gate_requirement": "disputed",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0003",
+        "captured_text": "My soul is my counsel; if I have no counsel, my soul has none.",
+        "captured_attribution": "Bahá’u’lláh",
+        "captured_citation": "attributed — collected sayings, no locator",
+        "capture_method": "book-scan",
+        "source_reference": "collected sayings anthology, p. 41",
+        "candidate_text": "My soul is my counsel; if I have no counsel, my soul has none.",
+        "candidate_author": "Bahá’u’lláh",
+        "normalization_notes": "identical to capture"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R5", "T-P2", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R5", "T-P2"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "printed anthology (scanned page, p. 41)", "locator": "p. 41", "relation": "supports"}]},
+        {"claim": "attribution", "status": "disputed", "evidence": [{"witness": "same wording appears under a different author in a second, earlier collection", "locator": "second collection, entry 12", "relation": "contradicts"}]},
+        {"claim": "locus", "status": "verified", "evidence": [{"witness": "printed anthology (scanned page, p. 41)", "locator": "p. 41", "relation": "supports"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "disputed", "corpus_state": "canonical", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "THE central proof that canonical does not imply verified: the operator admits the passage to the Garden (T-P2) while its attribution stays disputed. The disputed attribution is displayed, not resolved by rewriting the author field."
+    },
+    {
+      "id": "S4",
+      "title": "Right sentence, wrong work and date",
+      "canonical_case": "wrong-work",
+      "gate_requirement": "disputed",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0004",
+        "captured_text": "Ye are the fruits of one tree, and the leaves of one branch.",
+        "captured_attribution": "‘Abdu’l-Bahá",
+        "captured_citation": "Paris Talks, 22 October 1911",
+        "capture_method": "web-page",
+        "source_reference": "quotation page citing Paris Talks",
+        "candidate_text": "Ye are the fruits of one tree, and the leaves of one branch.",
+        "candidate_author": "‘Abdu’l-Bahá",
+        "candidate_source_ref": "Paris Talks, 22 October 1911",
+        "normalization_notes": "identical to capture"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R5", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R5"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "official published talk collection (primary archive)", "locator": "12 April 1912 talk, ¶3", "relation": "supports"}]},
+        {"claim": "locus", "status": "disputed", "evidence": [{"witness": "the cited Paris Talks date does not contain this sentence", "locator": "Paris Talks, 22 Oct 1911", "relation": "contradicts"}]},
+        {"claim": "date", "status": "disputed", "evidence": [{"witness": "official published talk collection", "locator": "12 April 1912", "relation": "contradicts"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "disputed", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "Mirrors the G4 id-26 correction: the sentence exists, the citation is wrong. The corrected locator is a NEW recorded claim; the original (wrong) citation stays visible in the capture. The quote text is never touched."
+    },
+    {
+      "id": "S5",
+      "title": "Quote of a quote — intermediary verified, primary attribution unproven",
+      "canonical_case": "quote-of-a-quote",
+      "gate_requirement": "disputed",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0005",
+        "captured_text": "Be the change you wish to see in the world.",
+        "captured_attribution": "Mahatma Gandhi",
+        "captured_citation": "quoted by a later author, no primary locus",
+        "capture_method": "pasted-text",
+        "source_reference": "secondary collection quoting Gandhi",
+        "candidate_text": "Be the change you wish to see in the world.",
+        "candidate_author": "Mahatma Gandhi",
+        "normalization_notes": "identical to capture; provenance_chain records the intermediary"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R5", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R5"],
+      "claims": [
+        {"claim": "intermediary-witness", "status": "verified", "evidence": [{"witness": "secondary collection (the work that actually contains this sentence)", "locator": "ch. 4", "relation": "supports"}]},
+        {"claim": "attribution", "status": "disputed", "evidence": [{"witness": "no primary Gandhi text contains this wording", "locator": "search across the collected writings", "relation": "contradicts"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "disputed", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "A 'quoted in' verification is explicitly NOT a primary verification. The record carries provenance_chain so the reader sees it is a quotation of a quotation, and the primary attribution stays disputed."
+    },
+    {
+      "id": "S6",
+      "title": "Translation variant of the same passage",
+      "canonical_case": "translation-variant",
+      "gate_requirement": "translation-variant",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0006",
+        "captured_text": "Do your work, but do not be attached to the fruit of your work.",
+        "captured_attribution": "Krishna (Bhagavad Gita)",
+        "captured_citation": "Gita 2.47 — translation unspecified",
+        "capture_method": "manual-entry",
+        "source_reference": "printed edition, translator not recorded in the capture",
+        "candidate_text": "Do your work, but do not be attached to the fruit of your work.",
+        "candidate_author": "Krishna",
+        "candidate_source_ref": "Gita 2.47 (translation: F. Edgerton, declared)",
+        "normalization_notes": "wording unchanged; the specific translation/edition was identified during research and recorded as the verified translation claim"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R4", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R4"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "Bhagavad Gita, named translation/edition (F. Edgerton)", "locator": "2.47", "relation": "supports"}]},
+        {"claim": "locus", "status": "verified", "evidence": [{"witness": "Bhagavad Gita, named translation/edition", "locator": "2.47", "relation": "supports"}]},
+        {"claim": "attribution", "status": "verified", "evidence": [{"witness": "Bhagavad Gita, named translation/edition — speaker Krishna to Arjuna", "locator": "2.47", "relation": "supports"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "verified", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "What is verified is that THIS translation reads thus. The repo already has multiple renderings of Gita 2.47; they are separate representations of one Passage, related by translation-of, NOT duplicates. Keeping them all is the intended behaviour."
+    },
+    {
+      "id": "S7",
+      "title": "Fabricated internet attribution",
+      "canonical_case": "fabricated-attribution",
+      "gate_requirement": "unverifiable",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0007",
+        "captured_text": "The only true wisdom is in knowing the vastness of your own ignorance.",
+        "captured_attribution": "Socrates",
+        "captured_citation": "attributed — meme image",
+        "capture_method": "photo",
+        "source_reference": "meme image shared online",
+        "raw_artifact_ref": "captures/2026-09-12/socrates-meme.jpg",
+        "candidate_text": "The only true wisdom is in knowing the vastness of your own ignorance.",
+        "candidate_author": "Socrates",
+        "normalization_notes": "identical to capture"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R6", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R6"],
+      "claims": [
+        {"claim": "wording", "status": "unverifiable", "evidence": []},
+        {"claim": "attribution", "status": "unverifiable", "evidence": []}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "unverifiable", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "No early witness exists anywhere; every appearance traces back to the same circulating text with no source. Aggregator sites are not witnesses, so this resolves to unverifiable. It may be retained as a documented example of misattribution — it may never be emitted as verified."
+    },
+    {
+      "id": "S8",
+      "title": "Oral attribution with a documented rendering",
+      "canonical_case": "oral-attribution",
+      "gate_requirement": "none",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0008",
+        "captured_text": "One finger cannot lift a pebble.",
+        "captured_attribution": "Oral tradition (teller not named in the capture)",
+        "captured_citation": "Oral Tradition",
+        "capture_method": "audio-transcript",
+        "source_reference": "field recording, transcript line 12",
+        "context_notes": "Proverb told during a gathering; story context noted in the transcript margin.",
+        "candidate_text": "One finger cannot lift a pebble.",
+        "candidate_author": "Unknown teller (documented rendering)",
+        "candidate_source_ref": "field recording 1974, transcript line 12",
+        "normalization_notes": "identical to capture; attribution kept as a documented rendering, not upgraded to a named author"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R4", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R4"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "field recording + archived transcript", "locator": "transcript line 12", "relation": "supports"}]},
+        {"claim": "attribution", "status": "verified", "evidence": [{"witness": "recording context notes naming the teller and gathering", "locator": "transcript margin", "relation": "supports"}]},
+        {"claim": "context", "status": "verified", "evidence": [{"witness": "archived transcript", "locator": "transcript line 12 + margin", "relation": "supports"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "verified", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "Crucial scope distinction: the record makes NO originality claim. What is verified is the documented rendering, its attribution as recorded, and its context. Had the record claimed 'these are the original words of X', that claim would be unverifiable and would drag the record to unverifiable."
+    },
+    {
+      "id": "S9",
+      "title": "Ambiguous source — resolves to a family of works, not one",
+      "canonical_case": "ambiguous-source",
+      "gate_requirement": "none",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0009",
+        "captured_text": "A house divided against itself cannot stand.",
+        "captured_attribution": "Abraham Lincoln",
+        "captured_citation": "Speech, 1858 — exact occasion unspecified",
+        "capture_method": "pasted-text",
+        "source_reference": "quotation site",
+        "candidate_text": "A house divided against itself cannot stand.",
+        "candidate_author": "Abraham Lincoln",
+        "normalization_notes": "identical to capture; no locator was supplied and none was invented"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R2", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1"],
+      "claims": [
+        {"claim": "wording", "status": "verified", "evidence": [{"witness": "printed speech collection", "locator": "1858 speech text", "relation": "supports"}]},
+        {"claim": "locus", "status": "needs_more_evidence", "evidence": [{"witness": "several 1858 speeches contain this sentence", "locator": "unresolved", "relation": "contextualizes"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "needs_more_evidence", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "The record is honest about an unresolved locator: it is eligible and wanted, the wording is verified, and the locus claim is explicitly 'needs more evidence' rather than an invented pinpoint. Only agent-authority transitions are used here — no research outcome is fabricated."
+    },
+    {
+      "id": "S10",
+      "title": "Paraphrase — verified as a paraphrase, never presented as a quotation",
+      "canonical_case": "paraphrase",
+      "gate_requirement": "none",
+      "envelope_overrides": {
+        "capture_id": "cap-2026-09-12-0010",
+        "captured_text": "Various sutras say, roughly, that clinging is the root of suffering.",
+        "captured_attribution": "Buddhism (paraphrased)",
+        "captured_citation": "Various Sutras (paraphrased)",
+        "capture_method": "manual-entry",
+        "source_reference": "the capture itself declares the wording is a paraphrase",
+        "candidate_text": "Clinging is the root of suffering.",
+        "candidate_author": "Buddhist teaching (paraphrase of the Garden's own phrasing)",
+        "candidate_source_ref": "Various sutras (paraphrased)",
+        "normalization_notes": "the captured sentence was rewritten as a paraphrase; the original wording is retained in captured_text and never displayed as a quotation"
+      },
+      "start": {"curation_state": "new", "research_state": "not_started", "corpus_state": "candidate_only", "work_state": "queued"},
+      "transitions": ["T-C1", "T-P1", "T-R1", "T-R4", "T-W1", "T-W2", "T-W6"],
+      "operator_transitions": ["T-C1", "T-R4"],
+      "claims": [
+        {"claim": "locus", "status": "verified", "evidence": [{"witness": "published sutra collection (the teaching the paraphrase renders)", "locator": "collected sutras, ch. 3", "relation": "supports"}]},
+        {"claim": "shape", "status": "verified", "evidence": [{"witness": "Garden editorial record — this wording is the Garden's paraphrase, not a quotation", "locator": "normalization notes", "relation": "supports"}]}
+      ],
+      "end": {"curation_state": "accepted", "research_state": "verified", "corpus_state": "eligible", "work_state": "done"},
+      "uncertainty_visible": true,
+      "notes": "No 'wording' claim exists on this record at all, which is exactly why every surface showing it must mark it as a paraphrase (uncertainty_visible = true). This is the contract-level fix for the repo's id 267, where a paraphrase-shaped row carries no shape marker."
+    }
+  ]
+}
