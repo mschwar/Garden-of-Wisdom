@@ -6,7 +6,8 @@ Unit: the open infra item filed as
 combined interaction, and the empty-result state. **Test coverage only: no browser behaviour
 changed, no data changed.**
 
-Landed on branch `test/filter-smoke-coverage` (see the CI block below for the merge commit).
+Landed as PR [#18](https://github.com/mschwar/Garden-of-Wisdom/pull/18), merged into `main` as
+`745c1dc` with the branch deleted (CI + live acceptance in the block below).
 Gate state unchanged: Gate A accepted 2026-09-12 (`docs/audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`);
 **W1.1 remains unauthorized** and nothing in this unit touches the corpus program.
 
@@ -114,6 +115,31 @@ filter guards and **not** the "Issues only" one, because 38 rows still carried o
 precisely rather than trigger-happily, and it is why the control above zeroes all four issue
 sources.
 
+## CI and live acceptance
+
+- PR [#18](https://github.com/mschwar/Garden-of-Wisdom/pull/18) — `smoke` (pull_request)
+  **success**, run
+  [34714335171](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34714335171).
+- Merged into `main` as `745c1dc` ("Merge pull request #18"), branch deleted.
+- On `main` after the merge: `smoke` run
+  [34714388506](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34714388506) **success**;
+  Pages deploy run 34714388432 **success**.
+- **Live acceptance** — the same 32 checks pointed at production, not at a local server:
+
+```
+$ .venv/bin/python scripts/smoke_quote_browser.py --base-url https://mschwar.github.io/Garden-of-Wisdom
+...
+PASS: all 6 filter dropdowns offer exactly the quotes.csv values plus an 'All' first option
+PASS: #filter-tag = 'acceptance' narrows to 2 cards, matching quotes.csv
+PASS: 'Issues only' narrows to 320 cards (dropping 4), every one badged
+PASS: combined #filter-tradition = "Baha'i" + search 'god' + Length desc renders 8 rows in order, matching quotes.csv
+PASS: empty result (#filter-tradition = 'Akan (Ghana)' + search 'Dhammapada') renders the empty-state row 'No matching quotes. Adjust the filters or search.'
+RESULT: PASS (0 warning(s))
+```
+
+i.e. the deployed page offers the CSV's own filter values, filters, toggles, combines with search
+and sort, and reports an empty result exactly as the data says — not just the local server.
+
 ## Out of scope, recorded not fixed
 
 - **Card view has no empty state.** Found while writing the empty-result check and confirmed by
@@ -125,6 +151,14 @@ sources.
   so it is filed as [#17](https://github.com/mschwar/Garden-of-Wisdom/issues/17) with a queue entry
   and a `docs/DECISIONS.md` note, and the new empty-result check asserts only what exists today
   (zero cards + the table's empty-state row). The follow-up unit should add the card-view assertion.
+- **CI runs on deprecated Node 20 action majors.** GitHub annotated the `main` smoke run:
+  `actions/checkout@v4` and `actions/setup-python@v5` still target Node 20 and were forced onto
+  Node 24 (the three Pages actions in `pages.yml` are older majors as well — current: `checkout`
+  v7.0.1, `setup-python` v7.0.0, `configure-pages` v6.0.0, `upload-pages-artifact` v5.0.0,
+  `deploy-pages` v5.0.1). CI is green today, so this is future-proofing, not a break — but the
+  Pages actions are the deploy path the queue explicitly guards, so it is its own unit rather than
+  a drive-by version bump here. Filed as [#19](https://github.com/mschwar/Garden-of-Wisdom/issues/19)
+  with a queue entry.
 - **`AGENTS.md` was still not updated** (its "What commands to run" section would be the natural
   home for `scripts/smoke_quote_browser.py`); the write is refused by tool policy, the same
   deviation the W0 unit and the previous browser unit recorded. The command is documented in

@@ -30,6 +30,12 @@ Living document — update it as items are picked up or closed, don't just appen
       live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
       (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
       when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
+- [ ] **Move CI off the deprecated Node 20 action majors.** GitHub annotated the `main` smoke run
+      (`actions/checkout@v4`, `actions/setup-python@v5` still target Node 20 and were forced onto
+      Node 24); the Pages actions in `pages.yml` are older majors too. CI is green today, so this
+      is future-proofing — but bumping the Pages actions is a deploy-path change and must be
+      re-verified live the way the 2026-09-11 acceptance was. Filed as
+      [#19](https://github.com/mschwar/Garden-of-Wisdom/issues/19).
 - [ ] **Card view has no empty state** (found while adding filter coverage, out of scope there).
       With a search/filter combination that matches nothing, card view renders an empty
       `#results` — 0 children, no message — so the page is just a blank area under a header
