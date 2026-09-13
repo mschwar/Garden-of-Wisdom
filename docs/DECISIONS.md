@@ -900,7 +900,8 @@ that cites it. That is why the count is called out as the tripwire in both the r
 
 Process convention, learned the expensive way during #31's close-out. The unit's handoff
 (`GARDEN_VALIDATOR_SYMMETRY_HANDOFF.md`) is used **verbatim as the PR body**, and its "Exact next
-Prompt" section contained the phrase `close #34` — a sentence telling a future session how to *decline*
+Prompt" section contained a closing keyword immediately followed by that issue's number — a sentence
+telling a future session how to *decline*
 that issue. GitHub parses `<closing keyword> #N` anywhere in a PR body as a closing reference, so
 merging PR #35 marked issue #34 **COMPLETED** with nothing done, at the same moment the merge landed.
 #34 was reopened with that explanation rather than silently re-filed (a re-filed issue loses the
@@ -909,7 +910,8 @@ comment trail and hides the cause).
 **The rule:** never write a closing keyword (`close`, `closes`, `closed`, `fix`, `fixes`, `fixed`,
 `resolve`, `resolves`, `resolved`) followed by `#N` for an issue you want to stay open — not in the
 handoff, not in the commit message, not in any prose that will be reused as a PR or commit body. Write
-"record #34 as \"no change\"", not "close #34". The failure mode is subtle because the text is *about*
+"record #34 as \"no change\"", not a closing keyword followed by its number. The failure mode is
+subtle because the text is *about*
 the issue rather than an action on it, and it fires later, at merge time, on a different issue than the
 one the PR is about. A repo-wide grep for
 `\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b[:\ ]*#[0-9]+` is the cheap check before opening a PR.

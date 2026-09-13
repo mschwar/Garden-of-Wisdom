@@ -228,10 +228,17 @@ curation edits themselves (human pass), and any verification-status change.
 ## Process finding — the PR body auto-closed the follow-up issue
 
 Worth recording because it cost a real issue state and will recur: **the handoff file was used
-verbatim as the PR #35 body, and its "Exact next Prompt" text contained the phrase `close #34`.** GitHub
+verbatim as the PR #35 body, and its "Exact next Prompt" text contained a closing keyword immediately
+followed by that issue's number.** GitHub
 parses `<closing keyword> #N` in a PR body as a closing reference, so merging PR #35 marked issue #34
 **COMPLETED** with no work done on it. #34 has been reopened with that explanation, and the wording here
 now says "record #34 as \"no change\"".
+
+**The hazard also fired a second time, on the fix commit.** The commit message that recorded this
+finding quoted the offending phrase, so pushing it to `main` re-closed that issue roughly a minute after the
+reopen — commit messages pushed to the default branch are parsed the same way. Both the docs text and
+the commit message now describe the pattern without ever writing it, and the pattern must never appear
+literally in any file or message in this repo.
 
 The rule this unit adds: never write a closing keyword followed by `#N` for an issue you want to stay
 open into any text that will be reused as a PR or commit body — handoff prose and future-work prompts
