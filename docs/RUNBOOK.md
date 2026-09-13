@@ -46,6 +46,33 @@ state vocabularies, and requirement 6's queries at ~2,000 rows — and exits non
 `RESULT: FAIL` and one `FAIL:` line per broken check. It never touches `quotes.csv`/`sources.csv`
 (it hashes both before and after). See `docs/program/W1_1_STORAGE_AND_SCHEMA.md`.
 
+## Check the candidate envelope contract (W1.2)
+
+```
+python3 scripts/check_garden_envelope.py
+python3 scripts/garden_envelope.py serialize --envelope FILE
+python3 scripts/garden_envelope.py validate  --envelope FILE [--captures FILE] [--rule N]
+```
+
+`scripts/garden_envelope.py` implements the `garden.candidate-envelope/1` contract
+(`docs/program/CANDIDATE_ENVELOPE.md`) as a canonical serialized JSON form plus a deterministic
+validator for rules 1–6, each violation reporting its rule id (`rule-1` … `rule-6`). It also
+bridges a valid envelope into W1.1's store: `store_capture` writes the immutable capture row from
+the envelope's `captured_*` fields, `store_envelope` validates all six rules against the store's
+own capture records and then writes the candidate and its duplicate hints, and `read_envelope`
+reconstructs the envelope's required fields from the store. The sentinel vocabulary
+(`unknown`/`und`/`none`/`legacy-import`) is carried verbatim — never as an empty string, and a
+missing required field is never defaulted. The CLI is a **read-only diagnostic** (it inspects an
+envelope file; it creates no capture and records no decision — the intake surface is W1.3).
+`scripts/check_garden_envelope.py` runs the full acceptance + evidence suite (102 checks) in a
+throwaway temp directory: the serialized form round-trips byte-identically and is key-order
+independent, every valid fixture and all twelve W0 scenario envelopes pass all six rules, every
+rule has a failing fixture that reports exactly that rule id, sentinels survive validation,
+serialization and SQLite verbatim, a valid envelope is stored and read back with all 21 required
+fields intact, and `quotes.csv`/`sources.csv` are hashed before and after. Exits non-zero with
+`RESULT: FAIL` and one `FAIL:` line per broken check. See
+`docs/program/W1_2_ENVELOPE_VALIDATOR.md`.
+
 ## Run the browser locally
 
 ```

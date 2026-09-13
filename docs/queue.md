@@ -62,6 +62,8 @@ Living document — update it as items are picked up or closed, don't just appen
       + validator · **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate
       hints · **W1.5** curation review + decisions + audit history · **W1.6** end-to-end test pack +
       Gate B evidence packet.
+      **Unit status (updated, appended — the lines above are left byte-identical): W1.1 ✅ DONE ·
+      W1.2 ✅ DONE (see the close-out bullet below) · next: W1.3.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -85,6 +87,52 @@ Living document — update it as items are picked up or closed, don't just appen
       `GARDEN_W1_1_HANDOFF.md`. `quotes.csv`/`sources.csv` byte-identical (read-only rule held). Also
       recorded there: six doctrine ambiguities W1.5/W3 must resolve (notably `work_state` having two
       subjects, and no sanctioned capture-deletion path). **Next: W1.2.**
+- [x] **W1.2 — candidate-envelope contract + validator. DONE 2026-09-12** (branch
+      `w1/envelope-validator`, PR
+      [#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26), not merged — the parent lands it
+      after independent/foreign QA). `scripts/garden_envelope.py` implements
+      `garden.candidate-envelope/1` (`docs/program/CANDIDATE_ENVELOPE.md`) as a canonical
+      serialized JSON form (sorted keys, UTF-8, `allow_nan=False`) plus a deterministic validator
+      for rules 1–6, each violation reporting `rule-1` … `rule-6`. Sentinel handling for
+      `unknown`/`und`/`none`/`legacy-import` is a per-field allowance table: a sentinel is carried
+      verbatim through validation, serialization and SQLite, never turned into `""`, and a missing
+      required field is never defaulted. `scripts/check_garden_envelope.py` is the acceptance +
+      evidence run (**102** checks; 99 as authored, +3 failing fixtures added by the reviewing
+      session to close coverage gaps found in independent QA): round-trip is byte-identical and
+      key-order independent, **23 invalid fixtures** (≥1 per rule, asserted as an *exact* rule-id
+      set) plus 4 valid ones and all twelve W0 scenario envelopes pass/ fail exactly as declared,
+      and a valid envelope is stored through W1.1's store and read back with all **21 required
+      fields intact**. The `.invalid_envelopes` fixture set lives in
+      `docs/program/fixtures/envelope_fixtures.json`; the design doc is
+      `docs/program/W1_2_ENVELOPE_VALIDATOR.md`. **15 negative controls** recorded in
+      `GARDEN_W1_2_HANDOFF.md` (each turns the run red with a targeted `FAIL:` line, no
+      traceback), plus a separate **review finding** (independent QA found three unguarded paths —
+      the `intake_schema_version` value check and rule 4's undeclared-keys / non-object-hint
+      checks — and fixed them with three fixtures; see the handoff's review section and
+      `docs/DECISIONS.md` "W1.2 review (QA)"). `quotes.csv`/`sources.csv` byte-identical
+      (read-only rule held). Decision recorded in `docs/DECISIONS.md` ("W1.2 (envelope): no
+      migration in W1.2 …"). **Next: W1.3.**
+
+### Open — discovered during W1.2 (filed, NOT fixed in passing)
+
+- [ ] **Optional envelope fields have no store columns.** Of the nine optional fields
+      (`docs/program/CANDIDATE_ENVELOPE.md` §"Optional fields"), only `external_id` has a column in
+      W1.1's schema; `provenance_chain`, `attribution_chain`, `placeholder_markers`,
+      `source_link_state`, `locator`, `container`, `period_hint` and `rights_note` are validated,
+      serialized and round-tripped but cannot be persisted. Persisting them needs a new migration,
+      and W1.1's acceptance run asserts the ledger is exactly `["0001_create_core"]`, so a W1.2
+      migration would turn W1.1's suite red. **Not fixed in W1.2** (a storage-schema change is
+      W1.1's lane, and its acceptance would have to be edited to accept it). Needs a decision:
+      either add migration `0002` (and relax W1.1's ledger assertion to "0001 present, applied
+      once") or keep the optional fields out of the store until the unit that first needs them
+      (likely W1.4, for `placeholder_markers`/`provenance_chain`). Recorded in
+      `docs/program/W1_2_ENVELOPE_VALIDATOR.md` §5.3.
+- [ ] **Rule 5 only compares `captured_text`.** The contract's rule 5 says nothing about the other
+      ten `captured_*` fields an envelope also carries, so an envelope whose
+      `captured_attribution`/`captured_citation`/etc. contradict its own capture record would pass.
+      W1.2 implements the rule exactly as written rather than silently widening it; the gap needs a
+      contract decision (extend rule 5, or state that the other capture fields are the capture's
+      and an envelope must not restate them). Recorded in `W1_2_ENVELOPE_VALIDATOR.md` §5.1.
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 

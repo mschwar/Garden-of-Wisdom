@@ -505,3 +505,69 @@ idempotency, capture immutability and decision-log append-only enforced by trigg
 ~2,000 rows). Eight negative controls are recorded in `GARDEN_W1_1_HANDOFF.md` — seven from the unit and one added by the reviewing session, which found the first version guarded only one of the four state columns' `CHECK` constraints (removing the `research_state` `CHECK` left the run green); the loop over all four columns is the fix. Details:
 `docs/program/W1_1_STORAGE_AND_SCHEMA.md`. This executes the D2 decision; it does not
 supersede or amend it.
+
+## 2026-09-12 — W1.2 (envelope): canonical JSON form, one rule id per defect, and no store migration in W1.2
+
+W1.2 implemented the `garden.candidate-envelope/1` contract
+(`docs/program/CANDIDATE_ENVELOPE.md`) as a serialized form plus a validator for rules 1-6, and
+ruled on the three questions implementing it actually raised.
+
+**1. The serialized form is canonical JSON with `sort_keys=True` and `allow_nan=False`.** One
+envelope is one JSON object: keys sorted (so key insertion order cannot change the bytes),
+compact separators, `ensure_ascii=False` so UTF-8 stays UTF-8 rather than `\u` escapes, and no
+export-time state, so it is a pure function of the envelope. `allow_nan=False` is the deliberate
+part: a value the canonical form cannot represent (the `Infinity` a JSON reader makes of
+`1e999`) is a **refusal**, not an `Infinity` literal nobody can re-parse. Rejected: a
+newline-terminated pretty-printed form (diff-friendly but not canonical — two equal envelopes
+could serialize differently), and `allow_nan=True` (which would let rule 6's own round-trip
+succeed on a value that is not valid JSON).
+
+**2. Each broken check reports exactly one rule id, and the rule boundaries are drawn so one
+defect has one id.** Rule 1 owns out-of-vocabulary values and missing/empty/ill-typed required
+fields; rule 3 owns in-vocabulary-but-non-intake state values, so `curation_state: "maybe"` is
+rule-1 while `curation_state: "accepted"` is rule-3, never both. `captured_text` non-emptiness
+belongs to rule 2 alone, so rule 1 does not also flag it. Rule 5 compares UTF-8 **bytes**, and a
+`captures=None` call reports rule 5 rather than silently skipping it — a check that does not run
+is worse than no check. Rejected: letting a defect report several rules (it would make the
+"fixture X reports exactly rule Y" assertion — the only thing that proves the rule ids are
+carried — impossible to state).
+
+**3. W1.2 adds NO store migration.** W1.1's handoff anticipated that W1.2 would add the optional
+envelope fields (`source_link_state`, `placeholder_markers`, `provenance_chain`, ...) as a new
+migration id. W1.2 declines. Of the nine optional fields only `external_id` has a column today;
+adding the rest means a `0002` migration, and W1.1's acceptance suite asserts the migration
+ledger is exactly `["0001_create_core"]`, so a W1.2 migration would turn W1.1's run red unless
+W1.1's own acceptance assertions were edited — i.e. a storage-schema decision (W1.1's lane) plus
+an edit to another unit's evidence, taken inside the envelope unit. Instead: the serialized form
+carries all nine losslessly, the store persists the 21 **required** fields, a stored envelope
+reads back intact and re-validates, and the optional-field persistence gap is filed as open work
+in `docs/queue.md` (to be closed by whichever unit first needs the columns, likely W1.4 for
+`placeholder_markers`/`provenance_chain`). Rejected: (a) the `0002` migration plus relaxing W1.1's
+ledger assertion; (b) inventing a generic `extra_json` column to avoid naming the fields (it
+would make the store schema a bucket and hide which fields the contract actually has).
+
+Also decided in W1.2: the envelope carries no candidate identity, so `store_envelope` requires the
+caller to supply `candidate_id` rather than inventing a derivation the contract does not declare;
+`normalization_notes` may not be a bare sentinel (a sentinel is absence, and the contract requires
+an assertion even for a no-op); and the module's CLI is a read-only diagnostic (`serialize` /
+`validate` over a file) — it creates no capture and records no decision, because the intake
+surface is W1.3. Implemented as `scripts/garden_envelope.py` with
+`scripts/check_garden_envelope.py` as the deterministic acceptance + evidence run (99 checks, 15
+negative controls recorded in `GARDEN_W1_2_HANDOFF.md`). Details:
+`docs/program/W1_2_ENVELOPE_VALIDATOR.md`.
+
+## 2026-09-12 — W1.2 review (QA): three validator paths were unguarded; three failing fixtures added (99 → 102 checks)
+
+Independent QA by a separate session from the author — the same relationship as the W1.1
+reviewer — found that three code paths in `scripts/garden_envelope.py` had no failing fixture,
+so a mutation disabling each left the whole `check_garden_envelope.py` run green: the
+`intake_schema_version` value check in rule 1 (no fixture had a wrong schema key), and rule 4's
+undeclared-keys and non-object-hint checks (no fixture had a hint with extra keys or a bare
+non-object element). This is the same class of coverage gap the W1.1 reviewer found (the
+`research_state` `CHECK`), and it is fixed the same way: three otherwise-valid failing fixtures
+(`wrong-intake-schema-version`, `hint-extra-keys`, `hint-not-an-object`) added to
+`docs/program/fixtures/envelope_fixtures.json`, taking the suite from 99 to **102 checks** and the
+invalid-fixture set from 20 to 23. No validator behaviour changed. Re-run of the reviewer's four
+independent mutations confirmed all three paths now go red and zero coverage gaps remain.
+This supersedes the "99 checks" sentence in the W1.2 entry above; the validation contract itself
+is unchanged. Recorded in `GARDEN_W1_2_HANDOFF.md` §"Review finding (independent QA, landed in review)".
