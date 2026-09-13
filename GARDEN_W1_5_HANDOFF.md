@@ -1,8 +1,8 @@
 # GARDEN_W1_5_HANDOFF.md
 
 **Unit:** W1.5 — Curation review + decision recording + audit history.
-**Branch:** `w1/curation-review` · **PR:** #30 (this unit's own PR) · **Merge:** see the post-merge
-docs commit for the merge sha / CI run ids.
+**Branch:** `w1/curation-review` · **PR:** [#32](https://github.com/mschwar/Garden-of-Wisdom/pull/32) ·
+**Merge:** `627d604`.
 **Date:** 2026-09-13.
 
 ## Summary
@@ -136,6 +136,18 @@ the work (removing T-P7 leaves the stranded-dimension path red).
 - **No research surface.** There is no code path in W1.5 that writes `research_state`.
 - **No web/browser review UI.**
 - **No populated `data/store` mirror.**
+
+## Post-merge verification (2026-09-13)
+
+- Merged as `627d604` (PR [#32](https://github.com/mschwar/Garden-of-Wisdom/pull/32), `--merge`).
+- CI on the PR: smoke run `34787864150` **success**; GitGuardian **pass**.
+- CI on the merge push to `main`: smoke run `34787931511` **success**; Pages deploy run
+  `34787931501` **success**.
+- Live acceptance: `https://mschwar.github.io/Garden-of-Wisdom/` **200**,
+  `/browser/index.html` **200**; live `quotes.csv` and `sources.csv` sha256 match the repo
+  (`5675d7e6…` / `10b4c156…`). (W1.5 touched neither file and no browser file, so this is a
+  regression check, not a re-format.) The five W1 acceptance suites re-ran green on the merged
+  `main` under `python3` 3.14 and `/opt/homebrew/bin/python3.12`.
 
 ## Resume / next action
 

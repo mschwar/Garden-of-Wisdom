@@ -181,7 +181,9 @@ Living document — update it as items are picked up or closed, don't just appen
       **No migration** — W1.4 declined the `placeholder_markers` column (see the W1.4 findings section).
       **Next: W1.5.**
 - [x] **W1.5 — curation review + decision recording + audit history. DONE 2026-09-13** (branch
-      `w1/curation-review`). `scripts/garden_review.py` (`queue` / `show` / `audit` / `accept` /
+      `w1/curation-review`, PR
+      [#32](https://github.com/mschwar/Garden-of-Wisdom/pull/32), merged as `627d604`).
+      `scripts/garden_review.py` (`queue` / `show` / `audit` / `accept` /
       `hold` / `reject` / `duplicate` / `reopen`) is the operator-facing review surface on a single
       new store write gate, `garden_store.Store.curate`: it looks the legal T-C1…T-C12 transition up,
       applies the required corpus follow-on, and writes the candidate's states **and every audit row
