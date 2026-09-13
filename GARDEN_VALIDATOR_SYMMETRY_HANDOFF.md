@@ -187,7 +187,7 @@ rule you change, and prove it with a negative control in a throwaway `/tmp` copy
 2026-09-13 transcripts) and re-count the queue's D6 item to match; (4) `quotes.csv` / `sources.csv` stay
 byte-identical (`5675d7e6…` / `10b4c156…`) — if a decision cannot be implemented without editing the
 corpus, stop and record why instead. One branch → one PR → merge → push, then state the next task. If
-the operator prefers the validator's scope be frozen as-is, close #34 as "no change" with that
+the operator prefers the validator's scope be frozen as-is, record #34 as "no change" with that
 measurement as the reason and take the **CI-coverage unit** instead (wire the six W1 acceptance suites
 into `browser-smoke.yml`) — that is the other long-open, non-gated item.
 
@@ -224,3 +224,18 @@ curation edits themselves (human pass), and any verification-status change.
 - Branch deleted locally and remotely (`gh pr merge --delete-branch`; `git remote prune origin`), the
   throwaway `/tmp` harness and control copies removed. Issue #31 closed; the follow-up is
   [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34).
+
+## Process finding — the PR body auto-closed the follow-up issue
+
+Worth recording because it cost a real issue state and will recur: **the handoff file was used
+verbatim as the PR #35 body, and its "Exact next Prompt" text contained the phrase `close #34`.** GitHub
+parses `<closing keyword> #N` in a PR body as a closing reference, so merging PR #35 marked issue #34
+**COMPLETED** with no work done on it. #34 has been reopened with that explanation, and the wording here
+now says "record #34 as \"no change\"".
+
+The rule this unit adds: never write a closing keyword followed by `#N` for an issue you want to stay
+open into any text that will be reused as a PR or commit body — handoff prose and future-work prompts
+included, since those are exactly the parts that get copy-pasted. A repo-wide grep for the pattern
+`\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b[:\ ]*#[0-9]+` now returns nothing outside this note's own
+description of the hazard (that one line was the only occurrence). Recorded in `docs/DECISIONS.md` and
+in the work-unit skill.
