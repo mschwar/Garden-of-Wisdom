@@ -73,6 +73,40 @@ fields intact, and `quotes.csv`/`sources.csv` are hashed before and after. Exits
 `RESULT: FAIL` and one `FAIL:` line per broken check. See
 `docs/program/W1_2_ENVELOPE_VALIDATOR.md`.
 
+## Submit a candidate by hand (W1.3)
+
+```
+python3 scripts/garden_store.py create --dir data/store          # once; idempotent
+python3 scripts/garden_submit.py submit --dir data/store --text 'TEXT' --capture-method pasted-text
+python3 scripts/garden_submit.py submit --dir data/store --text-file page.txt --capture-method book-scan
+cat page.txt | python3 scripts/garden_submit.py submit --dir data/store --stdin --capture-method pasted-text
+python3 scripts/check_garden_submit.py                            # the W1.3 acceptance + evidence run
+```
+
+One submission writes **one immutable capture** (the text byte for byte, as encountered) and **one
+candidate** at its intake states (`new` / `not_started` / `candidate_only` / `queued`). It records
+no decision, sets no research state, and generates no duplicate hints (that is W1.4); there is no
+review or accept command (that is W1.5) — the stored record is read back out with
+`garden_store.py export --dir DIR` or `dump --dir DIR`.
+
+`--capture-method` is required and has no default: how the text was encountered is evidence. The
+raw text is never trimmed, quote-normalized, or glyph-repaired, so a literal `_` placeholder and
+curly quotes survive verbatim. Omitting an optional flag (`--attribution`, `--citation`,
+`--source-reference`, `--language`, …) uses the contract's sentinel for that field (`unknown` /
+`none` / `und`); passing the flag *empty* is refused with the field named. If `--candidate-text` /
+`--candidate-author` / `--candidate-source-ref` differ from the capture, `--normalization-notes` is
+required — the CLI performs no normalization of its own (W1.4 owns that algorithm) and will not
+record one without a reason.
+
+Record ids are allocated as `cap-YYYY-MM-DD-NNNN` / `cand-YYYY-MM-DD-NNNN`, where the day is the
+capture day and the number is the store's next free one. Add `--json` for one machine-readable
+canonical object, `--emit-envelope FILE` to also write the envelope JSON. A refused submission
+writes nothing at all.
+
+The canonical store lives at `data/store/`: `garden.sqlite3` is git-ignored (machine-local,
+non-diffable) and `garden.export.txt` next to it is the committed text mirror. See
+`docs/program/W1_3_SUBMISSION_CLI.md`.
+
 ## Run the browser locally
 
 ```

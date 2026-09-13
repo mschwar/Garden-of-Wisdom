@@ -64,6 +64,8 @@ Living document — update it as items are picked up or closed, don't just appen
       Gate B evidence packet.
       **Unit status (updated, appended — the lines above are left byte-identical): W1.1 ✅ DONE ·
       W1.2 ✅ DONE (see the close-out bullet below) · next: W1.3.**
+      **Unit status (updated again, appended 2026-09-13): W1.1 ✅ DONE · W1.2 ✅ DONE · W1.3 ✅ DONE
+      (see its close-out bullet below) · next: W1.4.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -113,6 +115,60 @@ Living document — update it as items are picked up or closed, don't just appen
       `docs/DECISIONS.md` "W1.2 review (QA)"). `quotes.csv`/`sources.csv` byte-identical
       (read-only rule held). Decision recorded in `docs/DECISIONS.md` ("W1.2 (envelope): no
       migration in W1.2 …"). **Next: W1.3.**
+- [x] **W1.3 — manual capture/submission surface (CLI first). DONE 2026-09-13** (branch
+      `w1/submission-cli`, PR
+      [#28](https://github.com/mschwar/Garden-of-Wisdom/pull/28)). `scripts/garden_submit.py` turns
+      one raw submission into one **immutable capture** (the text byte for byte, as encountered —
+      literal `_`, curly quotes, leading/trailing whitespace, a wrong author and an absent citation
+      all survive) plus one **candidate** at its intake states (`new`/`not_started`/`candidate_only`/
+      `queued`), through W1.1's store and W1.2's validator. `scripts/check_garden_submit.py` is the
+      acceptance + evidence run (**134** checks; it drives the CLI as a subprocess for all 18
+      refusals and for every accepted submission, then asserts against the store the CLI wrote).
+      Rulings W1.3 owns: the record-id scheme (`cap-`/`cand-YYYY-MM-DD-NNNN`, day = the **capture**
+      day, next number derived by scanning the store, existing ids refused before anything is
+      written), the canonical store location (`data/store/`, SQLite git-ignored, `garden.export.txt`
+      the committed mirror), and the normalization boundary (W1.3 implements **no** normalization;
+      the invariant it enforces is *no normalization without a note*, so a differing
+      `--candidate-text`/`--candidate-author`/`--candidate-source-ref` is refused unless
+      `--normalization-notes` says what changed and why). An omitted flag becomes the field's
+      declared sentinel, while a flag supplied *empty* is passed through so the validator names the
+      field; a refused submission writes nothing at all (asserted for all 18). Design doc:
+      `docs/program/W1_3_SUBMISSION_CLI.md`. Decision recorded in `docs/DECISIONS.md` ("W1.3
+      (submission CLI): the record-id scheme, the normalization boundary, the store location, and no
+      populated mirror yet"). `quotes.csv`/`sources.csv` byte-identical (read-only rule held).
+      **Deliberately not done, with the reason recorded:** no populated store mirror is committed —
+      W1.3's only submissions are its own temp-dir fixtures and the acceptance run must pass from a
+      clean clone; the first real operator submission populates it and the Gate B evidence store is
+      where the demonstration belongs (this deviates from W1.1's handoff expectation and is recorded
+      as such in `DECISIONS.md`). **Next: W1.4.**
+
+### Open — discovered during W1.3 (filed, NOT fixed in passing)
+
+- [ ] **`AGENTS.md` does not describe the corpus-program command surface.** The first file every
+      agent reads lists `validate_quotes.py`, the homepage-preview export and `python3 -m http.server`
+      — and nothing about `check_program_contracts.py`, `smoke_quote_browser.py`, the W1 store/
+      envelope/submit commands, or the **W1 cross-unit rule that `quotes.csv` and `sources.csv` are
+      read-only for the whole wave**. The gap predates W1.3 (it was already stale after W1.1/W1.2) and
+      is now larger. Not fixed here: `AGENTS.md` writes are refused by tool policy and it is a
+      protected file with a stated size budget, so the change needs an operator edit. Filed as
+      [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27).
+- [ ] **A candidate can only ever have one capture.** `PROVENANCE_AND_CAPTURE_CONTRACT.md` invariant
+      3 explicitly allows the same passage to be captured twice and says "the candidate records all
+      of them", and `candidate_captures` has an `ordinal` column for exactly that — but no surface
+      can attach a second capture to an existing candidate, and W1.3 refuses a `--capture-id` the
+      store already holds rather than restating it (rule 5 compares only `captured_text`, so a
+      restatement could disagree with the stored record on attribution and still validate). Needs a
+      decision on the link-existing-capture path and on whether rule 5 should widen; recorded in
+      `docs/program/W1_3_SUBMISSION_CLI.md` §7.3 and `DECISIONS.md`. Not fixed in W1.3.
+- [ ] **`captured_by` has a surface default the contract does not give it.** W1.3 defaults it to
+      `operator` (matching `garden_store.add_capture`) rather than requiring an explicit flag. A
+      reading, not a contract statement; recorded in `W1_3_SUBMISSION_CLI.md` §7.1 so a reviewer can
+      require the flag instead.
+- [ ] **The manual surface exposes no flag for any optional envelope field** (W1.2's
+      persistence gap, unchanged). Eight of the nine optional fields still have no store column;
+      `external_id` has one but no W1 flow needs it yet, so no flag was added. A flag that accepted a
+      value the store cannot hold would be a silent drop. See the W1.2 entry above for the migration
+      decision that is still owed to W1.4.
 
 ### Open — discovered during W1.2 (filed, NOT fixed in passing)
 
@@ -137,7 +193,11 @@ Living document — update it as items are picked up or closed, don't just appen
 - [ ] **CI does not run the W1 acceptance suites.** `.github/workflows/browser-smoke.yml`'s
       "Check the data validators still pass" step runs `validate_quotes.py`,
       `check_program_contracts.py` and `validate_homepage_preview_export.py`, but not
-      `scripts/check_garden_store.py` (W1.1) or `scripts/check_garden_envelope.py` (W1.2). The two
+      `scripts/check_garden_store.py` (W1.1) or `scripts/check_garden_envelope.py` (W1.2).
+      **Updated 2026-09-13 (W1.3): there are now three W1 acceptance suites**
+      (`check_garden_store.py`, `check_garden_envelope.py`, `check_garden_submit.py`) — all
+      stdlib-only, deterministic, exit-0/1 — and all three are still absent from CI. The decision
+      below applies to three, not two. The two
       W1 evidence runs therefore pass locally (and in the reviewer's run) but are not protected
       from a future regression by CI. Adding them is a low-risk, deterministic, stdlib-only,
       exit-0/1 addition to that step, but it is a CI change touching the guarded workflow and both
