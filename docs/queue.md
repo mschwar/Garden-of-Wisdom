@@ -70,6 +70,8 @@ Living document — update it as items are picked up or closed, don't just appen
       W1.3 ✅ DONE · W1.4 ✅ DONE (see its close-out bullet below) · next: W1.5.**
       **Unit status (updated again, appended 2026-09-13, W1.5 close-out): W1.1 ✅ DONE · W1.2 ✅ DONE ·
       W1.3 ✅ DONE · W1.4 ✅ DONE · W1.5 ✅ DONE (see its close-out bullet below) · next: W1.6.**
+      **Unit status (updated again, appended 2026-09-13, W1.6 close-out): W1.1–W1.6 ✅ ALL DONE (see
+      the W1.6 close-out bullet below). W1 COMPLETE — the Gate B packet is submitted. W2 is not started.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -207,7 +209,33 @@ Living document — update it as items are picked up or closed, don't just appen
       controls** (same-session review pass; each fires W1.5's *own* guard — T-P1 firing, T-P7 firing,
       illegal-transition admission, the required-reason guard, a research-state write, the
       machine-inferred marker, the T-P1 system authority, and a CLI layer that would default an empty
-      reason) are all recorded in `GARDEN_W1_5_HANDOFF.md`. **Next: W1.6.**
+      reason) are all recorded in `GARDEN_W1_5_HANDOFF.md`. **Next: W1.6.** **→ W1.6 DONE; see the
+      W1.6 close-out bullet below.**
+- [x] **W1.6 — end-to-end test pack + Gate B evidence packet. DONE 2026-09-13** (branch
+      `w1/gate-b-packet`, PR —, merged as —). `scripts/check_garden_e2e.py` is the deterministic,
+      clean-clone, one-command end-to-end acceptance run (**96 checks**, both interpreters,
+      stdlib-only): it drives the whole loop — a messy submission batch (a literal `_` glyph row
+      and a curly apostrophe row read **verbatim from `quotes.csv`**, plus a wrong author,
+      leading/trailing whitespace, a missing citation, a near-duplicate pair, and two unrelated
+      rows sharing the generic `Oral Tradition` label) → `submit` (W1.3) → `normalize --all` +
+      `hints --all` (W1.4) → `accept/hold/reject/duplicate/reopen` with the full `accept → reject`
+      reversal (W1.5) — through the real CLIs in a throwaway temp dir, and asserts: every capture
+      **byte-identical** to the submitted text after every stage; provenance (method, timestamp,
+      wrong author, whitespace, a missing citation's `none` sentinel) preserved; normalize + hints
+      never touch the `[captures]` section and write no decision row; a hint is never a state; the
+      generic `Oral Tradition` pair produces **no** reference hint (the W1.4 false-positive fix);
+      every decision audited and the `decisions` log append-only; the reversal
+      (`['T-C1','T-P1','T-C8','T-P7']`) strands no dimension; and **no curation action implies
+      verification** (`research_state` stays `not_started` throughout). It re-runs
+      `validate_quotes.py` and hashes both CSVs before/after (byte-identical: `5675d7e6…` /
+      `10b4c156…`), proves the store export (`garden.export/1`) round-trips, and writes nothing
+      outside the temp dir. The Gate B packet `docs/program/W1_6_GATE_B_PACKET.md` (mirroring
+      `W0_GATE_REPORT.md`'s shape) is the wave gate's evidence package; the design doc is
+      `docs/program/W1_6_E2E_TEST_PACK.md`. **6 same-session negative controls** (c1–c6, each to a
+      stored write path; one finding — c5 — where the store's own `import_bytes` guard masks the
+      e2e's round-trip check) recorded in `GARDEN_W1_6_HANDOFF.md`. **No migration**, no new store
+      surface, `quotes.csv`/`sources.csv` untouched. **W1 is COMPLETE: the Gate B packet is
+      submitted; W2 is not started.** (PR and merge ids filled in the post-merge docs commit.)
 
 ### Open — discovered during W1.4 (filed, NOT fixed in passing)
 
@@ -325,6 +353,12 @@ Living document — update it as items are picked up or closed, don't just appen
       the five. The decision asked for at W1.2 is therefore still open, now over five suites; the
       decision in `DECISIONS.md` ("W1.5 lesson for the CI gap…") records that it was not fixed as a
       side effect of an ingestion/review unit.
+      **Updated 2026-09-13 (W1.6 close-out): there are now SIX W1 acceptance suites**
+      (`check_garden_store.py` 59, `check_garden_envelope.py` 102, `check_garden_submit.py` 134,
+      `check_garden_normalize.py` 232, `check_garden_review.py` 246, `check_garden_e2e.py` 96) — the
+      last of them the wave's own gate — and a **seventh surface** (`garden_review.py`) that none of
+      them protect from a future regression — CI still runs none of the six. This is now the final
+      recorded count for W1; the decision asked for at W1.2 remains open over six suites.
       W1 evidence runs therefore pass locally (and in the reviewer's run) but are not protected
       from a future regression by CI. Adding them is a low-risk, deterministic, stdlib-only,
       exit-0/1 addition to that step, but it is a CI change touching the guarded workflow and both
