@@ -87,6 +87,15 @@ hundredth (0.68 vs 0.69 for that pair), which is recorded here so a reviewer doe
 bug. The legacy report's own direction-dependence is filed as a separate issue, because the D6
 curation pass will want to re-derive those pairs.
 
+> **Resolved 2026-09-13 (issue #31).** The legacy validator now scores a pair the same way this
+> generator does — the mean of both directional ratios, threshold `0.60` compared with `>` — and it
+> **hard-fails** if a pass with every tradition's rows reversed disagrees, so the `0.60` branch
+> behaviour above is now the repo-wide rule rather than a W1.4-only correction. The predicted
+> hundredth moved exactly as written here (`113 ~ 114` reports `0.68`). The pair set was unchanged
+> (45) and the D6 counts were re-derived. See `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation
+> 2026-09-13 (issue #31)" and the `docs/DECISIONS.md` entry of the same date. This note is an
+> annotation; the section above is left byte-identical as the W1.4 record.
+
 ## 4. Ruling 2 — a shared citation is only evidence when the citation pinpoints something
 
 This is the fix for the false-positive class `docs/data/DATA_QUALITY_REPORT.md` describes: *"many

@@ -836,3 +836,62 @@ assertion.
 
 Verdict: **Gate B accepted**, 2026-09-13. Decided this acceptance does **not** authorize W2 — that
 stays a separate, explicit operator decision per `W1_DECOMPOSITION.md`.
+
+## 2026-09-13 — The near-duplicate score is a property of the pair, and the sweep stays per-tradition
+
+Fix for issue [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31), executed as its own unit
+(branch `fix/validator-symmetric-similarity`, PR #35). `scripts/validate_quotes.py`'s near-duplicate
+heuristic scored each candidate pair with **one directional** `difflib.SequenceMatcher.ratio()` call.
+That ratio is asymmetric, so the number a pair was reported with was a function of which row was
+visited first, and a pair straddling the `0.60` threshold could appear or disappear outright rather
+than merely shift. Measured on the frozen corpus: `113 ~ 114` scores `0.6888…` one way and `0.6666…`
+the other; `189 ~ 216` crosses the threshold in one order (`0.6023`) and not the other (`0.5909`).
+
+**1. The score is the mean of both directional ratios.** This is the rule W1.4's store-side hint
+generator already adopted (`docs/program/W1_4_NORMALIZATION_HINTS.md` §3 ruling 1), so the validator
+and the store now agree about what a pair's similarity is. The rejected alternative — "canonically
+order the pair, then score it once" — was rejected because it makes the score depend on the
+canonicalisation (id order? text order?) rather than on the pair, which is the same defect wearing a
+different hat. The consequence is recorded rather than hidden: the frozen report's number for
+`113 ~ 114` moves `0.69` → `0.68`, which W1.4's design doc had already predicted to the hundredth.
+
+**2. The validator hard-fails on an order-dependent result.** A second detection pass over the same
+rows with every tradition's rows reversed must produce an identical pair set *and* identical reason
+strings, otherwise the run exits 1. An order-dependent number is a **correctness** bug, so it is not
+parked as curation signal — and it is a defect this repo actually shipped, so it gets a guard rather
+than a note. The guard is a hard failure in the validator, which is in CI (`browser-smoke.yml` runs
+it), so the class cannot return silently. Control `c1` (revert the scorer to one directional call)
+turns the run red with exactly the difference the issue described, including the membership flip on
+`189 ~ 216`; control `c2` (the same mutation plus the guard disabled) is green, which is what proves
+the guard — and not something else — is the catcher.
+
+**3. A shared citation that also clears the text threshold now reports its number.** The old loop
+`continue`d on a shared `source_ref`, so a pair sharing a pinpoint citation *and* reading nearly
+identically threw away the second, independent piece of evidence. The pair count does not move (the
+number is appended to the existing line), and a second hard check re-derives each printed reason from
+the rows so the annotation cannot be dropped silently (control `c3`).
+
+**4. The sweep stays scoped within one `tradition` — decided *with* the measurement, not before it.**
+Corpus-wide, the same rules flag **196** pairs instead of **45**. Of the 151 additions, **146** are
+the same bare `Oral Tradition` label matching unrelated rows across traditions (the documented
+false-positive class), so widening now would bury the signal in the curation queue this feeds.
+The rejected alternative was to widen *and* apply W1.4 ruling 2's locator test in the same pass — a
+coherent design, but it silently redefines what the queue's D6 item is looking at, and #31's own
+re-count (15 pairs to inspect / 30 to skip) is defined against the current scope. Filed as
+[#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34) with the numbers, including the 5
+cross-tradition text pairs the scoped sweep cannot see at all — the strongest being
+`39` (Christianity) ~ `53` (Judaism) at 0.82, the same commandment in two traditions.
+
+**5. The frozen evidence was extended, never rewritten.** `docs/data/DATA_QUALITY_REPORT.md` keeps its
+2026-09-11 transcript byte-identical (`git diff` shows **0 deleted lines** in that file) and gains a
+dated re-derivation section carrying the verbatim fresh transcript, the exact pair-class table
+(2 text-only + 13 pinpointed-citation + 25 bare-label + 5 work-level = **45**), and the two decisions
+above. The validator writes nothing; `quotes.csv` / `sources.csv` stay byte-identical
+(`5675d7e6…` / `10b4c156…`). The queue's D6 item was re-counted from its approximate `~22` / `~23`
+split to the re-derived **15 to inspect / 30 to skip** — a stale count in a queue item is a defect of
+the same class as a stale number in the report.
+
+**Known limitation, recorded not papered over:** the *scope* has no automated falsifier. Control `c4`
+(widen the sweep to the whole corpus) leaves the suite green, because a wider sweep is still
+internally consistent; the only detector is the `45`-pair count in the transcript and the D6 re-count
+that cites it. That is why the count is called out as the tripwire in both the report and the queue.
