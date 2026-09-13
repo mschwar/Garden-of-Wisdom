@@ -68,6 +68,8 @@ Living document — update it as items are picked up or closed, don't just appen
       (see its close-out bullet below) · next: W1.4.**
       **Unit status (updated again, appended 2026-09-13, W1.4 close-out): W1.1 ✅ DONE · W1.2 ✅ DONE ·
       W1.3 ✅ DONE · W1.4 ✅ DONE (see its close-out bullet below) · next: W1.5.**
+      **Unit status (updated again, appended 2026-09-13, W1.5 close-out): W1.1 ✅ DONE · W1.2 ✅ DONE ·
+      W1.3 ✅ DONE · W1.4 ✅ DONE · W1.5 ✅ DONE (see its close-out bullet below) · next: W1.6.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -178,6 +180,32 @@ Living document — update it as items are picked up or closed, don't just appen
       cover it). **17 author controls + 7 review controls**, all recorded in `GARDEN_W1_4_HANDOFF.md`.
       **No migration** — W1.4 declined the `placeholder_markers` column (see the W1.4 findings section).
       **Next: W1.5.**
+- [x] **W1.5 — curation review + decision recording + audit history. DONE 2026-09-13** (branch
+      `w1/curation-review`). `scripts/garden_review.py` (`queue` / `show` / `audit` / `accept` /
+      `hold` / `reject` / `duplicate` / `reopen`) is the operator-facing review surface on a single
+      new store write gate, `garden_store.Store.curate`: it looks the legal T-C1…T-C12 transition up,
+      applies the required corpus follow-on, and writes the candidate's states **and every audit row
+      in one SQLite transaction** — no window in which a state changes without its audit row.
+      `scripts/check_garden_review.py` is the acceptance + evidence run (**246** checks, both
+      interpreters): all twelve T-C transitions are exercised through the real CLI and each produces
+      an audit row with actor/timestamp/from/to/transition_id/reason; acceptance fires the
+      deterministic **T-P1** `candidate_only → eligible` (authority `system`, audited); both
+      reversal paths (`T-C8` then **T-P7**, `T-C9` then **T-P7**) leave **no dimension stranded**
+      (falsifying the W0 carried-forward risk — `T-P7` returns an accepted-then-withdrawn record to
+      `candidate_only`); rejecting keeps the capture and the candidate readable; **no curation action
+      writes research state** (rendered read-only, always `not_started`, asserted after every
+      transition); the queue renders the capture as `asserted`, the proposal as `derived
+      (normalization)`, the notes as `asserted`, and the hints as `machine-inferred (a hint is
+      evidence, never a decision)` (invariant 6); refused decisions (illegal transition, missing
+      candidate, empty `--reason`) write nothing at all; the `decisions` log is re-asserted
+      append-only; and `quotes.csv`/`sources.csv` are byte-identical (`5675d7e6…` / `10b4c156…`).
+      Design doc: `docs/program/W1_5_CURATION_SURFACE.md`. Decision recorded in `docs/DECISIONS.md`
+      ("W1.5 (curation review) …"). **No migration** — the `decisions` ledger and the four state
+      columns already exist from W1.1, so W1.1's exact-ledger assertion is untouched. **8 negative
+      controls** (same-session review pass; each fires W1.5's *own* guard — T-P1 firing, T-P7 firing,
+      illegal-transition admission, the required-reason guard, a research-state write, the
+      machine-inferred marker, the T-P1 system authority, and a CLI layer that would default an empty
+      reason) are all recorded in `GARDEN_W1_5_HANDOFF.md`. **Next: W1.6.**
 
 ### Open — discovered during W1.4 (filed, NOT fixed in passing)
 
@@ -288,6 +316,13 @@ Living document — update it as items are picked up or closed, don't just appen
       W1.4 again did not fix it: it is a change to a guarded workflow, so it needs its own unit
       (and its own branch/PR), not a side effect of an ingestion unit. The decision asked for at
       W1.2 is therefore still open, now over four suites.
+      **Updated 2026-09-13 (W1.5 close-out): there are now FIVE W1 acceptance suites**
+      (`check_garden_store.py` 59, `check_garden_envelope.py` 102, `check_garden_submit.py` 134,
+      `check_garden_normalize.py` 232, `check_garden_review.py` 246) and a **sixth surface**
+      (`garden_review.py`) that none of them protect from a future regression — CI still runs none of
+      the five. The decision asked for at W1.2 is therefore still open, now over five suites; the
+      decision in `DECISIONS.md` ("W1.5 lesson for the CI gap…") records that it was not fixed as a
+      side effect of an ingestion/review unit.
       W1 evidence runs therefore pass locally (and in the reviewer's run) but are not protected
       from a future regression by CI. Adding them is a low-risk, deterministic, stdlib-only,
       exit-0/1 addition to that step, but it is a CI change touching the guarded workflow and both
