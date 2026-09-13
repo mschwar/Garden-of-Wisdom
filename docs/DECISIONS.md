@@ -645,3 +645,63 @@ store cannot hold is a silent drop; and the `captured_at` offset check is delibe
 between the submission surface (which derives the ids from the stamp's date) and rule 1, with the
 acceptance run asserting the layering so the earlier check has a unique falsifier (it did not, until
 control n14 found it).
+
+## 2026-09-13 — W1.4 (normalization + hints): the algorithm, the threshold, specificity, and no migration
+
+W1.4 owns the deterministic intake transform and the duplicate-hint generator. Four decisions, each
+with the rejected alternative recorded.
+
+**1. The normalization algorithm is a closed, declared list — and every change is counted.**
+`garden.normalize/1` = Unicode NFC recomposition, then four canonical-character classes (quote marks,
+dashes, ellipsis, no-break spaces) applied **one class at a time**, then whitespace runs collapsed to
+one space and boundary whitespace trimmed. Rejected: a general "smart punctuation" pass, or
+`str.translate` with the union of the class tables. The union is not just untidy — it converts a
+later class's characters while attributing the count to the first class that fired, so the note
+silently **under-reports**; the acceptance run counts each class independently and caught it
+(control `n6`). Also rejected: touching anything not on the list (guillemets, a trailing
+`— Rumi` attribution line, the literal `_` placeholder). Guessing the placeholder's character stays
+forbidden (2026-09-11), so the proposal keeps the `_` and the note says it was preserved.
+
+**2. The similarity threshold is 0.60, and the score is the *mean* of the two directional
+`difflib` ratios.** 0.60 matches the legacy validator so the repo's 45 near-duplicate pairs remain
+usable as reference data. The mean is a correction, not a preference: `SequenceMatcher.ratio()` is
+asymmetric (rows 113/114 score 0.69 one way and 0.67 the other), so a raw ratio makes a pair's
+reported number depend on which candidate is being compared and lets the two candidates disagree
+about their own pair. Rejected: keeping the raw ratio and documenting the asymmetry. The cost is
+that a basis number can differ from the legacy report's by a hundredth; that is recorded rather than
+hidden, and the legacy report's own direction-dependence is filed separately because the D6 curation
+pass will re-derive those pairs.
+
+**3. A shared citation is evidence only when the citation pinpoints something.** This is the fix for
+the false-positive class `docs/data/DATA_QUALITY_REPORT.md` names: 19 rows share the literal
+`source_ref` `"Oral Tradition"` and get flagged against each other although the quotes are
+unrelated. `same-reference`/`same-passage` now require a citation carrying a **locator** (an Arabic
+digit, a Roman-numeral token, or `§`); `none`/`unknown`/`und`/`""` is not a citation at all; a bare
+work title is `generic`. Rejected: reproducing the legacy predicate (equal `source_ref`) — it is the
+noise the hint exists to remove — and rejected a curated allow/deny list of known-generic labels,
+which is arbitrary and would rot. The rule is strictly narrower than the legacy report's split
+(it also suppresses a shared bare work title, e.g. three rows of
+`Tablets of Bahá’u’lláh, Words of Paradise`), because "same work" is not "same passage"; a missed
+hint is cheap, a wrong duplicate decision is expensive. Also recorded: the legacy report compared
+pairs within one `tradition`, the store has no `tradition` column, so hints compare every candidate
+against every other — deliberate, because a duplicate can be filed under a different label.
+
+**4. W1.4 adds NO migration, so `placeholder_markers` stays unstructured.** W1.2 filed that eight
+optional envelope fields (including `placeholder_markers`) have no store column, and W1.3's handoff
+guessed W1.4 would be the unit to need one. W1.4 needs the placeholder *observation*, not a
+structure: `normalization_notes` exists, its contract is "what changed and why", and it carries
+"`1 literal '_' preserved (not repaired…)`". Adding columns with no consumer would be a speculative
+schema change in an ingestion-lane unit, and it would have forced W1.1's acceptance run to relax its
+exact ledger assertion (`["0001_create_core"]`). Rejected: adding migration `0002` now. The
+persistence gap stays filed; the unit that first *consumes* those fields structurally owns the
+migration and the ledger-assertion change together.
+
+Also decided in W1.4: an explicit `--candidate-id` that cannot be normalized is a refusal, while an
+`--all` run skips such a candidate with a named `SKIPPED:` line — because a whitespace-only
+submission is legal at intake and there is no withdrawal path anywhere in W1, so one junk row must
+not make the batch unusable; but a batch that can normalize **nothing** fails, since a run that
+writes nothing must not report success. And both guard layers (`proposal_for` before the write, and
+`garden_store.apply_normalization` at the write) are kept and asserted separately: the surface's
+pre-check is what makes a batch all-or-nothing, and the store's is what makes the write path safe for
+any future caller. Control `n11` showed the store layer unproven until the suite called it directly —
+the same class of gap W1.3 recorded for `captured_at`, found the same way.

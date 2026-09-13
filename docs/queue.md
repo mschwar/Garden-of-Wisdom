@@ -66,6 +66,8 @@ Living document — update it as items are picked up or closed, don't just appen
       W1.2 ✅ DONE (see the close-out bullet below) · next: W1.3.**
       **Unit status (updated again, appended 2026-09-13): W1.1 ✅ DONE · W1.2 ✅ DONE · W1.3 ✅ DONE
       (see its close-out bullet below) · next: W1.4.**
+      **Unit status (updated again, appended 2026-09-13, W1.4 close-out): W1.1 ✅ DONE · W1.2 ✅ DONE ·
+      W1.3 ✅ DONE · W1.4 ✅ DONE (see its close-out bullet below) · next: W1.5.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit
@@ -141,6 +143,75 @@ Living document — update it as items are picked up or closed, don't just appen
       clean clone; the first real operator submission populates it and the Gate B evidence store is
       where the demonstration belongs (this deviates from W1.1's handoff expectation and is recorded
       as such in `DECISIONS.md`). **Next: W1.4.**
+- [x] **W1.4 — normalization + duplicate hints. DONE 2026-09-13** (branch `w1/normalization-hints`,
+      PR [#29](https://github.com/mschwar/Garden-of-Wisdom/pull/29); commits `78432c8` + `604990c`).
+      `scripts/garden_normalize.py` implements `garden.normalize/1` — NFC recomposition; four
+      canonical-character classes (quote marks, dashes, ellipsis, no-break spaces) applied **one class
+      at a time**; whitespace runs collapsed and boundary whitespace trimmed; a literal `_` placeholder
+      **preserved and reported, never repaired** — and records a note for **every** change, with counts,
+      attributed to the captured field it came from (`identical to capture`, W1.3's exact string, when
+      nothing changed). The capture is never touched: the acceptance run asserts the whole `[captures]`
+      export section is byte-identical after normalizing everything. `normalize` writes the proposal
+      through one new guarded store method (`garden_store.apply_normalization`, which refuses a decided
+      candidate, an empty proposal and an empty note); `hints` rebuilds `{kind, target, basis}` rows
+      (`exact-text` / `near-text` / `same-reference` / `same-passage`), so hints are derived data that a
+      rebuild **replaces rather than accumulates**, and **never a state** — no `curation_state` write, no
+      candidate `duplicate`, and `decisions` stays empty (all asserted).
+      **The three rulings W1.4 owns:** (1) the similarity threshold is **0.60** over normalized
+      case-folded text, scored as the **mean of the two directional `difflib` ratios** — the raw ratio is
+      asymmetric (rows 113/114 score 0.69 one way and 0.67 the other), so the two candidates would
+      otherwise disagree about their own pair; (2) a shared citation is evidence only when it carries a
+      **locator** (digit, Roman numeral, `§`) — the fix for the generic-`source_ref` false positive in
+      `docs/data/DATA_QUALITY_REPORT.md`, asserted on the same fixtures where the legacy heuristic's own
+      predicate flags the pair, so the guard is proven to do work; (3) a batch run **skips and names**
+      a candidate it cannot normalize (a whitespace-only submission is legal at intake and W1 has no
+      withdrawal path) while an explicit `--candidate-id` refusal writes nothing, and a batch that
+      normalizes **nothing** fails. `scripts/check_garden_normalize.py` is the acceptance + evidence run
+      (**232** checks, both interpreters), every fixture derived from the real `quotes.csv` (3 ~ 283,
+      4/14, 319/331/332, 5/19, 113/114, the `has_unresolved_glyph` rows, a searched-for already-clean
+      row) with a vacuity guard per fixture class. Design doc: `docs/program/W1_4_NORMALIZATION_HINTS.md`.
+      Decision recorded in `docs/DECISIONS.md` ("W1.4 (normalization + hints) …"). `quotes.csv` /
+      `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`). Three defects were found and fixed inside
+      the unit (the note under-reported changes from a union-table `str.translate`; the similarity was
+      asymmetric; `--all` aborted on an unnormalizable candidate), plus one coverage gap found by the
+      unit's own control pass (the store's state guard had no unique falsifier — controls `n15`–`n17` now
+      cover it). **17 author controls + 7 review controls**, all recorded in `GARDEN_W1_4_HANDOFF.md`.
+      **No migration** — W1.4 declined the `placeholder_markers` column (see the W1.4 findings section).
+      **Next: W1.5.**
+
+### Open — discovered during W1.4 (filed, NOT fixed in passing)
+
+- [ ] **A candidate can never be withdrawn, and a whitespace-only submission is permanent.**
+      `garden_submit.py` accepts a text that is only whitespace (envelope rule 2 requires non-empty, and
+      whitespace is non-empty — correctly, since a capture is never trimmed), whose proposal normalizes to
+      `""` and can therefore never be written; captures are immutable and undeletable by trigger
+      (`PROVENANCE_AND_CAPTURE_CONTRACT.md` invariant 2) and no candidate/capture deletion or withdrawal
+      command exists anywhere in W1. This is the concrete instance of the "no sanctioned capture-deletion
+      path" ambiguity W1.1 recorded, and it is why `normalize --all` must skip such a row forever. Both
+      available fixes are contract decisions (tighten envelope rule 2, or add an operator-visible
+      withdrawal that keeps the capture), so neither is W1.4's to make. Filed as
+      [#30](https://github.com/mschwar/Garden-of-Wisdom/issues/30); recorded in
+      `docs/program/W1_4_NORMALIZATION_HINTS.md` §6.
+- [ ] **`validate_quotes.py`'s near-duplicate similarity is direction-dependent.**
+      `difflib.SequenceMatcher.ratio()` is asymmetric (`ratio(113, 114) = 0.6888…`, `ratio(114, 113) =
+      0.6666…` on the real corpus), so the pair's reported number is a function of row order and the
+      frozen `docs/data/DATA_QUALITY_REPORT.md` numbers cannot be reproduced in the other order — with a
+      `> 0.6` threshold, a pair straddling 0.60 could even appear or disappear. The D6 curation item will
+      re-derive those pairs, so the fix needs its own unit: define the score symmetrically, re-generate
+      the report, and re-count D6. Filed as [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31).
+- [ ] **`AGENTS.md` still does not describe the corpus-program command surface** — and still omits the
+      W1 read-only rule. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) had been
+      *closed as COMPLETED*, but the file is unchanged at `main` (`grep -c 'garden_' AGENTS.md` → 0, 63
+      lines, last touched by `31f06e0`), so the documented resume path — "read `AGENTS.md` first" — is
+      still wrong and an agent reading only that file can still believe editing the CSVs is fine. W1.4
+      **reopened** it with that evidence; it still needs an operator edit or a policy exception (which is
+      why W1.4's own doc-surface work stops at `RUNBOOK.md`).
+- [ ] **A generic-citation duplicate can never attract a reference hint, so the queue must show the
+      basis** — not a defect, a consequence worth writing down for W1.5: with ruling 2 in force, a
+      duplicate whose citation is a bare label (or a sentinel) can only ever attract `exact-text` /
+      `near-text` hints, never `same-reference` / `same-passage`. The queue surface must therefore show
+      the hint's `basis` (which it is specified to do), because the kind alone no longer tells the
+      operator how strong the evidence is.
 
 ### Open — discovered during W1.3 (filed, NOT fixed in passing)
 
@@ -169,6 +240,8 @@ Living document — update it as items are picked up or closed, don't just appen
       `external_id` has one but no W1 flow needs it yet, so no flag was added. A flag that accepted a
       value the store cannot hold would be a silent drop. See the W1.2 entry above for the migration
       decision that is still owed to W1.4.
+      **Answered 2026-09-13 (W1.4 close-out):** the migration decision was made — no migration, and
+      still no flag for any optional field. See the W1.2 entry's W1.4 annotation above.
 
 ### Open — discovered during W1.2 (filed, NOT fixed in passing)
 
@@ -184,6 +257,15 @@ Living document — update it as items are picked up or closed, don't just appen
       once") or keep the optional fields out of the store until the unit that first needs them
       (likely W1.4, for `placeholder_markers`/`provenance_chain`). Recorded in
       `docs/program/W1_2_ENVELOPE_VALIDATOR.md` §5.3.
+      **Answered 2026-09-13 (W1.4 close-out): W1.4 needed the placeholder *observation*, not a
+      structure, and it added NO migration.** `placeholder_markers` still has no column; the
+      `_`-glyph observation lives in `normalization_notes` (a field that already exists, whose
+      contract is "what changed and why"), and W1.1's exact-ledger assertion is untouched. The
+      reason — adding columns with no consumer is a speculative schema change in an ingestion lane,
+      and it would force W1.1's acceptance run to be relaxed — is recorded in `docs/DECISIONS.md`
+      ("W1.4 (normalization + hints) …", decision 4). The gap stays open, and now belongs to the
+      first unit that *consumes* one of those fields structurally (a discovery adapter, or a W2/W3
+      export).
 - [ ] **Rule 5 only compares `captured_text`.** The contract's rule 5 says nothing about the other
       ten `captured_*` fields an envelope also carries, so an envelope whose
       `captured_attribution`/`captured_citation`/etc. contradict its own capture record would pass.
@@ -198,6 +280,14 @@ Living document — update it as items are picked up or closed, don't just appen
       (`check_garden_store.py`, `check_garden_envelope.py`, `check_garden_submit.py`) — all
       stdlib-only, deterministic, exit-0/1 — and all three are still absent from CI. The decision
       below applies to three, not two. The two
+      **Updated 2026-09-13 (W1.4 close-out): there are now FOUR W1 acceptance suites**
+      (`check_garden_store.py` 59 checks, `check_garden_envelope.py` 102, `check_garden_submit.py`
+      134, `check_garden_normalize.py` 232) and CI still runs none of them — `browser-smoke.yml`'s
+      validator step is unchanged. All four are stdlib-only, deterministic and exit-0/1, and all four
+      were re-run locally under both interpreters (Homebrew 3.14.5 and CI's 3.12) as W1.4's evidence.
+      W1.4 again did not fix it: it is a change to a guarded workflow, so it needs its own unit
+      (and its own branch/PR), not a side effect of an ingestion unit. The decision asked for at
+      W1.2 is therefore still open, now over four suites.
       W1 evidence runs therefore pass locally (and in the reviewer's run) but are not protected
       from a future regression by CI. Adding them is a low-risk, deterministic, stdlib-only,
       exit-0/1 addition to that step, but it is a CI change touching the guarded workflow and both

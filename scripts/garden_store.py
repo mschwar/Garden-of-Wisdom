@@ -33,10 +33,12 @@ What this module guarantees (and what `scripts/check_garden_store.py` asserts):
      `sources.csv` / `browser/`; the legacy corpus is untouched for the whole of W1.
 
 Out of W1.1 scope, deliberately absent: any intake/submission CLI (W1.3), envelope validation
-(W1.2), normalization and duplicate-hint *algorithms* (W1.4), the curation review surface and
-the transition guard machinery (W1.5), any promotion path to `canonical` (W3), and anything
-to do with `quotes.csv`. This unit ships the store, the migration, the round-trip, and the
-evidence -- `docs/program/W1_DECOMPOSITION.md` section "W1.1 - Storage decision + minimal
+(W1.2), the normalization *algorithm* and the duplicate-hint *generator* (W1.4, which live in
+`scripts/garden_normalize.py` -- this module only carries the guarded write path they use,
+`apply_normalization`, and the derived-hint write mode, `replace_duplicate_hints`), the curation
+review surface and the transition guard machinery (W1.5), any promotion path to `canonical` (W3),
+and anything to do with `quotes.csv`. This unit ships the store, the migration, the round-trip, and
+the evidence -- `docs/program/W1_DECOMPOSITION.md` section "W1.1 - Storage decision + minimal
 schema".
 """
 from __future__ import annotations
@@ -513,6 +515,58 @@ class Store:
             raise StoreError(f"candidate {candidate_id!r} rejected: {exc}") from None
         self.conn.commit()
         return candidate_id
+
+    def apply_normalization(
+        self,
+        candidate_id: str,
+        *,
+        candidate_text: str,
+        candidate_author: str,
+        candidate_source_ref: str,
+        normalization_notes: str,
+    ) -> None:
+        """Write a candidate's normalized proposal and its notes (W1.4's write path).
+
+        Four guards, all checked before anything is written:
+
+          * the candidate must exist;
+          * `curation_state` must still be `new` -- normalization is an *intake-time* operation.
+            A candidate the operator has already decided on is history; re-deriving its proposal
+            after a decision would silently restate the evidence a decision was made on;
+          * `candidate_text` and `normalization_notes` must be non-empty -- "we did not touch it"
+            is an assertion (`identical to capture`), never an omission;
+          * nothing in this method touches `captures`, the four state columns, or `decisions`.
+            The capture it derives from is immutable and stays byte-for-byte the encounter.
+        """
+        _require(bool(candidate_id), "candidate_id must be non-empty")
+        _require(candidate_text != "", "candidate_text must be non-empty (an empty proposal is not a proposal)")
+        _require(
+            normalization_notes != "",
+            "normalization_notes is required even when nothing changed "
+            "('identical to capture' must be an assertion, not an omission)",
+        )
+        row = self.conn.execute(
+            "SELECT curation_state FROM candidates WHERE candidate_id = ?", (candidate_id,)
+        ).fetchone()
+        if row is None:
+            raise StoreError(f"no candidate {candidate_id!r} in the store")
+        if row["curation_state"] != "new":
+            raise StoreError(
+                f"candidate {candidate_id!r} is curation_state={row['curation_state']!r}: "
+                f"normalization only applies while a candidate is 'new'"
+            )
+        self.conn.execute(
+            "UPDATE candidates SET candidate_text = ?, candidate_author = ?, "
+            "candidate_source_ref = ?, normalization_notes = ? WHERE candidate_id = ?",
+            (
+                candidate_text,
+                candidate_author,
+                candidate_source_ref,
+                normalization_notes,
+                candidate_id,
+            ),
+        )
+        self.conn.commit()
 
     def add_duplicate_hints(self, candidate_id: str, hints: list[dict]) -> int:
         """Append duplicate hints in `hint_seq` order. Returns the new high-water seq."""
