@@ -89,6 +89,44 @@ INTAKE_STATES = {
     "corpus_state": "candidate_only",
     "work_state": "queued",
 }
+#: The five curation actions the operator can take, each mapping to the curation state it
+#: requests. The legal (from, to) pairs come from `CURATION_TRANSITIONS` below (STATE_MODEL.md
+#: section 1); an action whose current state does not fit a legal transition is refused.
+CURATION_ACTIONS: dict[str, str] = {
+    "accept": "accepted",
+    "hold": "hold",
+    "reject": "rejected",
+    "duplicate": "duplicate",
+    "reopen": "new",
+}
+#: The twelve curation transitions, exactly as `docs/program/STATE_MODEL.md` section 1 lists
+#: them. `(from, to) -> transition_id`. Every one of them is authority `operator`; moving a
+#: candidate any other way is refused by `Store.curate`.
+CURATION_TRANSITIONS: dict[tuple[str, str], str] = {
+    ("new", "accepted"): "T-C1",
+    ("new", "hold"): "T-C2",
+    ("new", "rejected"): "T-C3",
+    ("new", "duplicate"): "T-C4",
+    ("hold", "accepted"): "T-C5",
+    ("hold", "rejected"): "T-C6",
+    ("hold", "duplicate"): "T-C7",
+    ("accepted", "rejected"): "T-C8",
+    ("accepted", "duplicate"): "T-C9",
+    ("rejected", "new"): "T-C10",
+    ("duplicate", "new"): "T-C11",
+    ("duplicate", "accepted"): "T-C12",
+}
+#: The corpus transitions W1.5 may fire, `(from, to) -> (transition_id, authority)`.
+#:   * T-P1 `candidate_only -> eligible` is the deterministic, audited consequence of
+#:     acceptance (`STATE_MODEL.md` section 3) -- authority `system`.
+#:   * T-P7 `eligible -> candidate_only` is the operator-authority reversal that runs when a
+#:     curation acceptance is withdrawn (`T-C8`/`T-C9`), so no record is ever left `eligible`
+#:     while its curation is `hold`/`rejected`/`duplicate` (the no-stranded-dimension rule).
+#: T-P2..T-P6 (including retirement T-P3) are operator promotion decisions and are out of W1.5.
+CORPUS_TRANSITIONS: dict[tuple[str, str], tuple[str, str]] = {
+    ("candidate_only", "eligible"): ("T-P1", "system"),
+    ("eligible", "candidate_only"): ("T-P7", "operator"),
+}
 HINT_KINDS = ("exact-text", "near-text", "same-reference", "same-passage")
 CAPTURE_METHODS = (
     "manual-entry",
@@ -391,6 +429,21 @@ def _require(condition: bool, message: str) -> None:
         raise StoreError(message)
 
 
+def _corpus_followon_reason(transition_id: str, curation_reason: str) -> str:
+    """The audit reason for a corpus follow-on, tied to the curation decision that forced it."""
+    if transition_id == "T-P1":
+        return (
+            f"deterministic consequence of acceptance (STATE_MODEL.md T-P1): a wanted record "
+            f"becomes eligible, never 'true'; operator reason: {curation_reason}"
+        )
+    if transition_id == "T-P7":
+        return (
+            f"curation acceptance withdrawn; the record returns to the candidate queue "
+            f"(STATE_MODEL.md T-P7); operator reason: {curation_reason}"
+        )
+    raise StoreError(f"no documented reason for corpus follow-on {transition_id}")
+
+
 class Store:
     """Read/write access to one Garden store. Small on purpose: W1.1 is the schema, not a CLI."""
 
@@ -610,7 +663,7 @@ class Store:
         ).fetchone()
         return int(row[0]) + 1
 
-    def record_decision(
+    def _insert_decision(
         self,
         *,
         subject_kind: str,
@@ -625,11 +678,12 @@ class Store:
         transition_id: str | None = None,
         occurred_at: str | None = None,
     ) -> int:
-        """Append one audit row. Returns its `seq`.
+        """Validate and append one audit row. Returns its `seq`. Does NOT commit.
 
         `from_state`/`to_state` must be values of the named dimension's vocabulary as written
         in `STATE_MODEL.md`; anything else is refused here *and* by the column's CHECK path.
-        Whether the move is a legal transition in the table is W1.5's guard, not W1.1's.
+        Whether the move is a legal transition in the table is `curate`'s guard (W1.5), not
+        this row's.
         """
         _require(dimension in DIMENSIONS, f"unknown dimension {dimension!r}")
         _require(actor_kind in ACTOR_KINDS, f"unknown actor_kind {actor_kind!r}")
@@ -662,9 +716,171 @@ class Store:
                 reason,
             ),
         )
-        self.conn.commit()
         assert cur.lastrowid is not None  # an INSERT always yields one
         return int(cur.lastrowid)
+
+    def record_decision(
+        self,
+        *,
+        subject_kind: str,
+        subject_id: str,
+        dimension: str,
+        action: str,
+        from_state: str,
+        to_state: str,
+        actor: str,
+        actor_kind: str,
+        reason: str,
+        transition_id: str | None = None,
+        occurred_at: str | None = None,
+    ) -> int:
+        """Append one audit row, committing it. Returns its `seq`."""
+        seq = self._insert_decision(
+            subject_kind=subject_kind,
+            subject_id=subject_id,
+            dimension=dimension,
+            action=action,
+            from_state=from_state,
+            to_state=to_state,
+            actor=actor,
+            actor_kind=actor_kind,
+            reason=reason,
+            transition_id=transition_id,
+            occurred_at=occurred_at,
+        )
+        self.conn.commit()
+        return seq
+
+    def curate(
+        self,
+        candidate_id: str,
+        *,
+        action: str,
+        actor: str,
+        reason: str,
+        occurred_at: str | None = None,
+    ) -> dict:
+        """Apply one operator curation decision and its required corpus follow-on, atomically.
+
+        This is W1.5's single write gate (`docs/program/W1_5_CURATION_SURFACE.md`). The
+        curation state moves along a legal T-C1…T-C12 transition and, when the model requires
+        it, the corpus state moves too:
+
+          * becoming `accepted` while `candidate_only` fires the deterministic, audited
+            **T-P1** `candidate_only -> eligible` (authority `system`) -- eligibility is
+            "wanted", never "true";
+          * leaving `accepted` (`T-C8`/`T-C9`) while `eligible` fires **T-P7**
+            `eligible -> candidate_only` (authority `operator`, the operator making the
+            reversal) so no record is ever left `eligible` while its curation is `hold` /
+            `rejected` / `duplicate`.
+
+        Everything -- the curation state, any corpus state, and the audit rows for all of it --
+        is written in ONE transaction and then committed, so there is never a window in which a
+        state changed without its audit row. The method touches **only** `curation_state` and
+        `corpus_state`: `research_state` and `work_state` are never written here (a curation
+        decision implies no research), and `reason` is required before anything is written.
+
+        Returns a description of what was recorded: `{candidate_id, curation: (from,to,id),
+        corpus: (from,to,id) or None, seq: [first decision seq, ...]}`.
+        """
+        _require(bool(candidate_id), "candidate_id must be non-empty")
+        _require(bool(actor), "every curation decision needs an actor")
+        _require(bool(reason), "every curation decision must carry a reason (required, never omitted)")
+        _require(action in CURATION_ACTIONS, f"unknown curation action {action!r}")
+        row = self.conn.execute(
+            "SELECT curation_state, corpus_state FROM candidates WHERE candidate_id = ?",
+            (candidate_id,),
+        ).fetchone()
+        if row is None:
+            raise StoreError(f"no candidate {candidate_id!r} in the store")
+        from_c, from_p = row["curation_state"], row["corpus_state"]
+        to_c = CURATION_ACTIONS[action]
+        pair = (from_c, to_c)
+        if pair not in CURATION_TRANSITIONS:
+            raise StoreError(
+                f"no legal curation transition {from_c!r} -> {to_c!r} for action {action!r} "
+                f"(STATE_MODEL.md has {CURATION_TRANSITIONS.get(pair, 'no such move')}); "
+                f"nothing was written"
+            )
+        curation_transition = CURATION_TRANSITIONS[pair]
+
+        # The corpus follow-ons this curation move forces, in order.
+        follow: list[tuple[str, str, str, str, str]] = []  # (dim, from, to, trans_id, authority)
+        to_p = from_p
+        if to_c == "accepted" and from_p == "candidate_only":
+            follow.append(("corpus", "candidate_only", "eligible", "T-P1", "system"))
+            to_p = "eligible"
+        elif from_c == "accepted":
+            # T-C8 / T-C9 -- curation left 'accepted'; if eligibility was granted on that
+            # acceptance it must be withdrawn now (no dimension is stranded).
+            if from_p == "eligible":
+                follow.append(("corpus", "eligible", "candidate_only", "T-P7", "operator"))
+                to_p = "candidate_only"
+        if not follow and to_p != from_p:
+            raise StoreError(
+                f"internal: corpus would move {from_p!r} -> {to_p!r} with no recorded transition"
+            )
+
+        try:
+            cur = self.conn.execute(
+                "UPDATE candidates SET curation_state = ?, corpus_state = ? WHERE candidate_id = ?",
+                (to_c, to_p, candidate_id),
+            )
+            if cur.rowcount != 1:
+                self.conn.rollback()
+                raise StoreError(f"candidate {candidate_id!r} did not update (rowcount {cur.rowcount})")
+            seqs = [
+                self._insert_decision(
+                    subject_kind="candidate",
+                    subject_id=candidate_id,
+                    dimension="curation",
+                    action="curation-decision",
+                    from_state=from_c,
+                    to_state=to_c,
+                    transition_id=curation_transition,
+                    actor=actor,
+                    actor_kind="operator",
+                    reason=reason,
+                    occurred_at=occurred_at,
+                )
+            ]
+            corpus_desc: dict | None = None
+            for dim, f_state, t_state, trans_id, authority in follow:
+                if authority == "system":
+                    follow_actor, follow_kind = "system", "system"
+                else:  # operator -- the operator who made the curation reversal
+                    follow_actor, follow_kind = actor, "operator"
+                seqs.append(
+                    self._insert_decision(
+                        subject_kind="candidate",
+                        subject_id=candidate_id,
+                        dimension=dim,
+                        action="corpus-follow-on",
+                        from_state=f_state,
+                        to_state=t_state,
+                        transition_id=trans_id,
+                        actor=follow_actor,
+                        actor_kind=follow_kind,
+                        reason=_corpus_followon_reason(trans_id, reason),
+                        occurred_at=occurred_at,
+                    )
+                )
+                corpus_desc = {
+                    "from": f_state,
+                    "to": t_state,
+                    "transition_id": trans_id,
+                    "authority": authority,
+                }
+            self.conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self.conn.rollback()
+            raise StoreError(f"curation decision for {candidate_id!r} rejected: {exc}") from None
+        return {
+            "candidate_id": candidate_id,
+            "curation": {"from": from_c, "to": to_c, "transition_id": curation_transition},
+            "corpus": corpus_desc,
+            "seq": seqs,
+        }
 
     # -- reads -------------------------------------------------------------------------
     def counts(self) -> dict[str, int]:

@@ -141,6 +141,37 @@ run skips such a candidate with a `SKIPPED: <id>: <reason>` line (a batch that c
 fails instead). `normalize` and `hints` only apply while a candidate is `new`: a decided candidate
 is history, not a work in progress. See `docs/program/W1_4_NORMALIZATION_HINTS.md`.
 
+## Review a candidate and record the curation decision (W1.5)
+
+```bash
+python3 scripts/garden_review.py queue      --dir data/store                        # the unreviewed queue, newest first
+python3 scripts/garden_review.py show       --dir data/store --candidate-id cand-2026-09-13-0001
+python3 scripts/garden_review.py accept     --dir data/store --candidate-id cand-2026-09-13-0001 --reason 'wanted and pursuable'
+python3 scripts/garden_review.py hold       --dir data/store --candidate-id cand-... --reason 'defer until attribution checked'
+python3 scripts/garden_review.py reject     --dir data/store --candidate-id cand-... --reason 'not wanted in the Garden'
+python3 scripts/garden_review.py duplicate  --dir data/store --candidate-id cand-... --reason 'already represented by cand-2026-09-13-0002'
+python3 scripts/garden_review.py reopen     --dir data/store --candidate-id cand-... --reason 'new information arrived'
+python3 scripts/garden_review.py audit      --dir data/store [--candidate-id cand-...]   # the append-only decision log
+python3 scripts/check_garden_review.py                                 # the W1.5 acceptance + evidence run
+```
+
+`queue` prints the unreviewed queue (`curation_state = 'new'`) newest first, rendering the capture
+verbatim (marked `asserted`), the normalized proposal (marked `derived (deterministic normalization
+of the capture)`), the normalization notes (marked `asserted`), and the duplicate hints (marked
+`machine-inferred (a hint is evidence, never a decision)`). `show` renders any one candidate with
+its full audit history; `audit` prints the append-only decision log.
+
+Each of `accept / hold / reject / duplicate / reopen` is one **operator** curation decision. It must
+have `--reason`, moves the candidate along a legal T-C1…T-C12 transition, and appends the audit row(s)
+in the **same transaction** as the state change. Acceptance deterministically promotes
+`candidate_only → eligible` (**T-P1**, authority `system` — eligibility means "wanted", never
+"true"). A withdrawn acceptance (`accept` then `reject`/`duplicate` — **T-C8**/**T-C9**) fires
+**T-P7** `eligible → candidate_only`, so no record is ever left eligible while its curation is
+hold/rejected/duplicate. **No curation action writes research state** — it stays `not_started`. Every
+decision records actor, timestamp, from, to, transition_id and reason; a refused decision (an illegal
+transition, a missing candidate, or an empty `--reason`) writes nothing at all. `--actor` defaults to
+`operator`. See `docs/program/W1_5_CURATION_SURFACE.md`.
+
 ## Run the browser locally
 
 ```

@@ -705,3 +705,75 @@ writes nothing must not report success. And both guard layers (`proposal_for` be
 pre-check is what makes a batch all-or-nothing, and the store's is what makes the write path safe for
 any future caller. Control `n11` showed the store layer unproven until the suite called it directly —
 the same class of gap W1.3 recorded for `captured_at`, found the same way.
+
+## 2026-09-13 — W1.5 (curation review): a single atomic write gate, the reversal path, research read-only, and no migration
+
+W1.5 is the loop's payoff: the operator-facing `accept / hold / reject / duplicate / reopen`
+surface, where a curation decision is a recorded, audited transition — never a silent state flip. The
+implementation is `scripts/garden_review.py` (the CLI) on top of a new store write gate
+`garden_store.Store.curate`, with `scripts/check_garden_review.py` as the acceptance + evidence run
+(**246** checks, both interpreters; an 8-mutation same-session review pass, all recorded in
+`GARDEN_W1_5_HANDOFF.md`). Details: `docs/program/W1_5_CURATION_SURFACE.md`. It falsifies the
+carried-forward risk from `W0_GATE_REPORT.md` — *"the reversal rule (T-C8 → T-P7) is legal on paper
+but untested against a real store"* — by exercising both reversal paths against the real store and
+asserting no dimension is stranded.
+
+**1. Every curation decision goes through ONE atomic write: `Store.curate`.** It looks the legal
+T-C1…T-C12 transition up, computes the required corpus follow-on, updates `curation_state` (and
+`corpus_state` when a follow-on fires), and appends every audit row — the curation row and each
+corpus row — **in one SQLite transaction**, so there is never a window in which a state changed
+without its audit row. Rejected: a state UPDATE and a separate `record_decision` call, because two
+commits would create exactly that window. `record_decision` was refactored into a non-committing
+`_insert_decision` helper so `curate` can drive the whole thing transactionally; the public
+`record_decision` still commits and still passes W1.1's suite byte-for-byte.
+
+**2. Acceptance fires T-P1 `candidate_only → eligible` (authority `system`); a withdrawn acceptance
+fires T-P7 `eligible → candidate_only` (authority `operator`) — the reversal strands no dimension.**
+Becoming `accepted` is the deterministic, audited eligibility-for-a-wanted-record, never "true"
+(`STATE_MODEL.md` §3). Leaving `accepted` (`T-C8` → `rejected` / `T-C9` → `duplicate`) while the
+record is `eligible` fires T-P7 back to `candidate_only`, so no record ever has
+`curation ∈ {hold, rejected, duplicate}` with `corpus = eligible`. The acceptance run asserts that
+invariant over every candidate after every transition. Note: rejecting from `new`/`hold` does **not**
+retire the record (`T-P3 candidate_only → retired`) — T-P3 is an operator promotion decision and out
+of W1.5 (the walkthrough's branch B adds it as a *separate* later decision), and rejection keeps the
+capture and the candidate readable, exactly as the acceptance criterion requires.
+
+**3. No curation action writes research state — it is rendered read-only and always `not_started`.**
+`curate` updates only `curation_state` and `corpus_state`; there is no research write path and no
+research surface. Asserted after every curation action, on every fixture and transition candidate,
+and a mutation that makes `curate` set `research_state = 'in_research'` turns the run red.
+
+**4. The machine-inferred-vs-asserted marker is rendered, not hidden.** The queue view labels the
+capture `asserted (the verbatim encounter)`, the proposal `derived (deterministic normalization of
+the capture)`, the notes `asserted (what changed and why)`, and the duplicate hints
+`machine-inferred (a hint is evidence, never a decision)` — invariant 6 of `STATE_MODEL.md`, made
+visible where the operator reads it.
+
+**5. W1.5 adds NO migration.** The `decisions` ledger, the four state columns, and the append-only /
+immutability triggers all exist from W1.1; W1.5 only adds code. W1.1's exact-ledger assertion
+(`["0001_create_core"]`) is untouched, and `quotes.csv` / `sources.csv` are byte-identical
+before/after every W1.5 run.
+
+**6. The "one guard per layer" lesson W1.5 had to relearn — and gave the guard its own falsifier.**
+The store-layer empty-reason guard is backed up by `_insert_decision`'s own empty-reason check, so
+removing `curate`'s guard in isolation left the suite green (the backstop masked it) — the same class
+of masking the skill warns about. The acceptance run now asserts the **layering**: it looks for
+`curate`'s distinctive wording (`every curation decision must carry a reason`) rather than the shared
+substring, giving the surface's guard a unique falsifier.
+
+**Also decided in W1.5:** an omitted `--actor` records the decision as `operator` (fallback identity,
+never anonymous); `--reason` is required and refused-empty before anything is written; a refused
+decision (illegal transition, missing candidate, empty reason) writes nothing at all (asserted,
+store byte-identical); the read-only commands (`queue`, `show`, `audit`) never write; and a
+candidate deposited before normalization is shown as-is — the operator runs `normalize --all` /
+`hints --all` before reviewing (W1.6's end-to-end does exactly this), which is why the design relies
+on the pipeline in `docs/RUNBOOK.md` rather than forcing it at review time.
+
+## 2026-09-13 — W1.5 lesson for the CI gap: the review surface is a sixth command, and its suite is a fifth acceptance suite
+
+W1.2 filed that CI does not run the W1 acceptance suites; W1.3 and W1.4 re-filed it as the count
+grew. W1.5 leaves it open again, now over **five** deterministic, stdlib-only, exit-0/1 suites —
+`check_garden_store.py` (59), `check_garden_envelope.py` (102), `check_garden_submit.py` (134),
+`check_garden_normalize.py` (232), `check_garden_review.py` (246) — and a sixth surface
+(`garden_review.py`) that none of them protect from a future regression. It is still a change to the
+guarded `browser-smoke.yml` workflow and was not fixed as a side effect of an ingestion/review unit.
