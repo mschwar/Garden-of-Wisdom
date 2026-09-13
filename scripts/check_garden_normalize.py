@@ -95,6 +95,11 @@ TEST_CHARACTERS = {
 QUOTE_MARKS = "".join(g for g in TEST_CHARACTERS if g in "\u2018\u2019\u201a\u201b\u2032\u201c\u201d\u201e\u2033")
 TEST_TRANSLATION = {ord(g): r for g, r in TEST_CHARACTERS.items()}
 
+#: The test's OWN placeholder glyph. Deliberately not `garden_normalize.PLACEHOLDER_GLYPH`: if the
+#: test discovered its fixtures with the module's constant, changing the constant would change what
+#: the test thinks the corpus contains instead of failing. The two are asserted equal below.
+PLACEHOLDER = "_"
+
 #: An NFC/NFD pair: the decomposed form is what a capturer pasting from some tools would get.
 NFD_TEXT = "Baha\u0301'i, the light of unity."
 WHITESPACE_ONLY = "   \n\t  "
@@ -355,6 +360,12 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
         f"{gn.IDENTICAL_NOTE!r} vs {SUBMIT_IDENTICAL_NOTE!r}",
     )
     check(
+        gn.PLACEHOLDER_GLYPH == PLACEHOLDER,
+        "the module's placeholder glyph is the corpus's literal `_` (the test's own constant, so a "
+        "change to the module's constant fails here instead of silently redefining the fixture)",
+        f"{gn.PLACEHOLDER_GLYPH!r} vs {PLACEHOLDER!r}",
+    )
+    check(
         gn.citation_specificity("Oral Tradition") == "generic",
         "'Oral Tradition' is classified generic (a label that pinpoints nothing)",
     )
@@ -471,7 +482,7 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
         row_id
         for row_id in sorted(rows)
         if row_id < 200
-        and any(gn.PLACEHOLDER_GLYPH in rows[row_id][field] for field in ("quote_text", "author", "source_ref"))
+        and any(PLACEHOLDER in rows[row_id][field] for field in ("quote_text", "author", "source_ref"))
     ][:2]
     check(
         bool(placeholder_ids),
@@ -493,7 +504,7 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
         and " ".join(rows[row_id]["source_ref"].split()) == rows[row_id]["source_ref"]
         and " ".join(rows[row_id]["author"].split()) == rows[row_id]["author"]
         and all(
-            gn.PLACEHOLDER_GLYPH not in rows[row_id][field]
+            PLACEHOLDER not in rows[row_id][field]
             for field in ("quote_text", "source_ref", "author")
         )
     ][:1]
@@ -713,8 +724,8 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
         note,
     )
     check(
-        messy_row.get("candidate_text", "").count(gn.PLACEHOLDER_GLYPH)
-        == messy_text.count(gn.PLACEHOLDER_GLYPH),
+        messy_row.get("candidate_text", "").count(PLACEHOLDER)
+        == messy_text.count(PLACEHOLDER),
         "the placeholder glyph count is identical in the capture and the proposal",
     )
     check(
@@ -744,15 +755,15 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
             ("source_ref", "candidate_source_ref", "captured_citation"),
             ("author", "candidate_author", "captured_attribution"),
         ):
-            source_count = rows[row_id][row_field].count(gn.PLACEHOLDER_GLYPH)
+            source_count = rows[row_id][row_field].count(PLACEHOLDER)
             if not source_count:
                 continue
             check(
-                captured.get(capture_field, "").count(gn.PLACEHOLDER_GLYPH) == source_count,
+                captured.get(capture_field, "").count(PLACEHOLDER) == source_count,
                 f"row {row_id}'s capture carries `{row_field}`'s {source_count} literal `_` verbatim",
             )
             check(
-                candidate.get(candidate_field, "").count(gn.PLACEHOLDER_GLYPH) == source_count,
+                candidate.get(candidate_field, "").count(PLACEHOLDER) == source_count,
                 f"row {row_id}'s proposal preserves `{row_field}`'s {source_count} `_` -- no glyph "
                 f"was guessed",
                 repr(candidate.get(candidate_field)),
@@ -973,6 +984,21 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
                 target_ok = False
     check(every_hint_ok, "every hint has a declared kind, a non-empty basis, and is gapless from 1")
     check(target_ok, "every hint target resolves to a candidate in the store")
+    ordering_ok = True
+    for candidate_id in sorted(all_candidate_ids(store)):
+        keys = [(row["target"], row["kind"]) for row in hint_rows(store, candidate_id)]
+        documented = sorted(keys, key=lambda pair: (pair[0], gn.KIND_ORDER.index(pair[1])))
+        if keys != documented:
+            ordering_ok = False
+    check(
+        ordering_ok,
+        "every candidate's hints are stored in the documented (target, kind) order, so hint_seq is "
+        "stable across rebuilds and diffable",
+    )
+    check(
+        set(gn.KIND_ORDER) == set(HINT_KINDS) and len(gn.KIND_ORDER) == 4,
+        "the documented kind order covers exactly the contract's four hint kinds",
+    )
     check(
         {row["kind"] for candidate_id in known_candidates for row in hint_rows(store, candidate_id)}
         <= set(HINT_KINDS),
