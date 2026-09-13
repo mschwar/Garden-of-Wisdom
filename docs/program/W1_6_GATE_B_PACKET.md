@@ -125,7 +125,14 @@ operator/frontier decision on **Gate B**, followed (if accepted) by authorizatio
 
 ---
 
-### Post-merge verification (appended after merge)
+### Post-merge verification (2026-09-13)
 
-_(filled in the follow-up docs commit, like W0's "Post-change acceptance run"): merge sha, PR
-number, CI run ids, and the live `curl` acceptance._
+- Merged as `0d8f5e5` (PR [#33](https://github.com/mschwar/Garden-of-Wisdom/pull/33), `--merge`).
+- CI on the PR: smoke run `34788581800` **success**; GitGuardian **pass**.
+- CI on the merge push to `main`: smoke run `34788627418` **success**; Pages deploy run
+  `34788627431` **success**.
+- Live acceptance: `https://mschwar.github.io/Garden-of-Wisdom/` **200**, `/browser/index.html`
+  **200**; live `quotes.csv` and `sources.csv` sha256 match the repo (`5675d7e6…` / `10b4c156…`).
+  (W1.6 touched neither CSV nor any browser file — a regression check, not a re-format.)
+- The six W1 acceptance suites re-ran green on the merged `main` under `python3` 3.14
+  (store 59, envelope 102, submit 134, normalize 232, review 246, e2e 96).

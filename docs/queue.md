@@ -212,7 +212,8 @@ Living document — update it as items are picked up or closed, don't just appen
       reason) are all recorded in `GARDEN_W1_5_HANDOFF.md`. **Next: W1.6.** **→ W1.6 DONE; see the
       W1.6 close-out bullet below.**
 - [x] **W1.6 — end-to-end test pack + Gate B evidence packet. DONE 2026-09-13** (branch
-      `w1/gate-b-packet`, PR —, merged as —). `scripts/check_garden_e2e.py` is the deterministic,
+      `w1/gate-b-packet`, PR [#33](https://github.com/mschwar/Garden-of-Wisdom/pull/33), merged as
+      `0d8f5e5`). `scripts/check_garden_e2e.py` is the deterministic,
       clean-clone, one-command end-to-end acceptance run (**96 checks**, both interpreters,
       stdlib-only): it drives the whole loop — a messy submission batch (a literal `_` glyph row
       and a curly apostrophe row read **verbatim from `quotes.csv`**, plus a wrong author,
@@ -235,7 +236,7 @@ Living document — update it as items are picked up or closed, don't just appen
       stored write path; one finding — c5 — where the store's own `import_bytes` guard masks the
       e2e's round-trip check) recorded in `GARDEN_W1_6_HANDOFF.md`. **No migration**, no new store
       surface, `quotes.csv`/`sources.csv` untouched. **W1 is COMPLETE: the Gate B packet is
-      submitted; W2 is not started.** (PR and merge ids filled in the post-merge docs commit.)
+      submitted; W2 is not started.**
 
 ### Open — discovered during W1.4 (filed, NOT fixed in passing)
 

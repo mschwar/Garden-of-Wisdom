@@ -1,8 +1,8 @@
 # GARDEN_W1_6_HANDOFF.md
 
 **Unit:** W1.6 — End-to-end test pack + Gate B evidence packet.
-**Branch:** `w1/gate-b-packet` · **PR:** [#—](https://github.com/mschwar/Garden-of-Wisdom/pull/—) ·
-**Merge:** `—`.
+**Branch:** `w1/gate-b-packet` · **PR:** [#33](https://github.com/mschwar/Garden-of-Wisdom/pull/33) ·
+**Merge:** `0d8f5e5`.
 **Date:** 2026-09-13.
 
 ## Summary
