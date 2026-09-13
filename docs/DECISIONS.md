@@ -777,3 +777,43 @@ grew. W1.5 leaves it open again, now over **five** deterministic, stdlib-only, e
 `check_garden_normalize.py` (232), `check_garden_review.py` (246) — and a sixth surface
 (`garden_review.py`) that none of them protect from a future regression. It is still a change to the
 guarded `browser-smoke.yml` workflow and was not fixed as a side effect of an ingestion/review unit.
+
+## 2026-09-13 — W1.6 (Gate B pack): the loop is one reproducible command; W1 is complete
+
+W1.6 is the wave gate, not a new surface. It ships `scripts/check_garden_e2e.py` — a
+deterministic, clean-clone, one-command acceptance run (**96** checks, both interpreters) that
+drives the whole loop through the real W1.3/W1.4/W1.5 CLIs inside a throwaway temp dir and asserts
+the Gate B pass condition. Details: `docs/program/W1_6_E2E_TEST_PACK.md`; the evidence package is
+`docs/program/W1_6_GATE_B_PACKET.md` (mirroring `W0_GATE_REPORT.md`'s shape).
+
+**1. The messy batch is real corpus + controlled mess.** The e2e reads row 320 (a literal `_`
+placeholder glyph) and row 21 (a curly apostrophe) **verbatim from `quotes.csv`**, so the loop is
+proved against the corpus's own awkward bytes, not a toy; plus a wrong author, leading/trailing
+whitespace, a missing citation (omitted flag → `none` sentinel), a near-duplicate pair (must
+produce a hint) and two unrelated rows sharing the generic `Oral Tradition` label (must produce **no**
+reference hint — the W1.4 false-positive fix). Nothing is hard-coded; a fixture that stops narrowing
+fails loudly rather than passing vacuously.
+
+**2. "No curation action implies verification" is asserted, not just documented.** After every
+decision the e2e asserts every candidate's `research_state` is still `not_started`, that no decision
+row writes or implies a research state, and that corpus stays in the W1 vocabulary
+(`candidate_only`/`eligible`) — nothing claiming truth. Control **c2** (a `curate` that writes
+`research_state='in_research'`) turns the run red on exactly that check.
+
+**3. W1.6 adds no migration and no populated store mirror.** The loop's reproducibility is proved
+by the e2e's temp-dir round-trip from a clean clone (`garden.export/1` write → import → re-export
+byte-identical); a committed `data/store/garden.export.txt` is left to the first real operator
+population (W1.3 decision), not synthesized here. W1.1's exact-ledger assertion
+(`["0001_create_core"]`) is untouched.
+
+**4. W1.6 keeps the "give each guard its own falsifier" lesson.** The e2e's round-trip check turned
+out to be **backstopped** by `garden_store.import_bytes`' own internal re-export comparison: a
+mutation that makes the import lossy goes red on the store's `StoreError`, not on the e2e's
+round-trip `FAIL:` line (control **c5**, recorded as a finding). The e2e does not duplicate a guard
+the store already proves; it is recorded in the handoff rather than papered over.
+
+**5. W1 is complete; the Gate B packet is submitted.** Per `W1_DECOMPOSITION.md` and the wave
+authorization (decision D1), W1 ends at the Gate B packet. **W2 is not started** — no research
+surface, no promotion path, no migration. The carried-forward risks from `W0_GATE_REPORT.md` are
+all falsified or green (see the packet's status table). The next authorized action is an
+operator/frontier decision on **Gate B**, followed (if accepted) by authorization of **W2**.

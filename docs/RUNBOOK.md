@@ -172,6 +172,32 @@ decision records actor, timestamp, from, to, transition_id and reason; a refused
 transition, a missing candidate, or an empty `--reason`) writes nothing at all. `--actor` defaults to
 `operator`. See `docs/program/W1_5_CURATION_SURFACE.md`.
 
+## Run the whole W1 loop end to end (W1.6, the Gate B pack)
+
+```bash
+python3 scripts/check_garden_e2e.py                                # the W1.6 acceptance + Gate B evidence run
+```
+
+This is the wave gate's reproducible artifact. From a clean clone, one command (stdlib only — no
+Playwright, no pre-seeded store, no browser) drives the **whole loop** through the real CLIs inside
+a throwaway temp dir: a messy submission batch (a literal `_` placeholder-glyph row and a curly
+apostrophe row read **verbatim from `quotes.csv`**, plus a wrong author, leading/trailing
+whitespace, a missing citation, a near-duplicate text pair, and two unrelated rows sharing the
+generic `Oral Tradition` label) → `submit` (W1.3) → `normalize --all` + `hints --all` (W1.4) →
+`accept/hold/reject/duplicate/reopen` with the full `accept → reject` reversal (W1.5). It asserts —
+96 checks, exiting 0 with `RESULT: PASS` / non-zero with `RESULT: FAIL` and one `FAIL:` line per
+broken check — that every capture is **byte-identical** to the submitted text after every stage,
+that provenance (method, timestamp, wrong author, whitespace, a missing citation's `none`
+sentinel) survives on the capture, that normalize + hints never touch the `[captures]` section and
+write no decision row, that a hint is never a state, that the generic `Oral Tradition` pair
+produces **no** reference hint (the W1.4 false-positive fix), that every decision is audited and
+the `decisions` log is append-only, that the reversal (`['T-C1','T-P1','T-C8','T-P7']`) strands no
+dimension, and that **no curation action implies verification** (`research_state` stays
+`not_started` throughout). It also re-runs `validate_quotes.py`, hashes both CSVs before/after
+(byte-identical), and proves the store export (`garden.export/1`) round-trips. Nothing is written
+outside the temp dir. See `docs/program/W1_6_E2E_TEST_PACK.md` and the Gate B packet
+`docs/program/W1_6_GATE_B_PACKET.md`.
+
 ## Run the browser locally
 
 ```
