@@ -287,8 +287,68 @@ Filed on the board, each also in `docs/queue.md`:
 
 ## Post-merge verification
 
-_(filled in by the follow-up docs commit after the merge: merge sha, PR number, both CI run ids, and
-the live acceptance — four URLs 200 plus the live CSV hashes against the repo's.)_
+Merged 2026-09-13 as **`2934941`** — *"Merge pull request #29 from
+mschwar/w1/normalization-hints"* — with `gh pr merge 29 --merge`.
+
+CI, both runs triggered by that merge commit on `main`:
+
+| Workflow | Run | Conclusion |
+|---|---|---|
+| Quote browser smoke test | [34780897529](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34780897529) | success (39s) |
+| Deploy static site to GitHub Pages | [34780897662](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34780897662) | success (20s) |
+
+On the PR head itself (`c15f305`): smoke run
+[34780832314](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34780832314) **success** (41s)
+and the GitGuardian check **pass**. (Two earlier runs on this branch's ancestor commits,
+[34780462029](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34780462029) and
+[34780634962](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34780634962), were also
+`success`.)
+
+The whole suite set re-run **from the merged `main`** (HEAD `2934941`) — the run that matters, since
+it is the first time these files are exercised on the branch the wave ships from:
+
+```
+HEAD: 2934941c49c872abb4c6e76aaa51c6b654ff9e14 2934941 Merge pull request #29 from mschwar/w1/normalization-hints
+validate_quotes                       exit0  0 PASS | RESULT: PASS (no hard-integrity failures; see WARN-level items above for curation queue)
+check_program_contracts               exit0  0 PASS | RESULT: PASS (transition chains simulate, claim aggregates agree, envelopes conform)
+validate_homepage_preview_export      exit0  0 PASS | RESULT: PASS
+check_garden_store                    exit0  59 PASS | RESULT: PASS (create -> write -> export -> wipe -> re-import is byte-identical)
+check_garden_envelope                 exit0  102 PASS | RESULT: PASS (envelope contract enforced: 6/6 rules, sentinels verbatim, stored and read back)
+check_garden_submit                   exit0  134 PASS | RESULT: PASS (submissions persist: captures verbatim + immutable, candidates at intake, no decision, refused submissions write nothing)
+check_garden_normalize                exit0  232 PASS | RESULT: PASS (normalization records every change and preserves the capture verbatim; hints are deterministic, cited, and never a state)
+```
+
+Live acceptance (the deploy only re-publishes the frozen view; W1.4 changes no browser code, so this
+is the RUNBOOK checklist plus the CSV byte-comparison):
+
+```
+$ for u in .../ .../browser/index.html .../quotes.csv .../sources.csv; do curl -s -o /dev/null -w '%{http_code}' "$u"; done
+200 https://mschwar.github.io/Garden-of-Wisdom/
+200 https://mschwar.github.io/Garden-of-Wisdom/browser/index.html
+200 https://mschwar.github.io/Garden-of-Wisdom/quotes.csv
+200 https://mschwar.github.io/Garden-of-Wisdom/sources.csv
+$ curl -s -o /dev/null -w '%{http_code}' https://mschwar.github.io/Garden-of-Wisdom/.git/config
+404
+$ curl -s -o /dev/null -w '%{http_code}' https://mschwar.github.io/Garden-of-Wisdom/.github/workflows/pages.yml
+404
+$ curl -s https://mschwar.github.io/Garden-of-Wisdom/quotes.csv | shasum -a 256
+5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793  -
+$ curl -s https://mschwar.github.io/Garden-of-Wisdom/sources.csv | shasum -a 256
+10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13  -
+$ shasum -a 256 quotes.csv sources.csv          # the repo's own copies, identical
+5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793  quotes.csv
+10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13  sources.csv
+```
+
+Cleanup: branch `w1/normalization-hints` deleted locally and on `origin`, `git remote prune origin`
+run, no worktree was used (the unit worked in-place on an isolated branch), and the two mutation
+harnesses' throwaway trees were removed by their own `finally` blocks (nothing left under `/tmp`
+except the harness scripts themselves, which are not part of the repo).
+
+**QA honesty, again, in the post-merge record:** the review pass in this handoff is a second
+same-session harness, not a foreign review. W1.4 merged on that basis; if the operator wants a
+foreign pass, it should be run against `2934941` and its findings filed as new work rather than
+folded into this unit's evidence.
 
 ## Next authorized action
 
