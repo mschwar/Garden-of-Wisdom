@@ -54,7 +54,7 @@ Living document — update it as items are picked up or closed, don't just appen
       cause.** Filed rather than fixed (the fix is a deploy-path change needing its own live
       re-verification).
 
-## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — IN PROGRESS)
+## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
 - [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
       specified in `docs/program/W1_DECOMPOSITION.md`:
@@ -72,6 +72,14 @@ Living document — update it as items are picked up or closed, don't just appen
       W1.3 ✅ DONE · W1.4 ✅ DONE · W1.5 ✅ DONE (see its close-out bullet below) · next: W1.6.**
       **Unit status (updated again, appended 2026-09-13, W1.6 close-out): W1.1–W1.6 ✅ ALL DONE (see
       the W1.6 close-out bullet below). W1 COMPLETE — the Gate B packet is submitted. W2 is not started.**
+      **Unit status (updated again, appended 2026-09-13, Gate B frontier review): Gate B accepted,
+      2026-09-13 — see `docs/audit/2026-09-13/GATE_B_FRONTIER_REVIEW.md`. Independent review re-ran
+      `check_garden_e2e.py` (96 checks), `validate_quotes.py` and `check_program_contracts.py`
+      fresh, recomputed both CSV hashes, verified the PR #33 merge/CI/live-deploy chain via
+      `gh`/`curl`, and confirmed one negative control (c1) actually fires by live-mutating and
+      reverting `garden_submit.py`. No defects found — every claim in `W1_6_GATE_B_PACKET.md`
+      reproduced exactly. W2 remains unauthorized; this review grants only Gate B acceptance, a
+      separate operator decision from W2 authorization.**
       **Strict order:** W1.1 → W1.2 → W1.3 → W1.4 → W1.5 → W1.6. W1.4 may overlap W1.3; every other
       dependency is strict.
       **Per-unit contract (authorization of the wave does NOT merge the per-unit gates):** each unit

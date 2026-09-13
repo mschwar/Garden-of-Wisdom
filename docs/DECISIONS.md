@@ -817,3 +817,22 @@ authorization (decision D1), W1 ends at the Gate B packet. **W2 is not started**
 surface, no promotion path, no migration. The carried-forward risks from `W0_GATE_REPORT.md` are
 all falsified or green (see the packet's status table). The next authorized action is an
 operator/frontier decision on **Gate B**, followed (if accepted) by authorization of **W2**.
+
+## 2026-09-13 — Gate B frontier review: accept, no defects found
+
+Independent review (`docs/audit/2026-09-13/GATE_B_FRONTIER_REVIEW.md`) re-ran
+`scripts/check_garden_e2e.py` (96 checks), `validate_quotes.py`, and `check_program_contracts.py`
+fresh from the working tree, recomputed `quotes.csv`/`sources.csv` hashes, cross-checked the
+quoted Gate B and W1.6-acceptance-criteria text against `ACCEPTANCE_GATES.md` and
+`W1_DECOMPOSITION.md` verbatim, and verified the PR #33 merge/CI/live-deploy chain independently
+via `gh pr view`, `gh run view`, and `curl` rather than trusting the packet's own pasted output.
+Also live-tested negative control c1: temporarily patched `garden_submit.py`'s `read_text` to
+strip the submitted text, confirmed the e2e goes red on exactly the two checks the packet names,
+then restored the file and verified `diff` showed no residual change.
+
+Every claim in `docs/program/W1_6_GATE_B_PACKET.md` reproduced exactly. Unlike the Gate A review,
+**no defects were found** — no stale numbers, no misquoted gate text, nothing resting on unbacked
+assertion.
+
+Verdict: **Gate B accepted**, 2026-09-13. Decided this acceptance does **not** authorize W2 — that
+stays a separate, explicit operator decision per `W1_DECOMPOSITION.md`.
