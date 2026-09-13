@@ -3,8 +3,17 @@
 **Unit:** W1.3 — manual capture/submission surface (CLI first) (`docs/program/W1_DECOMPOSITION.md`
 §W1.3), the third unit of W1, building on W1.1's store and W1.2's envelope validator. Authorized in
 full by decision D1 (2026-09-12). **Branch:** `w1/submission-cli` (worktree
-`~/gow-worktrees/w1-3-submit`, off `origin/main` `e5d5734`), opened as PR
-[#28](https://github.com/mschwar/Garden-of-Wisdom/pull/28).
+`~/gow-worktrees/w1-3-submit`, off `origin/main` `e5d5734`). Landed as commit `f127eff`, opened as
+PR [#28](https://github.com/mschwar/Garden-of-Wisdom/pull/28), and **merged as `d7c3222`**
+(2026-09-13). Post-merge CI on `main`: smoke run
+[34778578468](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34778578468) **success**,
+Pages deploy run
+[34778578338](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34778578338) **success**;
+the PR's own check run [34778530813](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34778530813)
+**success** and GitGuardian **pass**. Live acceptance after the deploy: `/`,
+`/browser/index.html`, `/quotes.csv`, `/sources.csv` all **200**; the live
+`quotes.csv`/`sources.csv` `sha256`s are identical to the repo (see
+§"Post-merge verification").
 
 **What this unit is:** the first surface in the corpus program that *writes*. It turns one messy
 manual submission into one immutable capture plus one candidate at its intake states, and nothing
@@ -406,6 +415,43 @@ acceptance run's own criterion-2 case, not by review.
   guarded workflow, so it is filed, not fixed in a W1 unit.
 - **`work_state` still has two subjects** (W1.1 §8.1). W1.3 writes `work_state = 'queued'` because
   the envelope requires it; nothing here resolves the ambiguity.
+
+## Post-merge verification
+
+Recorded in the follow-up docs commit after the merge, from the merged `main` (`d7c3222`).
+
+```
+$ gh pr checks 28
+GitGuardian Security Checks	pass	0	https://dashboard.gitguardian.com	
+smoke	pass	38s	https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34778530813/job/103781157440
+
+# after the merge, on main
+$ gh run list --limit 2
+completed	success	Merge pull request #28 from mschwar/w1/submission-cli	Quote browser smoke test	main	push	34778578468	32s	2026-09-13T19:43:53Z
+completed	success	Merge pull request #28 from mschwar/w1/submission-cli	Deploy static site to GitHub Pages	main	push	34778578338	19s	2026-09-13T19:43:53Z
+
+# live acceptance (the deploy only re-publishes the frozen view; W1.3 touches no browser code)
+$ for U in / /browser/index.html /quotes.csv /sources.csv; do
+      curl -s -o /dev/null -w "$U %{http_code}\n" https://mschwar.github.io/Garden-of-Wisdom$U; done
+/ 200
+/browser/index.html 200
+/quotes.csv 200
+/sources.csv 200
+$ curl -s https://mschwar.github.io/Garden-of-Wisdom/quotes.csv | shasum -a 256
+5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793  -
+$ curl -s https://mschwar.github.io/Garden-of-Wisdom/sources.csv | shasum -a 256
+10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13  -
+$ shasum -a 256 quotes.csv sources.csv          # the repo's own copies, identical
+5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793  quotes.csv
+10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13  sources.csv
+$ curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.git/config
+404
+```
+
+The live CSVs are byte-identical to the repo — the frozen view survived the wave so far. (The
+unrelated `/.gitignore`-is-published defect of issue
+[#23](https://github.com/mschwar/Garden-of-Wisdom/issues/23) is unchanged and out of this unit's
+scope.)
 
 ## Next authorized action
 
