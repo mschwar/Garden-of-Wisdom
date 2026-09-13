@@ -107,6 +107,40 @@ The canonical store lives at `data/store/`: `garden.sqlite3` is git-ignored (mac
 non-diffable) and `garden.export.txt` next to it is the committed text mirror. See
 `docs/program/W1_3_SUBMISSION_CLI.md`.
 
+## Normalize a candidate and generate duplicate hints (W1.4)
+
+```
+python3 scripts/garden_normalize.py normalize --dir data/store --all        # write every proposal
+python3 scripts/garden_normalize.py normalize --dir data/store --candidate-id cand-2026-09-13-0001
+python3 scripts/garden_normalize.py hints     --dir data/store --all        # rebuild every hint set
+python3 scripts/garden_normalize.py hints     --dir data/store --candidate-id cand-2026-09-13-0001
+python3 scripts/garden_normalize.py classify  --reference 'Oral Tradition'  # specific / generic / none
+python3 scripts/garden_normalize.py describe  --text 'The earth is but one country…'
+python3 scripts/check_garden_normalize.py                                   # the W1.4 acceptance + evidence run
+```
+
+`normalize` writes the Garden-facing **proposal** for a stored candidate — `candidate_text`,
+`candidate_author`, `candidate_source_ref`, `normalization_notes` — and never touches the capture:
+`captured_text` stays byte for byte the encounter, with its literal `_` placeholders, curly quotes
+and untrimmed whitespace intact. The declared transforms are NFC recomposition; curly quotes/primes,
+dashes, ellipses and no-break spaces canonicalized; whitespace runs collapsed and boundary
+whitespace trimmed; and every change is named, with counts, in `normalization_notes`. When nothing
+changed the note is `identical to capture`. A value the algorithm does not declare is never touched,
+and the `_` placeholder glyph is **preserved and reported, never guessed**.
+
+`hints` rebuilds a candidate's `{kind, target, basis}` duplicate hints by comparing the store's
+candidates: `exact-text`, `near-text` (normalized case-folded similarity >= **0.60**, the mean of the
+two directional `difflib` ratios), `same-reference` and `same-passage` — the last two only when the
+shared citation is **specific** (it carries a locator: `Gita 2.47`, `Gleanings, CV`, `p. 26`), so a
+label like `Oral Tradition` produces no reference hint. Hints are derived data: a rebuild replaces
+the rows rather than accumulating them, and **a hint is never a state** — no `curation_state` is
+written and no `decisions` row is recorded.
+
+An explicit `--candidate-id` that cannot be normalized is refused and writes nothing; an `--all`
+run skips such a candidate with a `SKIPPED: <id>: <reason>` line (a batch that can normalize nothing
+fails instead). `normalize` and `hints` only apply while a candidate is `new`: a decided candidate
+is history, not a work in progress. See `docs/program/W1_4_NORMALIZATION_HINTS.md`.
+
 ## Run the browser locally
 
 ```
