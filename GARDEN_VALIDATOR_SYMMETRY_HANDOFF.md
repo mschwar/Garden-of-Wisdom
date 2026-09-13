@@ -194,3 +194,33 @@ into `browser-smoke.yml`) — that is the other long-open, non-gated item.
 **Still gated — do not start:** W2 and everything after it (Gate B is accepted; W2 authorization is a
 separate operator decision), any discovery adapter, any canonical promotion path, the D6/D7 corpus
 curation edits themselves (human pass), and any verification-status change.
+
+## Merged — post-merge record (2026-09-13)
+
+- Commit `d27cb64` on `fix/validator-symmetric-similarity`, PR
+  [#35](https://github.com/mschwar/Garden-of-Wisdom/pull/35), **merged as `f24fae7`**.
+- CI: PR smoke run
+  [34790379227](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790379227) **success**;
+  on `main` after merge, smoke run
+  [34790423853](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790423853) **success** and
+  Pages deploy run
+  [34790423865](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790423865) **success**.
+  GitGuardian on the PR: pass.
+- Live acceptance on the merged `main` (`curl`):
+
+  ```
+  /                    200
+  /browser/index.html  200
+  /quotes.csv          200
+  /sources.csv         200
+
+  quotes.csv     live=5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793 repo=5675d7e67da256e6211574bbf416a8e2f8c3f37a834816090c9a32847acac793 MATCH
+  sources.csv    live=10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13 repo=10b4c1567dbfc80b3b681599e85b7e2e6a241eff3cf2b610baf392508dea0c13 MATCH
+  ```
+- Re-ran on merged `main`: `validate_quotes.py` → `RESULT: PASS` (exit 0);
+  `check_program_contracts.py` and `validate_homepage_preview_export.py` → exit 0; all six W1
+  acceptance suites (`check_garden_store` / `_envelope` / `_submit` / `_normalize` / `_review` / `_e2e`)
+  → `RESULT: PASS`.
+- Branch deleted locally and remotely (`gh pr merge --delete-branch`; `git remote prune origin`), the
+  throwaway `/tmp` harness and control copies removed. Issue #31 closed; the follow-up is
+  [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34).

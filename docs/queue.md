@@ -482,6 +482,18 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       that stay green and why). Decision recorded in `docs/DECISIONS.md` ("The near-duplicate score is a
       property of the pair …"). **Nothing here is corpus-program W1/W2 work** — no store surface, no
       schema, no migration, no state vocabulary touched.
+      **Landed:** commit `d27cb64`, PR [#35](https://github.com/mschwar/Garden-of-Wisdom/pull/35),
+      **merged as `f24fae7`** (2026-09-13). CI: PR smoke run
+      [34790379227](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790379227) **success**;
+      on `main` after merge, smoke run
+      [34790423853](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790423853) **success**
+      and Pages deploy run
+      [34790423865](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790423865) **success**.
+      Live acceptance on the merged `main`: `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv`
+      all **200**, and both live CSVs `sha256`-identical to the repo
+      (`5675d7e6…` / `10b4c156…`). Re-ran on merged `main`: `validate_quotes.py` → `RESULT: PASS`,
+      `check_program_contracts.py` / `validate_homepage_preview_export.py` → exit 0, and all six W1
+      acceptance suites → `RESULT: PASS`.
 
 ## Closed — 2026-09-12 card-view empty state
 
