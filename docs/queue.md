@@ -11,12 +11,21 @@ Living document — update it as items are picked up or closed, don't just appen
       before and after. **Sequence: runs AFTER W1** — this writes `sources.csv`, which is
       READ-ONLY for the whole of W1 (`docs/program/W1_DECOMPOSITION.md` §Cross-unit rules). Not
       done.
-- [ ] **ADOPTED SCOPE (D6) — curate the ~22 near-duplicate pairs that share a *specific citation*;
-      explicitly SKIP the ~23 pairs that are the validator's generic-`source_ref` false positive**
+- [ ] **ADOPTED SCOPE (D6) — curate the near-duplicate pairs that share a *specific citation*;
+      explicitly SKIP the pairs that are the validator's generic-`source_ref` false positive**
       (e.g. unrelated rows both labelled `"Oral Tradition"`). Keep both rows for legitimate variant
       translations; only merge/remove accidental duplication. **Sequence: runs AFTER W1** — this
-      writes `quotes.csv`, which is READ-ONLY for the whole of W1. The 45-pair list and its caveat
-      are in `docs/data/DATA_QUALITY_REPORT.md`. Not done.
+      writes `quotes.csv`, which is READ-ONLY for the whole of W1.
+      **Numbers re-derived 2026-09-13 (issue #31; the earlier `~22` / `~23` split was approximate and
+      no re-run reproduced it): of the 45 flagged pairs, 15 warrant a human look (13 sharing a citation
+      that carries a pinpoint locator + 2 text-similarity-only) and 30 are not evidence that two records
+      are the same passage (25 sharing only the bare label `Oral Tradition`, 5 sharing a real work with
+      no pinpoint).** The exact class table, the classification rule and the transcript are in
+      `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #31)". Not done.
+      **Related open spec: [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34)** — the sweep is
+      per-`tradition` and ignores W1.4's locator rule; a corpus-wide sweep flags 196 pairs (5 of the 151
+      additions are real cross-tradition overlaps), so widening it is a decision for this item's own pass,
+      not a side effect.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess. **D8 (2026-09-12)
       leaves these 4 rows for the operator** — guessing stays forbidden.
@@ -259,13 +268,26 @@ Living document — update it as items are picked up or closed, don't just appen
       withdrawal that keeps the capture), so neither is W1.4's to make. Filed as
       [#30](https://github.com/mschwar/Garden-of-Wisdom/issues/30); recorded in
       `docs/program/W1_4_NORMALIZATION_HINTS.md` §6.
-- [ ] **`validate_quotes.py`'s near-duplicate similarity is direction-dependent.**
+- [x] **`validate_quotes.py`'s near-duplicate similarity is direction-dependent. CLOSED 2026-09-13**
+      (branch `fix/validator-symmetric-similarity`, PR
+      [#35](https://github.com/mschwar/Garden-of-Wisdom/pull/35)) — see the close-out bullet in the
+      "Closed — 2026-09-13 validator near-duplicate score" section below.
+      The original filing text follows, unchanged:
       `difflib.SequenceMatcher.ratio()` is asymmetric (`ratio(113, 114) = 0.6888…`, `ratio(114, 113) =
       0.6666…` on the real corpus), so the pair's reported number is a function of row order and the
       frozen `docs/data/DATA_QUALITY_REPORT.md` numbers cannot be reproduced in the other order — with a
-      `> 0.6` threshold, a pair straddling 0.60 could even appear or disappear. The D6 curation item will
-      re-derive those pairs, so the fix needs its own unit: define the score symmetrically, re-generate
-      the report, and re-count D6. Filed as [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31).
+      `> 0.6` threshold, a pair straddling 0.60 could even appear or disappear. Filed as
+      [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31).
+- [ ] **The near-duplicate sweep is per-`tradition` and ignores W1.4's locator rule.** Measured
+      2026-09-13 (out of scope for #31, which was a correctness fix, not a policy change): a corpus-wide
+      sweep flags **196** pairs instead of 45, of which 146 of the 151 additions are the same bare
+      `Oral Tradition` label matching across traditions — but 5 are real cross-tradition text overlaps the
+      scoped sweep cannot see at all (strongest: `39` Christianity ~ `53` Judaism at 0.82). Separately the
+      validator treats ANY shared `source_ref` as evidence, while W1.4's store rule
+      (`citation_specificity()`) requires a locator: of the validator's 43 shared-`source_ref` pairs only
+      13 carry one. Deciding this moves the D6 curation counts, so it is its own unit.
+      Filed as [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34); recorded in
+      `GARDEN_VALIDATOR_SYMMETRY_HANDOFF.md`.
 - [ ] **`AGENTS.md` still does not describe the corpus-program command surface** — and still omits the
       W1 read-only rule. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) had been
       *closed as COMPLETED*, but the file is unchanged at `main` (`grep -c 'garden_' AGENTS.md` → 0, 63
@@ -430,6 +452,36 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - [ ] Reconcile `verification_status` (Garden) vs `verification_state` (H2B) before more
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
+
+## Closed — 2026-09-13 validator near-duplicate score (issue #31)
+
+- [x] **Issue [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31) — the near-duplicate score
+      is now a property of the pair.** `scripts/validate_quotes.py` scored each candidate pair with ONE
+      directional `difflib.SequenceMatcher.ratio()` call, and that ratio is asymmetric, so a pair's
+      reported number depended on which row was visited first (`113 ~ 114`: 0.69 one way, 0.67 the
+      other) and a pair straddling the `0.60` threshold could **appear or disappear** rather than merely
+      shift (`189 ~ 216`: 0.6023 vs 0.5909). The score is now the **mean of both directional ratios**
+      (the rule W1.4's store-side hint generator already used, `docs/program/W1_4_NORMALIZATION_HINTS.md`
+      §3 ruling 1) and the validator **hard-fails** if a second detection pass with every tradition's rows
+      reversed disagrees with the first — an order-dependent number is now a `RESULT: FAIL`, not a
+      curation item. A second hard check re-derives every printed reason from the rows themselves, so a
+      citation pair that also clears the text threshold must carry its number. The pair set is unchanged
+      (**45**); four output lines moved. The two related questions #31 asked to decide: (1) a shared
+      citation that also clears the threshold now **reports** its number (3 pairs today) rather than
+      discarding it, and (2) the sweep **stays scoped per `tradition`** — with the measurement recorded
+      (corpus-wide flags 196 pairs; 146 of the 151 additions are the bare-`Oral Tradition` label, but 5
+      are real cross-tradition overlaps the scoped sweep misses) and the widening filed as its own spec,
+      [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34). `docs/data/DATA_QUALITY_REPORT.md`
+      gained a dated re-derivation (the 2026-09-11 transcript is kept byte-identical; `git diff` shows
+      **0 deletions** in that file) with the verbatim fresh transcript, the exact pair-class table
+      (2 text-only + 13 pinpointed-citation + 25 bare-label + 5 work-level = 45) and the two decisions;
+      the queue's **D6 item was re-counted** from the approximate `~22` / `~23` split to **15 to inspect /
+      30 to skip**. `quotes.csv` and `sources.csv` are byte-identical (`5675d7e6…` / `10b4c156…`): the
+      re-count is a derivation over the corpus, not an edit to it. Design trail:
+      `GARDEN_VALIDATOR_SYMMETRY_HANDOFF.md` (**5 negative controls**, one per changed path, plus the two
+      that stay green and why). Decision recorded in `docs/DECISIONS.md` ("The near-duplicate score is a
+      property of the pair …"). **Nothing here is corpus-program W1/W2 work** — no store surface, no
+      schema, no migration, no state vocabulary touched.
 
 ## Closed — 2026-09-12 card-view empty state
 

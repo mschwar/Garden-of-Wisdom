@@ -8,9 +8,23 @@ python3 scripts/validate_quotes.py
 
 Exits 0 with `RESULT: PASS` if there are no hard-integrity failures (parse errors, malformed
 UTF-8, duplicate IDs, missing required fields, invalid controlled values, dangling
-`source_id` references). Everything else it prints (near-duplicates, unresolved source links,
+`source_id` references, or a near-duplicate score that changes when the rows are visited in the
+other order). Everything else it prints (near-duplicates, unresolved source links,
 unresolved-glyph rows, counts by `item_type`/`verification_status`) is curation-queue signal,
 not a failure — read `docs/data/DATA_QUALITY_REPORT.md` for how to interpret it.
+
+Two lines of the near-duplicate block are checks, not signal: `pair detection re-run with every
+tradition's rows reversed` (the same sweep over the same rows in the other order must produce an
+identical result — a pair's number is a property of the pair, not of row order) and
+`near-duplicate reasons re-derived from the rows and matched` (every printed reason must name the
+evidence that actually holds, including a shared citation that also clears the text threshold).
+Either failing is a `RESULT: FAIL`. The score itself is the **mean of both directional
+`difflib.SequenceMatcher.ratio()` values**, because that ratio is asymmetric; see the rule in the
+script's docstring and `docs/DECISIONS.md` ("The near-duplicate score is a property of the pair").
+
+To re-freeze `docs/data/DATA_QUALITY_REPORT.md` after changing the heuristic: run the validator,
+paste its stdout verbatim into a new dated section (never overwrite the point-in-time transcript),
+and re-derive the pair-class counts the queue's D6 item cites.
 
 ## Check the corpus-program doctrine set
 
