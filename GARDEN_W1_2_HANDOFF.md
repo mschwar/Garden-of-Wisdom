@@ -6,8 +6,13 @@
 **Branch:** `w1/envelope-validator` (worktree `~/gow-worktrees/w1-2-envelope`, off `origin/main`
 `cbf1d5d`). Landed as commit `2b1d412` (implementation + docs; this file gained the commit sha and
 PR number in the follow-up commit `HEAD`), opened as PR
-[#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26) — **not merged**; the parent lands it
-after independent/foreign QA.
+[#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26), and **merged as `98631f5`**
+(independent/foreign QA found and fixed three unguarded validator paths before merge — see the
+review section below). CI on `main` after merge: smoke run
+[34776947692](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34776947692) **success**,
+Pages deploy run
+[34776947732](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34776947732) **success**;
+live `quotes.csv`/`sources.csv` byte-identical to the repo and `/` serves **200**.
 
 ## What landed
 

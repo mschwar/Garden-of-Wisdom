@@ -89,8 +89,9 @@ Living document — update it as items are picked up or closed, don't just appen
       subjects, and no sanctioned capture-deletion path). **Next: W1.2.**
 - [x] **W1.2 — candidate-envelope contract + validator. DONE 2026-09-12** (branch
       `w1/envelope-validator`, PR
-      [#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26), not merged — the parent lands it
-      after independent/foreign QA). `scripts/garden_envelope.py` implements
+      [#26](https://github.com/mschwar/Garden-of-Wisdom/pull/26), **merged as `98631f5`**;
+      independent/foreign QA found three unguarded validator paths and fixed them before merge —
+      see the review section in `GARDEN_W1_2_HANDOFF.md`). `scripts/garden_envelope.py` implements
       `garden.candidate-envelope/1` (`docs/program/CANDIDATE_ENVELOPE.md`) as a canonical
       serialized JSON form (sorted keys, UTF-8, `allow_nan=False`) plus a deterministic validator
       for rules 1–6, each violation reporting `rule-1` … `rule-6`. Sentinel handling for
@@ -133,6 +134,16 @@ Living document — update it as items are picked up or closed, don't just appen
       W1.2 implements the rule exactly as written rather than silently widening it; the gap needs a
       contract decision (extend rule 5, or state that the other capture fields are the capture's
       and an envelope must not restate them). Recorded in `W1_2_ENVELOPE_VALIDATOR.md` §5.1.
+- [ ] **CI does not run the W1 acceptance suites.** `.github/workflows/browser-smoke.yml`'s
+      "Check the data validators still pass" step runs `validate_quotes.py`,
+      `check_program_contracts.py` and `validate_homepage_preview_export.py`, but not
+      `scripts/check_garden_store.py` (W1.1) or `scripts/check_garden_envelope.py` (W1.2). The two
+      W1 evidence runs therefore pass locally (and in the reviewer's run) but are not protected
+      from a future regression by CI. Adding them is a low-risk, deterministic, stdlib-only,
+      exit-0/1 addition to that step, but it is a CI change touching the guarded workflow and both
+      W1 units shipped without it, so it is filed here rather than fixed in W1.2. Decide: extend
+      the smoke workflow's validator step to run both W1 acceptance suites, or leave them as
+      local-evidence-only.
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
