@@ -64,7 +64,7 @@ reconstructs the envelope's required fields from the store. The sentinel vocabul
 (`unknown`/`und`/`none`/`legacy-import`) is carried verbatim — never as an empty string, and a
 missing required field is never defaulted. The CLI is a **read-only diagnostic** (it inspects an
 envelope file; it creates no capture and records no decision — the intake surface is W1.3).
-`scripts/check_garden_envelope.py` runs the full acceptance + evidence suite (99 checks) in a
+`scripts/check_garden_envelope.py` runs the full acceptance + evidence suite (102 checks) in a
 throwaway temp directory: the serialized form round-trips byte-identically and is key-order
 independent, every valid fixture and all twelve W0 scenario envelopes pass all six rules, every
 rule has a failing fixture that reports exactly that rule id, sentinels survive validation,

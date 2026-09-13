@@ -14,8 +14,8 @@ after independent/foreign QA.
 | Artifact | Change |
 |---|---|
 | `scripts/garden_envelope.py` | **New.** The `garden.candidate-envelope/1` serialized form (canonical JSON: sorted keys, UTF-8, `allow_nan=False`, pure function of the envelope), the validator for rules 1–6 (each violation carries `rule-1`…`rule-6`), the sentinel allowance table, the store bridge (`store_capture` / `store_envelope` / `read_envelope` / `capture_texts`) into W1.1's store, and a **read-only diagnostic** CLI (`serialize` / `validate`) — no intake surface (that is W1.3). Stdlib only. |
-| `scripts/check_garden_envelope.py` | **New.** The W1.2 acceptance + evidence run: **99 checks**, `RESULT: PASS`/`FAIL`, one `FAIL:` line per broken check, no traceback on a broken envelope or a broken fixture file, everything in a throwaway temp dir. |
-| `docs/program/fixtures/envelope_fixtures.json` | **New.** `garden.envelope-fixtures/1`: 4 valid envelopes (the contract's worked example, a sentinel-maximal one, one carrying all nine optional fields, one preserving whitespace), **20 invalid envelopes** each declaring the rule it breaks, and 5 capture records for rule 5. |
+| `scripts/check_garden_envelope.py` | **New.** The W1.2 acceptance + evidence run: **102 checks** (99 as authored, +3 failing fixtures added by the reviewing session to close coverage gaps found in independent QA), `RESULT: PASS`/`FAIL`, one `FAIL:` line per broken check, no traceback on a broken envelope or a broken fixture file, everything in a throwaway temp dir. |
+| `docs/program/fixtures/envelope_fixtures.json` | **New.** `garden.envelope-fixtures/1`: 4 valid envelopes (the contract's worked example, a sentinel-maximal one, one carrying all nine optional fields, one preserving whitespace), **23 invalid envelopes** (20 as authored + 3 added in review) each declaring the rule it breaks, and 5 capture records for rule 5. |
 | `docs/program/W1_2_ENVELOPE_VALIDATOR.md` | **New.** The serialized form, the six rules as implemented (and where the rule boundaries are drawn), the sentinel handling table, the store bridge, and **eight** places the contract was ambiguous. |
 | `docs/RUNBOOK.md` | New §"Check the candidate envelope contract (W1.2)". |
 | `docs/DECISIONS.md` | Appended (§"W1.2 (envelope): canonical JSON form, one rule id per defect, and no store migration in W1.2"). Append-only: 50 added lines, 0 removed. |
@@ -168,7 +168,7 @@ PASS: nothing was written outside the store's own directory
 RESULT: PASS (envelope contract enforced: 6/6 rules, sentinels verbatim, stored and read back)
 ```
 
-99 `PASS:` lines, zero `FAIL:` lines, exit 0. (Two 12-line blocks of W0 scenario lines are elided
+102 `PASS:` lines, zero `FAIL:` lines, exit 0. (Two 12-line blocks of W0 scenario lines are elided
 above with an explicit marker; they are the only elisions.)
 
 ### The serialized form, the round-trip, and the store round-trip
@@ -331,6 +331,31 @@ lost `sort_keys`, because the round-trip re-serializes the same insertion order 
 Honest note on n7: its first `FAIL:` is the target (`parse(serialize(e)) equals e`); the second
 line is the script's own top-level guard catching the follow-on error from the same mutation, and
 it is still a `FAIL:` line, not a traceback. Recorded rather than cleaned up.
+
+## Review finding (independent QA, landed in review)
+
+Independent QA by a separate session from the author (the same relationship as the W1.1
+reviewer) found that **three code paths in `garden_envelope.py` were unguarded**: the author's 20
+invalid fixtures never exercised them, so a mutation disabling each left the whole run green —
+the exact class of gap the W1.1 reviewer found in `scripts/check_garden_store.py` (the
+`research_state` `CHECK`). The reviewer's own mutation harness (`/tmp/w12_independent_qa.py`,
+four mutations independent of the author's fifteen) drove them red:
+
+| # | Mutation (in a `/tmp` copy of the branch) | Before the fix | After the fix |
+|---|---|---|---|
+| M1 | **`intake_schema_version` VALUE check disabled** (`_rule1`: `version != SCHEMA_KEY` → `False`) | **GREEN — coverage gap**: no fixture had a wrong schema-version, so nothing proved the schema key is enforced | **RED**: `fixture 'wrong-intake-schema-version' reports exactly rule-1 -- reported []` |
+| M2 | **`_rule4` undeclared-keys check removed** | **GREEN — coverage gap**: no fixture carried a hint with extra keys | **RED**: `fixture 'hint-extra-keys' reports exactly rule-4 -- reported []` |
+| M3 | **`_rule4` non-object-hint check removed** | **GREEN — coverage gap**: no fixture had a non-object hint element | **RED**: `fixture 'hint-not-an-object' reports exactly rule-4 -- reported []` |
+| M4 | **rule 6 silently drops the optional fields** | **RED (already guarded)** by the existing `non-lossless-number` fixture + the round-trip checks | **RED (unchanged)** |
+
+Fixed in review rather than deferred, per the W1.1 precedent: three failing fixtures
+(`wrong-intake-schema-version`, `hint-extra-keys`, `hint-not-an-object`) added to
+`docs/program/fixtures/envelope_fixtures.json`, each otherwise-valid so only its intended rule
+fires. The suite went from **99 to 102 checks**; the reviewer re-ran the acceptance run
+(`RESULT: PASS`) and then re-ran all four mutations, confirming M1/M2/M3 now go red and **zero
+coverage gaps remain**. No validator behaviour changed — only the fixtures and this record. The
+reviewer's `M1` is the important one: the `intake_schema_version` schema key is the contract's
+identity line, and nothing previously proved it is enforced.
 
 ## Out of scope, recorded not fixed
 

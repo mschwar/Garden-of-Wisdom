@@ -555,3 +555,19 @@ surface is W1.3. Implemented as `scripts/garden_envelope.py` with
 `scripts/check_garden_envelope.py` as the deterministic acceptance + evidence run (99 checks, 15
 negative controls recorded in `GARDEN_W1_2_HANDOFF.md`). Details:
 `docs/program/W1_2_ENVELOPE_VALIDATOR.md`.
+
+## 2026-09-12 — W1.2 review (QA): three validator paths were unguarded; three failing fixtures added (99 → 102 checks)
+
+Independent QA by a separate session from the author — the same relationship as the W1.1
+reviewer — found that three code paths in `scripts/garden_envelope.py` had no failing fixture,
+so a mutation disabling each left the whole `check_garden_envelope.py` run green: the
+`intake_schema_version` value check in rule 1 (no fixture had a wrong schema key), and rule 4's
+undeclared-keys and non-object-hint checks (no fixture had a hint with extra keys or a bare
+non-object element). This is the same class of coverage gap the W1.1 reviewer found (the
+`research_state` `CHECK`), and it is fixed the same way: three otherwise-valid failing fixtures
+(`wrong-intake-schema-version`, `hint-extra-keys`, `hint-not-an-object`) added to
+`docs/program/fixtures/envelope_fixtures.json`, taking the suite from 99 to **102 checks** and the
+invalid-fixture set from 20 to 23. No validator behaviour changed. Re-run of the reviewer's four
+independent mutations confirmed all three paths now go red and zero coverage gaps remain.
+This supersedes the "99 checks" sentence in the W1.2 entry above; the validation contract itself
+is unchanged. Recorded in `GARDEN_W1_2_HANDOFF.md` §"Review finding (independent QA, landed in review)".

@@ -97,16 +97,21 @@ Living document — update it as items are picked up or closed, don't just appen
       `unknown`/`und`/`none`/`legacy-import` is a per-field allowance table: a sentinel is carried
       verbatim through validation, serialization and SQLite, never turned into `""`, and a missing
       required field is never defaulted. `scripts/check_garden_envelope.py` is the acceptance +
-      evidence run (**99** checks): round-trip is byte-identical and key-order independent, **20
-      invalid fixtures** (≥1 per rule, asserted as an *exact* rule-id set) plus 4 valid ones and
-      all twelve W0 scenario envelopes pass/ fail exactly as declared, and a valid envelope is
-      stored through W1.1's store and read back with all **21 required fields intact**. The
-      `.invalid_envelopes` fixture set lives in
+      evidence run (**102** checks; 99 as authored, +3 failing fixtures added by the reviewing
+      session to close coverage gaps found in independent QA): round-trip is byte-identical and
+      key-order independent, **23 invalid fixtures** (≥1 per rule, asserted as an *exact* rule-id
+      set) plus 4 valid ones and all twelve W0 scenario envelopes pass/ fail exactly as declared,
+      and a valid envelope is stored through W1.1's store and read back with all **21 required
+      fields intact**. The `.invalid_envelopes` fixture set lives in
       `docs/program/fixtures/envelope_fixtures.json`; the design doc is
       `docs/program/W1_2_ENVELOPE_VALIDATOR.md`. **15 negative controls** recorded in
       `GARDEN_W1_2_HANDOFF.md` (each turns the run red with a targeted `FAIL:` line, no
-      traceback). `quotes.csv`/`sources.csv` byte-identical (read-only rule held). Decision
-      recorded in `docs/DECISIONS.md` ("W1.2 (envelope): no migration in W1.2 …"). **Next: W1.3.**
+      traceback), plus a separate **review finding** (independent QA found three unguarded paths —
+      the `intake_schema_version` value check and rule 4's undeclared-keys / non-object-hint
+      checks — and fixed them with three fixtures; see the handoff's review section and
+      `docs/DECISIONS.md` "W1.2 review (QA)"). `quotes.csv`/`sources.csv` byte-identical
+      (read-only rule held). Decision recorded in `docs/DECISIONS.md` ("W1.2 (envelope): no
+      migration in W1.2 …"). **Next: W1.3.**
 
 ### Open — discovered during W1.2 (filed, NOT fixed in passing)
 

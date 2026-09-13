@@ -6,7 +6,7 @@ document is the written half of the unit: the serialized form, the six rules as 
 (including where the rule boundaries are drawn and why), the sentinel handling table, the store
 bridge into W1.1, and the places the contract was ambiguous. The executable half is
 `scripts/garden_envelope.py` (serialized form + validator + store bridge + a read-only diagnostic
-CLI) and `scripts/check_garden_envelope.py` (acceptance + evidence, 99 checks).
+CLI) and `scripts/check_garden_envelope.py` (acceptance + evidence, 102 checks).
 
 ## 1. The serialized form
 
@@ -194,7 +194,7 @@ Per the card's stop condition — **validator green on fixtures; no UI**:
 
 | Command | Effect |
 |---|---|
-| `python3 scripts/check_garden_envelope.py` | the full W1.2 acceptance + evidence run (99 checks) |
+| `python3 scripts/check_garden_envelope.py` | the full W1.2 acceptance + evidence run (102 checks) |
 | `python3 scripts/garden_envelope.py serialize --envelope FILE` | print one envelope's canonical serialized form |
 | `python3 scripts/garden_envelope.py validate --envelope FILE [--captures FILE] [--rule N]` | validate one envelope file read-only; one line per violation, each with its rule id |
 

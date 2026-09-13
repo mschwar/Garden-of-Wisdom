@@ -704,6 +704,92 @@
         "work_state": "queued",
         "external_id": 1e999
       }
+    },
+    {
+      "id": "wrong-intake-schema-version",
+      "fails_rule": "rule-1",
+      "why": "intake_schema_version is not the contract's schema key 'garden.candidate-envelope/1'. Added by the reviewing session: the original 20-fixture set had no wrong-version case, so removing the version check left the whole run green (M1).",
+      "envelope": {
+        "intake_schema_version": "garden.candidate-envelope/2",
+        "capture_id": "cap-2026-09-12-0001",
+        "captured_text": "The earth is but one country, and mankind its citizens.",
+        "captured_attribution": "unknown",
+        "captured_citation": "none",
+        "capture_method": "manual-entry",
+        "captured_at": "2026-09-12T09:14:11-06:00",
+        "captured_by": "operator",
+        "language": "en",
+        "source_reference": "none",
+        "context_notes": "none",
+        "raw_artifact_ref": "none",
+        "candidate_text": "The earth is but one country, and mankind its citizens.",
+        "candidate_author": "unknown",
+        "candidate_source_ref": "none",
+        "normalization_notes": "identical to capture",
+        "duplicate_hints": [],
+        "curation_state": "new",
+        "research_state": "not_started",
+        "corpus_state": "candidate_only",
+        "work_state": "queued"
+      }
+    },
+    {
+      "id": "hint-extra-keys",
+      "fails_rule": "rule-4",
+      "why": "A duplicate hint is exactly {kind, target, basis}; a hint carrying an undeclared key (here 'confidence') is malformed. Added by the reviewing session: the original fixture set had no extra-keys case, so removing that check left the run green (M2).",
+      "envelope": {
+        "intake_schema_version": "garden.candidate-envelope/1",
+        "capture_id": "cap-2026-09-12-0001",
+        "captured_text": "The earth is but one country, and mankind its citizens.",
+        "captured_attribution": "unknown",
+        "captured_citation": "none",
+        "capture_method": "manual-entry",
+        "captured_at": "2026-09-12T09:14:11-06:00",
+        "captured_by": "operator",
+        "language": "en",
+        "source_reference": "none",
+        "context_notes": "none",
+        "raw_artifact_ref": "none",
+        "candidate_text": "The earth is but one country, and mankind its citizens.",
+        "candidate_author": "unknown",
+        "candidate_source_ref": "none",
+        "normalization_notes": "identical to capture",
+        "duplicate_hints": [
+          {"kind": "near-text", "target": "283", "basis": "0.74 text similarity within tradition", "confidence": 0.9}
+        ],
+        "curation_state": "new",
+        "research_state": "not_started",
+        "corpus_state": "candidate_only",
+        "work_state": "queued"
+      }
+    },
+    {
+      "id": "hint-not-an-object",
+      "fails_rule": "rule-4",
+      "why": "duplicate_hints[] must contain {kind, target, basis} objects; a bare string is not a hint. Added by the reviewing session: the original fixture set had no non-object-hint case, so removing that check left the run green (M3).",
+      "envelope": {
+        "intake_schema_version": "garden.candidate-envelope/1",
+        "capture_id": "cap-2026-09-12-0001",
+        "captured_text": "The earth is but one country, and mankind its citizens.",
+        "captured_attribution": "unknown",
+        "captured_citation": "none",
+        "capture_method": "manual-entry",
+        "captured_at": "2026-09-12T09:14:11-06:00",
+        "captured_by": "operator",
+        "language": "en",
+        "source_reference": "none",
+        "context_notes": "none",
+        "raw_artifact_ref": "none",
+        "candidate_text": "The earth is but one country, and mankind its citizens.",
+        "candidate_author": "unknown",
+        "candidate_source_ref": "none",
+        "normalization_notes": "identical to capture",
+        "duplicate_hints": ["near-text"],
+        "curation_state": "new",
+        "research_state": "not_started",
+        "corpus_state": "candidate_only",
+        "work_state": "queued"
+      }
     }
   ]
 }
