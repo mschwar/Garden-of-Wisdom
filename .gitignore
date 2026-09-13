@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Garden corpus store of record (W1.3 ruling). The SQLite file is machine-local and not
+# diffable, so it is never committed; the deterministic text export next to it
+# (data/store/garden.export.txt) is the committed mirror. See
+# docs/program/W1_3_SUBMISSION_CLI.md section 6.
+data/store/garden.sqlite3

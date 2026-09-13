@@ -571,3 +571,77 @@ invalid-fixture set from 20 to 23. No validator behaviour changed. Re-run of the
 independent mutations confirmed all three paths now go red and zero coverage gaps remain.
 This supersedes the "99 checks" sentence in the W1.2 entry above; the validation contract itself
 is unchanged. Recorded in `GARDEN_W1_2_HANDOFF.md` §"Review finding (independent QA, landed in review)".
+
+## 2026-09-13 — W1.3 (submission CLI): the record-id scheme, the normalization boundary, the store location, and no populated mirror yet
+
+W1.3 is the first surface in the corpus program that writes. It owns the candidate-id naming
+scheme (W1.2 §5.2 left it open) and the canonical store location (W1.1's handoff left it open), and
+it had to draw the line between "submit" and "normalize" without implementing W1.4's algorithm.
+The implementation is `scripts/garden_submit.py` with `scripts/check_garden_submit.py` as the
+acceptance + evidence run (**134** checks, 15 negative controls + a separate 5-mutation review
+pass). Details: `docs/program/W1_3_SUBMISSION_CLI.md`.
+
+**1. Record ids are `cap-YYYY-MM-DD-NNNN` and `cand-YYYY-MM-DD-NNNN`, derived by scanning the
+store.** The day is the **capture** day (`captured_at`'s date), not the wall-clock day the command
+ran, so a submission recorded with an explicit historical timestamp is numbered on its own day and
+a different capture day gets its own `0001` sequence. `NNNN` is one greater than the highest number
+already used for that kind on that day, read out of the store itself. An explicit
+`--capture-id` / `--candidate-id` is honoured; an id the store already holds is **refused before
+anything is written**. Rejected: (a) a counter table (a second source of truth for an id the store
+can already derive); (b) a random or UUID suffix (no day grouping, not diffable, and not
+reproducible — the acceptance run asserts determinism by computing the next id twice and then
+checking the CLI allocates exactly it); (c) re-using an existing `capture_id` to attach a second
+candidate to a stored capture, which the contract permits (invariant 3) but which rule 5 cannot
+police — rule 5 compares only `captured_text` (W1.2 §5.1), so a restatement could disagree with the
+stored record on attribution and still validate. W1.3 therefore creates exactly one capture per
+submission and refuses to restate one; the multi-capture path belongs to the unit that needs it.
+
+**2. The normalization boundary: W1.3 performs no normalization, and enforces "no normalization
+without a note".** `candidate_text` / `candidate_author` / `candidate_source_ref` default to the
+captured values, so a plain submission records `normalization_notes: identical to capture` — an
+assertion that every normalization is accounted for, made by saying there is none. A value that
+differs from the capture without `--normalization-notes` is refused, naming both
+`normalization_notes` and the field it would have changed; with a note it is accepted and the
+capture stays byte-identical (the proposal is stored *alongside* the encounter). Rejected: (a)
+implementing whitespace/quote/diacritic normalization here — it is W1.4's algorithm and W1.4 is the
+unit that can iterate on it, thresholds and all; (b) "normalizing only the obvious cases" as a
+convenience, because an unrecorded transform is exactly what `PROVENANCE_AND_CAPTURE_CONTRACT.md`
+forbids. W1.4 replaces the default with a real transform and must keep the invariant.
+
+**3. An omitted flag becomes the field's declared sentinel; a flag supplied *empty* is passed
+through untouched so the validator names the field.** `--attribution` omitted →
+`captured_attribution: "unknown"`; `--attribution ""` → `""` → `[rule-1] 'captured_attribution' is
+empty; a sentinel … is not an empty string`. Rejected: treating an empty flag as "not supplied",
+which would turn "the operator gave us nothing here" into a silent claim that the attribution is
+unknown — a different and better-sounding fact. This is the mechanism behind the card's second
+acceptance criterion and it is asserted by 5 refusal cases, each with its own "wrote nothing" check.
+
+**4. The canonical store lives at `data/store/`: the SQLite file is git-ignored, the text export
+beside it is the committed mirror.** `data/store/garden.sqlite3` is machine-local and not diffable;
+`data/store/garden.export.txt` (`garden.export/1`) is the mirror W1.1's decision describes, and a
+diff of it is a per-record diff. Rejected: committing the database (an opaque binary in the history
+of a repository whose entire audit story is textual), and keeping the store outside the repo (the
+diffable mirror is the whole point of the split).
+
+**5. W1.3 commits NO populated mirror — a deliberate deviation from W1.1's handoff.** W1.1
+anticipated that "the first commit of a populated mirror belongs to the first unit that writes real
+submissions (W1.3)". W1.3 declines the *timing* while making the location ruling above. At this
+unit's stop point the only submissions that exist are its own test fixtures, and they live in a
+throwaway temp directory by design: the acceptance run must pass from a clean clone with no
+committed data, which is exactly what W1.6's Gate B packet requires. Committing fixture submissions
+into the store of record's history would put review scaffolding into the corpus, and W1.6 would have
+to unwind it. The first **real** operator submission populates the mirror, and Gate B is where an
+evidence store demonstrating it belongs. Nothing about the mechanism is deferred — only the first
+populated commit, and to the unit that will have real content.
+
+Also decided in W1.3: `captured_by` defaults to `operator` (a reading of the contract, matching
+`garden_store.add_capture`'s own default, recorded so a reviewer can require it to be explicit
+instead); a submission with `--candidate-author ""` and no note is refused naming
+`normalization_notes` rather than silently accepted, because a value that differs is a
+normalization whether or not it looks like one; the manual surface exposes **no** flag for any of
+the nine optional envelope fields — eight have no store column (W1.2's filed gap) and `external_id`,
+which does, is left to the adapters that will need it, because a flag that accepts a value the
+store cannot hold is a silent drop; and the `captured_at` offset check is deliberately duplicated
+between the submission surface (which derives the ids from the stamp's date) and rule 1, with the
+acceptance run asserting the layering so the earlier check has a unique falsifier (it did not, until
+control n14 found it).
