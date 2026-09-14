@@ -396,10 +396,68 @@ that breaks the contract is red before it can deploy. It is a *config* guard: it
 workflow still asks for a rooted artifact from an action version that excludes hidden files,
 not what a given deployment published — that is what the live probes above are for. It was
 added after issue #23; its **28** negative controls — one per check, the two shape guards, the
-count guard, and the regression cases that must stay green — are recorded in
-`GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`. Opening the harness itself (so the controls are
-re-runnable by someone other than the author, and a gutted check body cannot hide behind the
-count guard) is filed as issue #43 and is deliberately not part of this unit.
+count guard, and the regression cases that must stay green — were recorded in
+`GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`, and four of them now live in the committed control
+table that `scripts/run_negative_controls.py` re-applies on every CI run (see
+"Machine-check the checkers' negative controls" below; that script is where the whole control
+table for every checker now lives, so it no longer has to be taken on a handoff's word).
+
+
+## Machine-check the checkers' negative controls
+
+```
+python3 scripts/run_negative_controls.py            # every control of every checker (CI runs this)
+python3 scripts/run_negative_controls.py --check     # anchors only, no checker is run (fast)
+python3 scripts/run_negative_controls.py --list      # print the control table
+python3 scripts/run_negative_controls.py --checker scripts/check_pages_contract.py
+```
+
+Every checker in this repo is supposed to come with *negative controls*: one mutation per
+guard, which must turn the run red with **that guard's own** `FAIL:` line. Until this script
+those tables lived only in prose (`GARDEN_*_HANDOFF.md`), produced by a throwaway harness in
+`/tmp` that was deleted when the unit ended — so the evidence was not independently
+verifiable, and a *vacuous* check was undetectable: the Pages guard's `EXPECTED_CHECKS` fails
+when a check is **deleted**, but gutting a check body to `return None` while keeping its
+registration leaves the run green (foreign QA mutation `p36`).
+
+`scripts/run_negative_controls.py` (stdlib only) copies the working tree to a throwaway
+directory — never mutating it, and excluding `.git`/`.venv`/`__pycache__` — then, for each
+control: asserts the control's anchor occurs **exactly once** in its target file, applies the
+substitution, runs the checker **from inside the copy**, restores the file's pristine bytes,
+and asserts the **first** `FAIL:` line is the one the control aimed at. It also runs each
+checker unmutated first and refuses to report a control as fired against an already-red
+baseline.
+
+Verdicts that fail the run: `COVERAGE_GAP` (the mutation stayed green — the check has no
+falsifier), `MASKED` (a different check refused first), `ROTTEN_ANCHOR` (the anchor no longer
+occurs exactly once, so the table has drifted from the files), `FALSE_POSITIVE` (a
+contract-preserving edit that must stay green went red), `CRASH`, `INCONSISTENT`, `TIMEOUT`.
+Only `FIRED` passes a control that expects a `FAIL:` line. **This is what closes issue #43's
+`p36` finding**: gutting a check body makes that check's control report `COVERAGE_GAP` instead
+of hiding behind the count guard.
+
+It also carries **its own controls** (the `harness self-tests`, run on every invocation): a
+synthetic mini-repo exercises the five verdicts end to end, plus four table-hygiene guards (an
+empty table, a checker with no controls, a deleted registration, and the rule that a narrowed
+`--checker` selection is never checked against the whole-table count guard) — a harness that can
+no longer detect a green mutation is the same defect one level up. `EXPECTED_SELF_TESTS` and
+`EXPECTED_CONTROLS` are count guards: deleting either fails the run.
+
+**Cost, measured** (macOS, warm): ~4 minutes, dominated by `validate_quotes.py` (~21s/run) and
+`check_garden_e2e.py` (~22s/run). `--checker` narrows a local run; CI runs all of it, because
+the point is coverage, not a fast green, and the `smoke` job's budget was raised from 15 to 30
+minutes for exactly that reason (a table checked only for rot would not be evidence). Two
+checker families are exercised here:
+`scripts/smoke_quote_browser.py`'s controls need a real Chromium, so that checker declares
+`requires=("playwright",)` and is reported **SKIPPED** (never PASS) where the browser is
+missing — with `CI` set, or `--require-all`, a skip is an error rather than a quiet reduction
+in coverage.
+
+Known limits, so they are not mistaken for coverage: a control is a **single exact-string
+substitution**, so a regression that needs a file deleted, renamed or a multi-file edit is
+outside the table's vocabulary; and the table proves each *modelled* break is detected, never
+that a guard is complete. `docs/architecture/NEGATIVE_CONTROLS.md` has the design and the
+control-by-control record.
 
 
 ## Re-derive the canonical CSVs from the frozen originals
