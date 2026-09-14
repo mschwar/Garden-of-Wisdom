@@ -118,8 +118,25 @@ Living document — update it as items are picked up or closed, don't just appen
       negative controls become a committed, CI-wired table"). `quotes.csv`/`sources.csv`
       unchanged by this unit — byte-identical to `main`, which is the **D7-updated** pair
       `b3bb7848…` / `7aafcb67…` (the `5675d7e6…` / `10b4c156…` pair every pre-D7 entry quotes is
-      the pre-D7 state; see the hash note on the D7 item above). **Landing:** see the merge
-      record below.
+      the pre-D7 state; see the hash note on the D7 item above). **Landing:** commit `0f140cc`, PR
+      [#46](https://github.com/mschwar/Garden-of-Wisdom/pull/46), **merged as `47cc715`**
+      (2026-09-14). CI: PR smoke run
+      [34813841778](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34813841778)
+      **success** — the job log shows all 36 `ok` control lines, `RESULT: PASS (36 controls
+      fired, 9 harness self-tests)` and `checkers: 12 of 12 selected, 0 skipped`, so the
+      Chromium-dependent smoke controls ran in CI rather than skipping; on `main` after the
+      merge, smoke run
+      [34814567808](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34814567808)
+      **success** and Pages deploy run
+      [34814567692](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34814567692)
+      **success**. Live acceptance on the merged `main`: `/`, `/browser/index.html`,
+      `/quotes.csv`, `/sources.csv` all **200**; `/.gitignore`, `/.git/config` and
+      `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
+      (`b3bb7848…` / `7aafcb67…`). **The step costs ~6.5–7 minutes in CI** (vs ~4 warm locally),
+      so `browser-smoke.yml`'s `timeout-minutes` moved 15 → 30 in the same commit — the budget
+      was raised rather than the coverage trimmed. Design trail:
+      `GARDEN_NEGATIVE_CONTROLS_HANDOFF.md` (8 author controls + two review passes; the second
+      returned **PASS, no high/medium defects**).
 - [ ] **OPEN — five checker coverage gaps found while authoring the control table.** A green
       mutation is the signature of a documented contract with no falsifier, and the authoring
       pass found five, each re-verified independently (fresh copy, one substitution, checker run

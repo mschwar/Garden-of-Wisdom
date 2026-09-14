@@ -11,8 +11,42 @@ after the merge, never by a closing keyword) · **Filed out of scope:**
 
 ## Landed
 
-**Merge:** `<filled in the follow-up docs commit on main>` · **PR:** #46 · **CI:** `<run ids>` ·
-**Live acceptance:** `<recorded in the follow-up docs commit>`.
+**Merge:** `47cc715` — "Merge pull request #46 from mschwar/ci/negative-control-harness"
+(2026-09-14T06:42:07Z). Branch commit `0f140cc`.
+
+**CI.** PR smoke run
+[34813841778](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34813841778) **success**
+(job 9m12s; the new step 6m58s of it) — and the job log's own lines, not merely the step's exit
+code, show the work happened: 36 `ok` lines, `RESULT: PASS (36 controls fired, 9 harness
+self-tests) [negative controls]`, and `checkers: 12 of 12 selected, 0 skipped`, so the two
+Chromium-dependent `smoke_quote_browser.py` controls genuinely ran in CI rather than skipping
+(which `CI`-implied `--require-all` would have failed). After the merge on `main`: smoke run
+[34814567808](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34814567808) **success**
+(the same 36 `ok` lines and the same `RESULT: PASS (36 controls fired, 9 harness self-tests)`
+line; step 6m24s, job 8m28s) and Pages deploy run
+[34814567692](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34814567692) **success**.
+
+**Measured CI cost, recorded rather than estimated:** the new step is ~6.5–7 minutes in CI
+against ~4 minutes warm on the developer Mac, which is why `browser-smoke.yml`'s
+`timeout-minutes` moved 15 → 30 in this same commit rather than the coverage being trimmed.
+
+**Live acceptance on the merged `main` (2026-09-14):**
+
+```text
+200  /
+200  /browser/index.html
+200  /quotes.csv
+200  /sources.csv
+404  /.gitignore
+404  /.git/config
+404  /.github/workflows/pages.yml
+```
+
+Both live CSVs are `sha256`-identical to the repo:
+`b3bb7848…` (quotes.csv) / `7aafcb67…` (sources.csv).
+
+**Issue #43 is closed deliberately by comment** *after* the merge, with this evidence — never by
+a closing keyword in a PR or commit body (this repo has twice lost an issue that way).
 
 ## What this unit is
 
@@ -233,7 +267,33 @@ verdicts. That is the same defect the author's own control `h5` found and fixed 
 pre-fix revision, and its flag and the fix agree. Its attacks 1–14 all target the verdict logic
 (`judge`, `run_specs`, `table_problems`, the CLI), which the fix did not touch.
 
-**Pass 2 — time-boxed re-run against the frozen, fixed revision.** `<filled in when it returns>`
+**Pass 2 — time-boxed re-run against the frozen, fixed revision. FINAL VERDICT: PASS — no
+high/medium defects found.** All 8 attacks (10 invocations) behaved exactly as the unit claims;
+the `p36` vacuity class — the reason this unit exists — is genuinely closed: gutting a check body
+while keeping its registration turns the run red with `COVERAGE_GAP`. Its own words, verbatim
+from its transcript (`~/.hermes/cache/delegation/live/deleg_c98767ce/task-0.log`):
+
+> Workspace: all attacks ran in copies (`/tmp/fqa2` + `/tmp/fqa_a*`); the real repo was never
+> written to by me. … Every attack used `--checker scripts/check_pages_contract.py`
+> (sub-second); the full harness ran once, from the real repo path, and finished (270 s).
+>
+> ### FINAL VERDICT: **PASS** — no high/medium defects found
+>
+> All 8 attacks (10 invocations) behaved exactly as the unit claims. The `p36` vacuity class —
+> the reason this unit exists — is genuinely closed: gutting a check body while keeping its
+> registration turns the run red with `COVERAGE_ …`
+>
+> … the reviewed bytes match the commit (`scripts/run_negative_controls.py` = `adf6cf93…86b0` in
+> both the repo and my pristine copy). A harness write into the repo would have shown as
+> dirtiness …
+
+The transcripts are truncated mid-sentence where the subagent's stream was captured (the
+per-attack table lives in that log, outside the repo). Two facts from it are worth keeping
+because they are the ones a reader would otherwise have to take on trust: the reviewed
+`scripts/run_negative_controls.py` hashed **`adf6cf93…86b0`** in both the repo and the
+reviewer's own pristine copy — i.e. the review is of the committed bytes, not of an earlier
+edit — and the harness never dirtied the repo (its `git status --short` went from the unit's 7
+paths to empty after the author's commit, with no harness-caused change).
 
 
 ## Evidence

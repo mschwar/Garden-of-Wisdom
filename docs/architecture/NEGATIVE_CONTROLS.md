@@ -166,11 +166,12 @@ browsers' controls run there because that job installs Chromium; when the capabi
 missing the checker is reported **SKIPPED** (never PASS) and, with `CI` set or `--require-all`,
 a skip is an error rather than a quiet reduction in coverage.
 
-Measured cost (macOS, warm): ~4 minutes for the whole table, dominated by `validate_quotes.py`
-(~21s/run × 6) and `check_garden_e2e.py` (~22s/run × 3). The `smoke` job's budget was raised
-from 15 to 30 minutes for this step, deliberately: the alternative — checking the table only for
-anchor rot — is not the claim issue #43 filed. `--checker` narrows a local run; CI does not
-narrow.
+Measured cost: **~4 minutes warm on the developer Mac** — dominated by `validate_quotes.py`
+(~21s/run × 6) and `check_garden_e2e.py` (~22s/run × 3) — and **~6.5–7 minutes in CI** on a
+2-core runner (the step was 6m58s on PR #46 and 6m24s on the post-merge `main` run). The `smoke`
+job's budget was raised from 15 to 30 minutes for this step, deliberately: the alternative —
+checking the table only for anchor rot — is not the claim issue #43 filed. `--checker` narrows a
+local run; CI does not narrow.
 
 ## Limits, stated rather than papered over
 

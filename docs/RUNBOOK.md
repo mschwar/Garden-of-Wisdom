@@ -444,10 +444,10 @@ no longer detect a green mutation is the same defect one level up. `EXPECTED_SEL
 `EXPECTED_CONTROLS` are count guards: deleting either fails the run.
 
 **Cost, measured** (macOS, warm): ~4 minutes, dominated by `validate_quotes.py` (~21s/run) and
-`check_garden_e2e.py` (~22s/run). `--checker` narrows a local run; CI runs all of it, because
-the point is coverage, not a fast green, and the `smoke` job's budget was raised from 15 to 30
-minutes for exactly that reason (a table checked only for rot would not be evidence). Two
-checker families are exercised here:
+`check_garden_e2e.py` (~22s/run); ~6.5–7 minutes in CI on a 2-core runner. `--checker` narrows a
+local run; CI runs all of it, because the point is coverage, not a fast green, and the `smoke`
+job's budget was raised from 15 to 30 minutes for exactly that reason (a table checked only for
+rot would not be evidence). Two checker families are exercised here:
 `scripts/smoke_quote_browser.py`'s controls need a real Chromium, so that checker declares
 `requires=("playwright",)` and is reported **SKIPPED** (never PASS) where the browser is
 missing — with `CI` set, or `--require-all`, a skip is an error rather than a quiet reduction
