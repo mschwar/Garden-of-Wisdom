@@ -27,7 +27,7 @@ ledger is a table in the existing store), **no export-header bump** (additive se
   `counts()`, and the import loop.
 - `scripts/garden_ledger.py` — the CLI (`mark` / `reopen` / `list`), `RESULT: PASS`/`FAIL`, no
   traceback on a refusal.
-- `scripts/check_garden_ledger.py` — the acceptance + evidence run, **43 checks** (see verbatim
+- `scripts/check_garden_ledger.py` — the acceptance + evidence run, **45 checks** (see verbatim
   output below).
 - `scripts/check_garden_store.py` — exact-shape assertions updated to the two-migration schema
   (see rulings in `docs/DECISIONS.md`).
@@ -43,7 +43,7 @@ W1.3 ruling); `research_state` `from_state` is derived from `transition_id`.
 
 ## Evidence
 
-### 1. The D3 acceptance suite — `scripts/check_garden_ledger.py` (43 checks)
+### 1. The D3 acceptance suite — `scripts/check_garden_ledger.py` (45 checks)
 
 Verbatim output (run 2026-09-13, `python3` Homebrew 3.14.5 and `/opt/homebrew/bin/python3.12` —
 byte-identical `RESULT: PASS` under both):
@@ -64,13 +64,15 @@ PASS: mark records the live instance as unverifiable
 PASS: the ledger holds exactly the live instance with its evidence
 PASS: mark appends one research audit row (T-R6 from_state derived from the model)
 PASS: mark changed the store (the ledger + audit row landed)
+PASS: the ledger decided_at and audit occurred_at are one clock read (D-1)
 PASS: a duplicate mark is refused by the explicit re-adjudication guard
 PASS: the refused re-mark wrote nothing at all
 PASS: export starts with 'garden.export/1'
 PASS: the export carries the ledger section with the live instance
+PASS: the export sections appear in the documented fixed order (O-2)
 PASS: the export meta schema_version is unchanged by the ledger section
 PASS: the ledger round-trips (write -> wipe -> re-import byte-identical)
-PASS: the import reports what it loaded (imported 2 record(s))
+PASS: the import reports exactly the loaded record count (ledger + audit; O-1)
 PASS: empty reason is refused with its own message (…must carry a reason…)
 PASS: empty evidence_ref is refused with its own message (…evidence_ref is required…)
 PASS: empty decided_by is refused with its own message (…decided_by must be non-empty…)
@@ -105,20 +107,21 @@ check_garden_envelope: 102 PASS  102 PASS
 check_garden_submit:   134 PASS  134 PASS
 check_garden_normalize:232 PASS  232 PASS
 check_garden_review:   246 PASS  246 PASS
-check_garden_ledger:    43 PASS   43 PASS   (new)
+check_garden_ledger:    45 PASS   45 PASS   (new)
 check_garden_e2e:       96 PASS   96 PASS
 ```
 plus the three CI validators (`validate_quotes.py`, `check_program_contracts.py`,
 `validate_homepage_preview_export.py`) all `RESULT: PASS`. `quotes.csv` / `sources.csv`
 byte-identical (`5675d7e6…` / `10b4c156…`).
 
-### 3. Negative controls (7, all RED)
+### 3. Negative controls (10, all RED)
 
-Each control mutates a guard's **distinctive message** in a throwaway `/tmp` copy of the repo
-(never the real tree), runs the copy's `check_garden_ledger.py`, and requires `RESULT: FAIL` with
-that guard's `FAIL:` line and **no traceback**. The mutations break the asserted needle *inside*
-the message (so a second layer — the SQL `CHECK`/PK — cannot mask the guard). Observed first-`FAIL`
-lines are copied verbatim from the harness run.
+Each control mutates a guard's **distinctive message** (or a schema/behavior path) in a throwaway
+`/tmp` copy of the repo (never the real tree), runs the copy's `check_garden_ledger.py`, and
+requires `RESULT: FAIL` with that guard's `FAIL:` line and **no traceback**. The mutations break
+the asserted needle *inside* the message (so a second layer — the SQL `CHECK`/PK — cannot mask the
+guard), or target a schema/behavior path. Observed first-`FAIL` lines are copied verbatim from the
+harness run.
 
 | id | mutation (in `/tmp` repo copy of `garden_store.py`) | observed first `FAIL:` line |
 |----|------------------------------------------------------|-----------------------------|
@@ -129,15 +132,33 @@ lines are copied verbatim from the harness run.
 | c5 | `not in the unverifiable ledger; nothing to reopen` → `not in the Xunverifiable ledger; …` | `FAIL: reopen on a missing row was refused, but NOT by its explicit guard: legacy row '404' is not in the Xunverifiable ledger; …` |
 | c6 | `decided_by must be non-empty` → `decided_by Xmust be non-empty` | `FAIL: empty decided_by was refused, but NOT by its explicit guard: decided_by Xmust be non-empty` |
 | c7 | import loop drops `legacy_verification` from its section list | `FAIL: unexpected StoreError: re-export after import is not byte-identical to the imported text (the export encoding lost or reordered data)` |
+| d1 | two-read divergence: ledger stamp fixed to a past instant while the audit row takes its own read | `FAIL: the ledger decided_at and audit occurred_at are one clock read (D-1)` |
+| o1 | `ROW_TABLES` drops `legacy_verification` (import undercounts) | `FAIL: the import reports exactly the loaded record count (ledger + audit; O-1) -- imported 1 record(s)` |
+| o2 | `EXPORT_SECTIONS` reorders ledger before decisions | `FAIL: the export sections appear in the documented fixed order (O-2) -- ['[meta]', …, '[legacy_verification]', '[decisions]']` |
 
 Every control: `returncode=1`, `traceback=False`, the aimed guard's `FAIL:` line first — except c7,
 whose first `FAIL` is the store's byte-identity guard refusing the broken import (it proves the
 ledger is load-bearing in the round-trip and surfaces as the round-trip guarantee firing, which is
 the intended evidence).
 
-Authoring note (no foreign reviewer in this session): the negative controls were written as a
-**second, independent harness** (`/tmp/d3_negctrl.py`) after the suite, aimed at guard paths the
-author's in-suite checks exercise. A foreign QA pass is still recommended before merge.
+## Foreign-QA review (delegated subagent, PR #38)
+
+An independent review (own mutation harness, aimed at paths the author's set did not touch) found
+**no high/medium defect** and three low items, all resolved before merge (recorded in
+`docs/DECISIONS.md`, "D3 foreign-QA review"):
+
+- **D-1 (real, LOW): two clock reads per adjudication.** `mark` took a separate `now_iso()` for
+  the audit row when `decided_at` was omitted (every CLI `mark`). **Fixed** with a single `stamp`
+  used for both rows; added the D-1 check + the `d1` control above.
+- **O-1 (LOW):** `ROW_TABLES` had no falsifier. **Guarded** by asserting the exact `"imported 2
+  record(s)"` import string; control `o1`.
+- **O-2 (LOW):** export section order had no falsifier. **Guarded** by pinning the documented
+  section order; control `o2`.
+
+The reviewer's 12 own mutations: 9 RED and targeted; 2 were unobservable no-ops (m8 `ROW_TABLES`,
+m9 `EXPORT_SECTIONS` reorder — now covered by `o1`/`o2`) and 1 (m11, the two-read timing) needs a
+>1s inter-read delay to trip, which is the second-granular-clock limitation documented in the
+D-1 fix. A foreign QA pass is complete; this unit is ready to merge.
 
 ## Out of scope (recorded, not fixed)
 

@@ -91,7 +91,7 @@ guard still refuses an old text that lacks the new section, so no format can sil
 the store/review CLI contract: `RESULT: PASS`/`FAIL`, no traceback on a refusal, `--json` emits
 canonical single-line JSON.
 
-## Acceptance — `scripts/check_garden_ledger.py` (43 checks)
+## Acceptance — `scripts/check_garden_ledger.py` (45 checks)
 
 Runs in a throwaway temp dir; asserts schema + CHECK constraints, the atomic
 ledger-row-plus-audit-row write, no silent overwrite, the reopen reversal, byte-identical export

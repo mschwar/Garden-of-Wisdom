@@ -55,7 +55,7 @@ Living document — update it as items are picked up or closed, don't just appen
 
 - [ ] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
       corpus-program acceptance suites" step runs the six W1 suites but not the new
-      `scripts/check_garden_ledger.py` (43 checks) shipped by the D3 unit. A regression in the
+      `scripts/check_garden_ledger.py` (45 checks) shipped by the D3 unit. A regression in the
       `legacy_verification` table, the `mark`/`reopen` guards, or the export section would pass CI.
       Issue [#39](https://github.com/mschwar/Garden-of-Wisdom/issues/39). CI-step change (guarded
       workflow), so filed rather than fixed inside the D3 unit; the D3 suite already proves its
@@ -747,7 +747,7 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       not two). `legacy_verification` table via migration `0002_unverifiable_ledger`;
       `Store.mark_legacy_unverifiable` / `Store.reopen_legacy_unverifiable` (each writes its audit
       row in the same transaction); `scripts/garden_ledger.py` CLI (mark/reopen/list);
-      `scripts/check_garden_ledger.py` (**43** checks) + **7** negative controls (each goes
+      `scripts/check_garden_ledger.py` (**45** checks) + **10** negative controls (each goes
       `RESULT: FAIL` with its guard's `FAIL:` line, no traceback). Design doc:
       `docs/program/D3_UNVERIFIABLE_LEDGER.md`. Decision recorded in `docs/DECISIONS.md`
       ("D3 executed (the unverifiable side-car ledger)"), including the rulings that the export

@@ -235,7 +235,7 @@ python3 scripts/garden_ledger.py mark   --dir data/store --row 30 --transition T
     --reason "why" [--evidence-ref REF] [--actor NAME]     # mark a legacy row unverifiable
 python3 scripts/garden_ledger.py reopen --dir data/store --row 30 --reason "why"   # T-R12 reversal
 python3 scripts/garden_ledger.py list   --dir data/store                          # read-only
-python3 scripts/check_garden_ledger.py                    # the D3 acceptance + evidence run (43 checks)
+python3 scripts/check_garden_ledger.py                    # the D3 acceptance + evidence run (45 checks)
 ```
 
 `mark`/`reopen` each write their `research` audit row in the same transaction and refuse a

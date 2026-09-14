@@ -979,6 +979,11 @@ class Store:
                 f"re-adjudicate with reopen (T-R12) then mark again, never a silent overwrite"
             )
         from_state = UNVERIFIABLE_FROM_STATE[transition_id]
+        # One clock read for the whole adjudication: the ledger row's decided_at and the
+        # audit row's occurred_at MUST be the same instant. When decided_at is omitted, take
+        # a single now_iso() here and reuse it -- two separate reads (the audit path calls
+        # now_iso() again) would record two different clocks for one decision (foreign-QA D-1).
+        stamp = decided_at or now_iso()
         try:
             self.conn.execute(
                 f"INSERT INTO legacy_verification ({', '.join(LEGACY_VERIFICATION_COLUMNS)}) "
@@ -990,7 +995,7 @@ class Store:
                     reason,
                     evidence_ref,
                     decided_by,
-                    decided_at or now_iso(),
+                    stamp,
                 ),
             )
             seq = self._insert_decision(
@@ -1004,7 +1009,7 @@ class Store:
                 actor=decided_by,
                 actor_kind="operator",
                 reason=reason,
-                occurred_at=decided_at,
+                occurred_at=stamp,
             )
             self.conn.commit()
         except sqlite3.IntegrityError as exc:

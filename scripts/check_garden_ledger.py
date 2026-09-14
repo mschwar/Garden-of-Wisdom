@@ -248,6 +248,28 @@ def run_checks(scratch: Path) -> None:
         after_mark = store.export_bytes()
     check(before_mark != after_mark, "mark changed the store (the ledger + audit row landed)")
 
+    # -- 2b. D-1 falsifier (foreign-QA): one clock read per adjudication ----------------
+    # When decided_at is omitted (every CLI mark), the ledger row's decided_at and the audit
+    # row's occurred_at must be the SAME instant -- never two separate now_iso() reads. Use a
+    # dedicated store so this probe's extra audit row cannot perturb the main store's counts.
+    d1_dir = scratch / "d1"
+    create_store(d1_dir)
+    with Store(d1_dir) as store:
+        store.mark_legacy_unverifiable("d1-probe", transition_id="T-R6", reason="probe")
+        lrow = store.conn.execute(
+            "SELECT decided_at FROM legacy_verification WHERE legacy_row_id = 'd1-probe'"
+        ).fetchone()
+        arow = store.conn.execute(
+            "SELECT occurred_at FROM decisions WHERE subject_id = 'd1-probe'"
+        ).fetchone()
+        check(
+            lrow is not None
+            and arow is not None
+            and lrow["decided_at"] == arow["occurred_at"],
+            "the ledger decided_at and audit occurred_at are one clock read (D-1)",
+            f"ledger={lrow['decided_at'] if lrow else None} audit={arow['occurred_at'] if arow else None}",
+        )
+
     # -- 3. no silent overwrite ----------------------------------------------------------
     with Store(store_dir) as store:
         before = store.export_bytes()
@@ -275,6 +297,22 @@ def run_checks(scratch: Path) -> None:
         "the export carries the ledger section with the live instance",
         str([r["legacy_row_id"] for r in records["legacy_verification"]]),
     )
+    # The section order is a documented contract (EXPORT_SECTIONS): decisions, then the
+    # ledger last. Pin it so a reordering cannot silently pass (foreign-QA O-2).
+    section_headers = [ln for ln in text.decode("utf-8").splitlines() if ln.startswith("[") and ln.endswith("]")]
+    check(
+        section_headers == [
+            "[meta]",
+            "[captures]",
+            "[candidate_captures]",
+            "[candidates]",
+            "[duplicate_hints]",
+            "[decisions]",
+            "[legacy_verification]",
+        ],
+        "the export sections appear in the documented fixed order (O-2)",
+        str(section_headers),
+    )
     check(
         records["meta"]["schema_version"] == SCHEMA_VERSION,
         "the export meta schema_version is unchanged by the ledger section",
@@ -286,7 +324,11 @@ def run_checks(scratch: Path) -> None:
         status = store.import_bytes(text)
         reexport = store.export_bytes()
     check(reexport == text, "the ledger round-trips (write -> wipe -> re-import byte-identical)")
-    check("imported" in status, f"the import reports what it loaded ({status})")
+    check(
+        "imported 2 record(s)" in status,
+        "the import reports exactly the loaded record count (ledger + audit; O-1)",
+        status,
+    )
 
     # -- 5. guards refuse cleanly and write nothing --------------------------------------
     # Each guard's refusal is asserted by its OWN distinctive message, not by "refused": a
