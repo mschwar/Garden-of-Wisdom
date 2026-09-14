@@ -25,7 +25,11 @@ concurrency:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 30, not 15: the last step re-applies all 36 negative controls, which means re-running
+    # validate_quotes.py 6x and check_garden_e2e.py 3x on purpose (~4 min warm on a developer
+    # Mac; more on a 2-core runner). That cost is the point of the step -- a table checked only
+    # for rot would not be evidence -- so the budget is raised rather than the coverage cut.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -62,3 +66,11 @@ jobs:
           python scripts/check_garden_review.py
           python scripts/check_garden_e2e.py
           python scripts/check_garden_ledger.py
+
+      # Proven falsifiability, not a claim about it: each entry in the committed control table
+      # is re-applied to a throwaway copy of this tree and the checker must go red with that
+      # control's own FAIL: line. A mutation that no longer turns its checker red is reported
+      # as a coverage gap and fails the job (issue #43). The browsers' controls need the
+      # Chromium installed above, which is why this step lives in this job.
+      - name: Machine-check the checkers' negative controls
+        run: python scripts/run_negative_controls.py

@@ -1243,3 +1243,82 @@ untouched. `item_type` is untouched (D8 territory). No `quote_text`, `tradition`
 `quotes.csv` / `sources.csv` are the only data files this unit writes to; `docs/queue.md`,
 `docs/DECISIONS.md` (this entry), `docs/program/CORPUS_PROGRAM_DOCTRINE.md`, and
 `docs/program/fixtures/w0_scenarios.json` are the only docs it writes to.
+
+## 2026-09-14 — the checkers' negative controls become a committed, CI-wired table
+
+Issue [#43](https://github.com/mschwar/Garden-of-Wisdom/issues/43). Every checker here claimed
+falsifiability through a table of negative controls that lived only in a `GARDEN_*_HANDOFF.md`,
+produced by a throwaway `/tmp` harness deleted when the unit ended. Foreign QA on the Pages
+guard unit could not verify the author's table without reading a harness out of bounds for
+that pass, and its mutation `p36` showed a check body gutted to `return None` still passed,
+because `EXPECTED_CHECKS` counts *registrations*. The controls are now one committed,
+re-runnable script, `scripts/run_negative_controls.py`, wired into `browser-smoke.yml`.
+
+**One runner over a shared table, not one harness per checker.** The rejected alternative was
+`scripts/check_<name>_controls.py` per checker (the shape issue #43 suggests first). One runner
+means one copy of the tree, one verdict vocabulary, one self-test suite, and one CI entry —
+and the expensive parts (`copytree`, subprocess plumbing, output parsing) are written once. A
+per-checker module would have duplicated the machinery N times and let the verdict semantics
+drift between checkers, which is the failure this repo keeps finding in *other* forms.
+
+**A control is one exact-string substitution, and that is a deliberate ceiling.** A richer
+mutation language (delete a file, insert a step, multi-file edits) was rejected for v1 because
+every added mutation kind needs its own self-test before the harness can be trusted to judge
+it, and a control nobody has proven the harness can judge is not evidence. The limit is stated
+in the module docstring, the RUNBOOK and the design doc rather than left implicit, and the
+self-tests are where a future mutation kind must first be proven detectable.
+
+**The harness itself has controls, and an empty table is a failure.** A harness that can no
+longer tell a green mutation from a fired one is the same defect one level up, so nine
+self-tests run on every invocation against a synthetic mini-repo — five verdicts
+(`FIRED`, `COVERAGE_GAP`, `MASKED`, `ROTTEN_ANCHOR`, `FALSE_POSITIVE`) end to end through the
+real copy/mutate/run path, and four table-hygiene guards (an empty table, a checker with no
+controls, a deleted registration, and the rule that a narrowed `--checker` selection is never
+validated against the whole-table count guard — a call-site bug the author's own control `h5`
+found). `table_problems()` refuses an empty table, a checker with no controls, and a count that
+disagrees with `EXPECTED_CONTROLS`, so "the harness ran and printed PASS" can never mean "it
+checked nothing". `EXPECTED_CONTROLS` is a floor, exactly like `EXPECTED_CHECKS` — the real
+guard is the `COVERAGE_GAP` verdict, which is what catches a gutted check body (`p36`), and the
+design doc says so.
+
+**A control that stays green fails the run; it is not a warning.** A green mutation is the
+precise defect class this unit exists to end. It is reported as `COVERAGE_GAP` (with the
+observed output) and the run exits non-zero. The inverse is also enforced: each checker is run
+**unmutated first** and an already-red baseline is reported as itself, so no control can be
+credited with a failure the tree already had; and a control whose edit is contract-preserving
+(`expect_fail = None`) must stay GREEN, because a red-direction-only control set cannot catch a
+check that rejects a legitimate edit.
+
+**Expected `FAIL:` lines are compared exactly, with the copy path masked.** Substring matching
+is how this repo twice shipped a silent pass (the `page_url_unused` and shim-redirect
+substring tests). `normalize_paths` masks the throwaway copy root as `<copy>` and the temp root
+as `<tmp>` on both sides of the comparison, because a checker's FAIL detail can name the file
+it read and those paths differ per run and between macOS and CI's Linux — masking is what makes
+a committed expectation portable without weakening the comparison to `in`.
+
+**CI runs the whole table, and the cost is paid knowingly.** Measured ~4 minutes locally,
+dominated by `validate_quotes.py` (~21s/run, 6 runs) and `check_garden_e2e.py` (~22s/run, 3
+runs); the `smoke` job's 15-minute timeout has room. The rejected alternative was CI running
+only `--check` (anchor rot, no execution) or a "fast subset": that would keep the table from
+rotting while leaving the actual claim — *this mutation turns this checker red* — unverified in
+CI, which is exactly the gap #43 was filed about. `--checker` exists for local iteration, not
+for CI.
+
+**One locally-verified control is deliberately not in the table.** The smoke test's unbreakable
+`.tags` token overflow (dropping `overflow-wrap: anywhere`) fails with a `FAIL:` line embedding
+rendered geometry (`document scrollWidth=355 > clientWidth=320 … {'right': 448, 'tag': 'DD'}`).
+That number depends on the runner's font stack, so an exact-match expectation would be a
+CI-only false alarm. The mutation is recorded here and in `NEGATIVE_CONTROLS.md` as measured
+locally and excluded, rather than committed with a loose match that would weaken every other
+control's comparison.
+
+**Not fixed here, filed instead.** The discovery pass that authored the table measured four
+checker coverage gaps and one unguarded ruling (see the queue): the captures-UPDATE trigger's
+`RAISE` *message* is unguarded; `garden_normalize._comparison_view()`'s documented case-folding
+has no case-differing fixture; `check_garden_review.py` never inspects a decision row's `action`
+vocabulary; `check_garden_e2e.py` asserts the live `corpus_state` but not the T-P7 audit row's
+recorded `to_state`; and the D3 ruling "do not widen the `quotes.csv` enum" has no falsifier
+anywhere (`check_garden_ledger.py` only hashes the CSVs). Each is a *fixture/check* change to an
+existing suite, not part of the harness, so each belongs to the unit that owns that suite.
+
+

@@ -18,6 +18,10 @@ Living document — update it as items are picked up or closed, don't just appen
       ambiguity is written into the added source rows' `notes` and ruled on in `docs/DECISIONS.md`
       ("D7 executed") rather than silently folded into a generic oral-tradition row. Q3 (below)
       is not resolved by this — see that entry.
+      **Hash note (added 2026-09-14, negative-control unit):** D7 is the unit that changed the two
+      CSVs, so every pre-D7 entry in this file that quotes `5675d7e6…` / `10b4c156…` is describing
+      the **pre-D7** bytes. The current pair is `b3bb7848…` (quotes.csv) / `7aafcb67…`
+      (sources.csv), read off `main`; no unit before this one had recorded it.
 - [ ] **ADOPTED SCOPE (D6) — curate the near-duplicate pairs that share a *specific citation*;
       explicitly SKIP the pairs that are the validator's generic-`source_ref` false positive**
       (e.g. unrelated rows both labelled `"Oral Tradition"`). Keep both rows for legitimate variant
@@ -94,6 +98,41 @@ Living document — update it as items are picked up or closed, don't just appen
       **config** guard CI can run offline, and a live check cannot run in CI (it would need
       network + a successful deploy to be meaningful). Filed as
       [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41).
+- [x] **CLOSED — the negative-control harness is committed and CI-wired (issue
+      [#43](https://github.com/mschwar/Garden-of-Wisdom/issues/43)).** New
+      `scripts/run_negative_controls.py`: a table of **36 controls** over all **12** checkers,
+      each one exact-string substitution plus the exact first `FAIL:` line it must produce. The
+      harness copies the working tree to a throwaway directory (never mutating it), asserts the
+      anchor occurs exactly once, runs the checker unmutated first (a red baseline is reported
+      as itself), applies one mutation, runs the checker inside the copy, restores the pristine
+      bytes, and judges the **first** `FAIL:` line. Verdicts that fail the run: `COVERAGE_GAP`
+      (the mutation stayed green), `MASKED`, `ROTTEN_ANCHOR`, `FALSE_POSITIVE`, `CRASH`,
+      `INCONSISTENT`, `TIMEOUT`. **This is what closes the unit's `p36` finding**: a check body
+      gutted to `return None` while keeping its registration now makes that check's control
+      report `COVERAGE_GAP` instead of hiding behind `EXPECTED_CHECKS`. The harness carries
+      **8 self-tests** (one per verdict plus three table-hygiene guards, including "an empty
+      table must not print PASS"), and `EXPECTED_CONTROLS`/`EXPECTED_SELF_TESTS` are count
+      guards. CI: new `browser-smoke.yml` step "Machine-check the checkers' negative controls",
+      so every control is re-applied on every PR and push to `main`. Design doc:
+      `docs/architecture/NEGATIVE_CONTROLS.md`; decision in `docs/DECISIONS.md` ("the checkers'
+      negative controls become a committed, CI-wired table"). `quotes.csv`/`sources.csv`
+      unchanged by this unit — byte-identical to `main`, which is the **D7-updated** pair
+      `b3bb7848…` / `7aafcb67…` (the `5675d7e6…` / `10b4c156…` pair every pre-D7 entry quotes is
+      the pre-D7 state; see the hash note on the D7 item above). **Landing:** see the merge
+      record below.
+- [ ] **OPEN — five checker coverage gaps found while authoring the control table.** A green
+      mutation is the signature of a documented contract with no falsifier, and the authoring
+      pass found five, each re-verified independently (fresh copy, one substitution, checker run
+      from the copy root): `garden_normalize._comparison_view()`'s documented case-folding has
+      no case-differing fixture; `check_garden_review.py` never inspects a decision row's
+      `action` vocabulary; `check_garden_e2e.py` asserts the live `corpus_state` but not the
+      T-P7 audit row's recorded `to_state`; D3's "do not widen the `quotes.csv` enum" ruling has
+      no falsifier anywhere (`check_garden_ledger.py` only hashes the CSVs); and the
+      captures-UPDATE trigger's `RAISE` *message* is unguarded. Filed as
+      [#45](https://github.com/mschwar/Garden-of-Wisdom/issues/45) with the exact mutation and
+      observed output for each. Not fixed in the harness unit: every one is a fixture/check
+      change to the acceptance suite that owns it, so it belongs to the unit that owns that
+      suite.
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
