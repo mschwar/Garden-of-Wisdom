@@ -12,6 +12,15 @@ below is unedited.
 > counts the queue's D6 item now cites. The 2026-09-11 transcript below is kept byte-identical as the
 > point-in-time record.
 
+> **Re-derived again 2026-09-13 (issue #34).** #31 left two policy questions open; both are now
+> decided *with* their measurement: the sweep is **corpus-wide** (not scoped within one `tradition`),
+> and a shared `source_ref` is evidence **only when the citation carries a locator** (W1.4 ruling 2).
+> The pair count moves **45 → 20**: 30 pairs the old rule reported are label noise the locator rule
+> drops, and 5 pairs are recovered that the scoped sweep could not see at all. See "Re-derivation
+> 2026-09-13 (issue #34)" at the end. The 2026-09-11 and "#31" transcripts above are kept
+> byte-identical as point-in-time records; **the `45` in them is superseded by the `20` here**, and
+> the queue's D6 item has been re-counted against it.
+
 
 ## Summary
 
@@ -44,6 +53,12 @@ translations of the same verse and worth a human look.
 > a citation that pinpoints nothing (**25** of them the bare `Oral Tradition` label) against **15** that
 > warrant a human look (**13** plus a pinpoint locator, **2** text-similarity-only). The full breakdown
 > and its classification rule are in "Re-derivation 2026-09-13" at the end of this file.
+
+> **Superseded 2026-09-13 (issue #34).** Those 30 do not need a human to *skip* them any more: the
+> validator no longer reports them, so the list is **20 pairs, all 20 worth a look, 0 to skip**. The
+> false-positive class this caveat describes is now a rule in the validator (the locator test) rather
+> than a paragraph in a report the operator has to read past. Details in "Re-derivation 2026-09-13
+> (issue #34)".
 
 ## Full validator output
 
@@ -260,3 +275,154 @@ sources.csv: 18 rows, ids: ['1', '10', '11', '12', '13', '14', '15', '16', '17',
 
 RESULT: PASS (no hard-integrity failures; see WARN-level items above for curation queue)
 ```
+
+## Re-derivation 2026-09-13 (issue #34)
+
+#31 left two policy questions to its own follow-up unit: whether the sweep stays scoped within one
+`tradition`, and whether a shared `source_ref` is evidence on its own. Both are decided here, and they
+are one decision, not two — the measurement is what makes them one.
+
+### The four measured variants
+
+| # | scope | what a shared `source_ref` needs | pairs flagged |
+|---|---|---|---|
+| A | per-`tradition` | anything (any shared value) | **45** — the count the 2026-09-11 transcript prints |
+| B | corpus-wide | anything (any shared value) | **196** |
+| C | per-`tradition` | a **specific** citation (carries a locator) | **15** |
+| D | **corpus-wide** | a **specific** citation (carries a locator) | **20** ← adopted |
+
+#31 kept the sweep scoped and recorded the reason: widening it *under the rules as they then were*
+(A → B) adds 151 pairs, **146** of them the bare-`Oral Tradition` false-positive class, so the signal
+drowns. Under the locator rule (A → D) the same widening adds **5** pairs and **zero** label noise —
+because the 151 additions of B and the 30 suppressions of the locator rule are the *same pairs*. The
+citation rule is what removes the noise; once it does, keeping the scope costs 5 real pairs for
+nothing. So: **adopt W1.4 ruling 2's locator test for the `source_ref` branch, and widen the sweep to
+the whole corpus.**
+
+The rejected alternative is C — adopt the rule but keep the scope. It is internally consistent, and it
+was the conservative reading of #31. It was rejected because it leaves the validator blind to a
+duplicate filed under a second `tradition` label, which is the class of defect the sweep exists to
+find: the strongest recovered pair is `39` (Christianity, "Thou shalt love thy neighbour as thyself.")
+~ `53` (Judaism, "Love thy neighbour as thyself.") at **0.82**. W1.4's store-side hint generator
+already compares every candidate against every other for exactly that reason, and it is documented
+there as a decision rather than an accident (`docs/program/W1_4_NORMALIZATION_HINTS.md` §5); before
+this change the legacy validator and the store disagreed about it.
+
+### What moves, exactly
+
+Corpus-wide, **189** pairs share an exact `source_ref`. **13** of them carry a locator (reported as
+citation evidence) and **176** do not (not reported — that is the suppression). The 20 reported pairs:
+
+| class | rule | pairs |
+|---|---|---|
+| shared citation that pinpoints a place | `source_ref` equal **and** `citation_specificity() == "specific"` | **13** |
+| text similarity, no shared specific citation | `pair_similarity() > 0.60` | **7** |
+
+The **30** pairs the old rule reported and this rule does not — 25 of them the documented
+false-positive class, and 5 sharing a real work with no pinpoint (`"same work" is not "same passage"`,
+ruling 2's own words):
+
+| class | rule | pairs | the pairs |
+|---|---|---|---|
+| bare label | the shared `source_ref` is the literal `Oral Tradition` | **25** | the 322–330 cluster (21 pairs), `319 ~ 331`, `319 ~ 332`, `331 ~ 332`, `336 ~ 338` |
+| real work, no locator | the shared `source_ref` names a work but pinpoints nothing | **5** | `5 ~ 19`, `5 ~ 23`, `19 ~ 23` (*Tablets of Bahá’u’lláh, Words of Paradise*), `262 ~ 270` (*Metta Sutta*), `321 ~ 324` (*Blessingway Chant*) |
+
+The **7** text-similarity pairs are 2 the sweep already reported (`3 ~ 283` at 0.74 and `113 ~ 114` at
+0.68, both within one tradition) plus the **5 cross-tradition overlaps that widening recovers** — the
+reason widening is not a pure loss:
+
+| pair | traditions | similarity |
+|---|---|---|
+| `39 ~ 53` | Christianity ~ Judaism | **0.82** |
+| `50 ~ 318` | Christianity ~ Diné (Navajo) | 0.71 |
+| `78 ~ 173` | Islam ~ Sikhism | 0.62 |
+| `87 ~ 187` | Islam ~ Zoroastrianism | 0.61 |
+| `175 ~ 332` | Sikhism ~ Hopi (Pueblo) | 0.61 |
+
+**Net: 45 → 20.** 30 removed (label noise, now not reported at all rather than reported-and-skipped),
+5 added (real overlaps the scoped sweep could not see).
+
+### The queue's D6 count
+
+Re-counted against this rule: **20 pairs to inspect, 0 to skip** (it read **15 to inspect / 30 to
+skip** under #31's rule). The "skip" class did not shrink — it stopped existing: the validator no
+longer reports a pair whose only evidence is a shared generic label, so there is nothing left for the
+queue item to tell the operator to skip. The 5 recovered cross-tradition pairs are *added* to the
+human pass, and they are the ones most likely to be legitimate parallel attestations (the same
+commandment or image in two traditions) rather than accidental duplication — D6's "keep both rows for
+legitimate variant translations" applies to them unchanged.
+
+### Guards added, and their negative controls
+
+Ruling 2 is now a rule the validator *applies*; #31's finding was that the scope had no automated
+falsifier at all (its control c4). Four hard checks now cover both rulings, each with a control that
+turns the run red (throwaway `/tmp` copy of the repo; the real tree is only ever read):
+
+| check | what it proves | control | observed first `FAIL:` line |
+|---|---|---|---|
+| 1 — the pair set re-derived over every unordered pair of rows with **no grouping**, and required to equal the reported set | the SCOPE is the whole corpus | c1: `groups` regrouped per `tradition` | `the near-duplicate sweep is not corpus-wide: pairs/numbers only in the corpus-wide scan [(39, 53, 'text similarity 0.82'), (50, 318, 'text similarity 0.71'), (78, 173, 'text similarity 0.62'), (87, 187, 'text similarity 0.61'), (175, 332, 'text similarity 0.61')], only in the reported sweep []` |
+| 2 — every group's rows reversed, same result | the score is a property of the pair (#31, kept) | c6: scorer reverted to one directional `ratio()` | `near-duplicate detection is row-order dependent: pairs/numbers only in file order [(66, 67, 'same specific citation'), (87, 187, 'text similarity 0.64'), (113, 114, 'text similarity 0.69')], only in reversed order [(66, 67, 'same specific citation; text similarity 0.61'), (113, 114, 'text similarity 0.67'), (189, 216, 'text similarity 0.60')]` |
+| 3 — every printed reason re-derived from the rows with the rule written out inline | the CITATION RULE is applied (a generic shared citation is not evidence), and the dual-reason suffix is not dropped | c2: locator condition removed from the rule; c3: suffix dropped | c2 and c3 both `near-duplicate reasons do not match the evidence (reported, expected): …`, c3 naming exactly `66 ~ 67`, `201 ~ 306`, `209 ~ 301` |
+| 4 — the imported rule still classifies a bare label `generic` and a pinpoint `specific` | the rule is not silently redefined under the validator (it is imported from `garden_normalize`, so both guard 1 and guard 3 would follow a change there) | c4: `LOCATOR_PATTERN` neutered in the store module | `citation rule drift: citation_specificity('Gita 2.47') is 'generic', but this report's ruling assumes 'specific'` |
+| 4b — the corpus must offer pairs the rule suppresses | the suppression is not vacuous | c5: every generic `source_ref` made unique in a copy of `quotes.csv` | `vacuity guard: no pair on this corpus shares a generic source_ref, so the locator rule's suppression cannot be shown to do work …` |
+
+All six controls exit 1 with a targeted `FAIL:` line and no traceback; the unmutated copy of the same
+harness exits 0 (`RESULT: PASS`).
+
+Two things changed in the printed output beyond the pair list: the reason string for a citation pair is
+now `same specific citation` (it was `same source_ref`, which no longer describes the rule), and a new
+evidence line reports the scope measurement — `pairs sharing an exact source_ref (corpus-wide): 189 --
+13 specific (citation evidence), 176 generic (suppressed by the locator rule)`.
+
+**Cost, recorded honestly:** the corpus-wide sweep is every unordered pair (52,326 of them) and the run
+went from ~2.3s to ~21s (identical timing and byte-identical output under Homebrew 3.14.5 and CI's
+3.12). `pair_similarity` now carries an exact pre-filter that halves the pairs handed to
+`SequenceMatcher`: a pair's score cannot exceed `2 × |multiset intersection| / (len(a) + len(b))`, so
+when that bound cannot clear `0.60` the pair is not scored at all. Its output-neutrality was verified
+by brute force over all 52,326 pairs: of the 25,174 pre-filtered pairs the highest *true* score is
+**0.5062** (`16 ~ 87`), i.e. none of them could have been flagged.
+
+### Fresh transcript (verbatim, 2026-09-13, `python3 scripts/validate_quotes.py`)
+
+```
+parsed 324 quote rows, 10 columns: ['id', 'quote_text', 'tradition', 'source_ref', 'author', 'tags', 'item_type', 'verification_status', 'source_id', 'has_unresolved_glyph']
+duplicate ids: none
+id range: 1-344 (324 ids). non-contiguous gaps (expected, legacy IDs preserved): [(250, 261), (290, 301)]
+missing required fields: none
+traditions in use (27): ['Akan (Ghana)', "Baha'i", 'Buddhism', 'Cherokee', 'Christianity', 'Diné (Navajo)', 'Ethiopian', 'Haudenosaunee (Iroquois)', 'Hinduism', 'Hopi (Pueblo)', 'Igbo (Nigeria)', 'Islam', 'Judaism', "K'iche' (Maya)", 'Lakota', 'Modern Mayan', 'Multitribal Proverb', 'Nahua (Aztec)', 'Nez Perce', 'Nguni (Bantu)', 'Oglala Lakota', 'Shawnee', 'Sikhism', 'Tewa (Pueblo)', 'Yoruba (Nigeria)', 'Zoroastrianism', 'Zuni (Pueblo)']
+exact duplicate quote_text groups: 0
+near-duplicate candidates: 20 (corpus-wide)
+  3 ~ 283 (text similarity 0.74)
+  4 ~ 14 (same specific citation)
+  21 ~ 24 (same specific citation)
+  39 ~ 53 (text similarity 0.82)
+  50 ~ 318 (text similarity 0.71)
+  65 ~ 66 (same specific citation)
+  65 ~ 67 (same specific citation)
+  66 ~ 67 (same specific citation; text similarity 0.60)
+  73 ~ 240 (same specific citation)
+  78 ~ 173 (text similarity 0.62)
+  87 ~ 187 (text similarity 0.61)
+  105 ~ 266 (same specific citation)
+  113 ~ 114 (text similarity 0.68)
+  132 ~ 279 (same specific citation)
+  175 ~ 332 (text similarity 0.61)
+  186 ~ 303 (same specific citation)
+  201 ~ 306 (same specific citation; text similarity 0.86)
+  209 ~ 216 (same specific citation)
+  209 ~ 301 (same specific citation; text similarity 0.82)
+  216 ~ 301 (same specific citation)
+pair detection re-run with the corpus rows reversed: 20 candidates
+near-duplicate reasons re-derived from the rows and matched: 20
+pairs sharing an exact source_ref (corpus-wide): 189 -- 13 specific (citation evidence), 176 generic (suppressed by the locator rule)
+unresolved source links: 14 -> ids ['267', '275', '312', '315', '316', '317', '320', '333', '334', '335', '339', '342', '343', '344']
+rows with unresolved glyph markers (literal '_' standing in for an untyped character): 4 -> ids ['1', '16', '314', '320']
+counts by item_type: {'unknown': 20, 'excerpt': 270, 'oral-attribution': 34}
+counts by verification_status: {'unverified': 320, 'verified': 4}
+sources.csv: 18 rows, ids: ['1', '10', '11', '12', '13', '14', '15', '16', '17', '18', '2', '3', '4', '5', '6', '7.1', '8', '9']
+
+RESULT: PASS (no hard-integrity failures; see WARN-level items above for curation queue)
+```
+
+`quotes.csv` and `sources.csv` are byte-identical to the 2026-09-11 state
+(`5675d7e6…` / `10b4c156…`): the re-derivation is a computation over the corpus, not an edit to it.

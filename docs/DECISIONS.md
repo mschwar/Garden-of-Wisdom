@@ -915,3 +915,78 @@ subtle because the text is *about*
 the issue rather than an action on it, and it fires later, at merge time, on a different issue than the
 one the PR is about. A repo-wide grep for
 `\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b[:\ ]*#[0-9]+` is the cheap check before opening a PR.
+
+## 2026-09-13 — The near-duplicate sweep is corpus-wide, and a shared `source_ref` needs a locator
+
+The two policy questions #31 left open (issue #34). Both were decided **with** their measurement, over
+the four combinations of the two rules on the frozen 324-row corpus:
+
+| scope | shared `source_ref` needs | pairs flagged |
+|---|---|---|
+| per-`tradition` | any shared value | **45** (the pre-#34 count) |
+| corpus-wide | any shared value | **196** |
+| per-`tradition` | a **specific** citation | **15** |
+| **corpus-wide** | **a specific citation** | **20** ← adopted |
+
+**1. The citation rule is adopted from the store, not re-implemented.** A shared `source_ref` is
+evidence only when the citation carries a locator (an Arabic digit, a Roman numeral, or the section
+mark) — W1.4 ruling 2. This is the rule that removes the generic-`source_ref` false positive the
+2026-09-11 report documents in prose ("roughly half the 45 flagged pairs are this false-positive
+pattern"): measured corpus-wide, **189** pairs share an exact `source_ref`, **13** of them carry a
+locator and **176** do not. The validator now imports `citation_specificity()` from
+`scripts/garden_normalize.py` rather than carrying its own copy.
+
+*Rejected:* a local copy of the test plus a conformance assertion that the two agree. It would have kept
+`validate_quotes.py` runnable without the W1 module, but it puts the same rule in two files in two
+formats — the failure mode is a divergence nobody re-derives until the counts move, which is exactly
+the defect class this unit exists to close. The hidden coupling of the import (a change to the store's
+rule moves this report) is instead made **loud**: a hard check pins the rule's two canonical outcomes
+(`Oral Tradition` → generic, `Gita 2.47` → specific), so a drift in `garden_normalize` fails the
+validator naming the coupling rather than silently re-defining what the report counted.
+
+**2. The scope goes corpus-wide — and it is the *same* decision as (1), which is the whole finding.**
+#31 kept the sweep scoped and recorded the reason: widening it under the rules as they then were
+(A → B) adds 151 pairs, **146** of them the bare-`Oral Tradition` label, so the signal drowns. Under
+the locator rule (A → D) the same widening adds **5** pairs and **zero** label noise — because the 151
+additions of B and the 30 suppressions of the locator rule are the *same pairs*. The citation rule is
+what removes the noise; once it does, keeping the scope costs real signal for nothing. Those 5 are
+genuine cross-tradition text overlaps the scoped sweep could not see at all, the strongest being `39`
+(Christianity, "Thou shalt love thy neighbour as thyself.") ~ `53` (Judaism, "Love thy neighbour as
+thyself.") at **0.82** — a pair a duplicate sweep exists to surface.
+
+*Rejected:* variant C, adopt the rule but keep the scope (the conservative reading of #31). Internally
+consistent and 5 pairs cheaper, but it leaves the validator blind to a duplicate filed under a second
+`tradition` label, and it keeps the validator and the store disagreeing about the sweep's scope when
+W1.4's hint generator already compares every candidate against every other and documents that as a
+decision (`docs/program/W1_4_NORMALIZATION_HINTS.md` §5). *Also rejected:* variant B, widen without
+tightening the rule — that is the state #31 explicitly refused, 146 noise pairs to 5 real ones.
+
+**3. The pair count is the tripwire and the queue's D6 item is re-counted in the same unit.** The
+report's pair count moves **45 → 20** (30 generic-`source_ref` pairs no longer reported at all — 25 the
+bare label, 5 a real work with no pinpoint — and the 5 cross-tradition overlaps added), so D6 was
+re-counted from **15 to inspect / 30 to skip** to **20 to inspect / 0 to skip** in this unit. The skip
+class did not shrink, it stopped existing: the validator no longer reports a pair whose only evidence is
+a shared generic label, so the item's own "explicitly SKIP the generic-`source_ref` false positive"
+instruction is now vacuous. `AGENTS.md`'s rule applies unchanged to the 5 new pairs — a human decides
+whether they are accidental duplication or legitimate parallel attestations.
+
+**4. Both rules now have automated falsifiers, which is #31's outstanding finding (its control c4: "the
+scope has no automated falsifier").** Four hard checks: the pair set is re-derived over every unordered
+pair of rows with **no grouping** and must equal the reported set (SCOPE); the reversal pass from #31 is
+kept (ORDER); every printed reason is re-derived from the rows with the rule written out inline
+(CITATION); and the imported rule's canonical outcomes are pinned plus a vacuity check that the corpus
+still offers pairs the rule suppresses (DRIFT/VACUITY). Six negative controls in a throwaway `/tmp`
+copy each turn the run red with a targeted `FAIL:` line and no traceback; the unmutated copy exits 0.
+A narrower report is internally consistent, so the SCOPE guard's whole job is to make the reversion
+visible — it fails naming the exact 5 pairs the scoped sweep would have missed.
+
+**Cost, recorded:** the sweep is now every unordered pair (52,326 of them) and the run went from ~2.3s
+to ~21s. `pair_similarity` carries an exact pre-filter (a pair's score cannot exceed
+`2 × |multiset intersection| / (len(a)+len(b))`) that halves the pairs handed to `SequenceMatcher`; its
+output-neutrality was verified by brute force over all 52,326 pairs, the highest true score among the
+25,174 pre-filtered pairs being 0.5062. Accepted rather than optimized further: the guard passes are the
+evidence, and this validator is small enough that 21s is not worth a weaker guard.
+
+**Not corpus-program work and not a corpus edit.** No store surface, no schema, no migration, no state
+vocabulary. `quotes.csv` / `sources.csv` stay byte-identical (`5675d7e6…` / `10b4c156…`): every number
+here is a derivation over the corpus.

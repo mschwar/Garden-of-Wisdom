@@ -21,11 +21,23 @@ Living document — update it as items are picked up or closed, don't just appen
       that carries a pinpoint locator + 2 text-similarity-only) and 30 are not evidence that two records
       are the same passage (25 sharing only the bare label `Oral Tradition`, 5 sharing a real work with
       no pinpoint).** The exact class table, the classification rule and the transcript are in
-      `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #31)". Not done.
-      **Related open spec: [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34)** — the sweep is
-      per-`tradition` and ignores W1.4's locator rule; a corpus-wide sweep flags 196 pairs (5 of the 151
-      additions are real cross-tradition overlaps), so widening it is a decision for this item's own pass,
-      not a side effect.
+      `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #31)".
+      **Numbers re-derived AGAIN 2026-09-13 (issue #34 — the sweep's scope and citation rule were the
+      two policy questions #31 left open, and settling them moves this count): the list is now
+      **20 pairs, all 20 worth a look, 0 to skip** — 13 sharing a citation that carries a pinpoint
+      locator + 7 text-similarity-only, of which **5 are cross-tradition** and were invisible to the
+      old per-`tradition` sweep (`39 ~ 53` Christianity ~ Judaism at 0.82, `50 ~ 318` Christianity ~
+      Diné, `78 ~ 173` Islam ~ Sikhism, `87 ~ 187` Islam ~ Zoroastrianism, `175 ~ 332` Sikhism ~ Hopi).
+      The "skip" class did not shrink, it stopped existing: the validator no longer reports a pair whose
+      only evidence is a shared generic label, so the "explicitly SKIP the pairs that are the
+      validator's generic-`source_ref` false positive" instruction in this item's own title is now
+      vacuous — there is nothing in the list to skip.** The class table and the verbatim transcript are
+      in `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #34)". Not done.
+      **Related spec [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34) — settled
+      2026-09-13**: the sweep is now corpus-wide and applies W1.4's locator rule, so the per-`tradition`
+      scope and the 196-pair / 45-pair measurements quoted in the filing are historical — the working
+      count is **20**. See the "Closed — 2026-09-13 near-duplicate sweep scope + citation rule
+      (issue #34)" section below.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess. **D8 (2026-09-12)
       leaves these 4 rows for the operator** — guessing stays forbidden.
@@ -278,16 +290,19 @@ Living document — update it as items are picked up or closed, don't just appen
       frozen `docs/data/DATA_QUALITY_REPORT.md` numbers cannot be reproduced in the other order — with a
       `> 0.6` threshold, a pair straddling 0.60 could even appear or disappear. Filed as
       [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31).
-- [ ] **The near-duplicate sweep is per-`tradition` and ignores W1.4's locator rule.** Measured
-      2026-09-13 (out of scope for #31, which was a correctness fix, not a policy change): a corpus-wide
-      sweep flags **196** pairs instead of 45, of which 146 of the 151 additions are the same bare
-      `Oral Tradition` label matching across traditions — but 5 are real cross-tradition text overlaps the
-      scoped sweep cannot see at all (strongest: `39` Christianity ~ `53` Judaism at 0.82). Separately the
-      validator treats ANY shared `source_ref` as evidence, while W1.4's store rule
-      (`citation_specificity()`) requires a locator: of the validator's 43 shared-`source_ref` pairs only
-      13 carry one. Deciding this moves the D6 curation counts, so it is its own unit.
-      Filed as [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34); recorded in
-      `GARDEN_VALIDATOR_SYMMETRY_HANDOFF.md`.
+- [x] **RESOLVED 2026-09-13 — the near-duplicate sweep is now corpus-wide and applies W1.4's locator
+      rule** (issue [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34)). The original filing
+      text follows with its **superseded** numbers annotated, kept as the record of what was measured
+      before the decision: "a corpus-wide sweep flags **196** pairs instead of **45**" (the working
+      count after the decision is **20** — the locator rule drops the 30 generic-`source_ref` pairs the
+      196 was mostly made of, and widening then adds the 5 real cross-tradition overlaps), "of which 146
+      of the 151 additions are the same bare `Oral Tradition` label matching across traditions — but 5
+      are real cross-tradition text overlaps the scoped sweep cannot see at all" (still true, and the
+      reason the decision widened the sweep rather than only tightening the rule; strongest `39`
+      Christianity ~ `53` Judaism at 0.82), and "of the validator's 43 shared-`source_ref` pairs only 13
+      carry one" (that 43 was the per-`tradition` count; corpus-wide it is 189, of which the same **13**
+      carry a locator). Deciding this moved the D6 curation counts, as predicted — see the D6 item and
+      "Closed — 2026-09-13 near-duplicate sweep scope + citation rule (issue #34)" below.
 - [ ] **`AGENTS.md` still does not describe the corpus-program command surface** — and still omits the
       W1 read-only rule. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) had been
       *closed as COMPLETED*, but the file is unchanged at `main` (`grep -c 'garden_' AGENTS.md` → 0, 63
@@ -453,6 +468,56 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       export/validator code hardens either spelling. H2B D27 already flagged this.
       [#7](https://github.com/mschwar/Garden-of-Wisdom/issues/7)
 
+## Closed — 2026-09-13 near-duplicate sweep scope + citation rule (issue #34)
+
+- [x] **Issue [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34) — the near-duplicate sweep is
+      now corpus-wide, and a shared `source_ref` is evidence only when the citation pinpoints a place.**
+      Both rulings were decided *with* their measurement, over the four combinations, on the frozen
+      324-row corpus:
+
+      | scope | shared `source_ref` needs | pairs |
+      |---|---|---|
+      | per-`tradition` | any shared value | **45** (the pre-#34 count) |
+      | corpus-wide | any shared value | **196** |
+      | per-`tradition` | a **specific** citation (locator) | **15** |
+      | **corpus-wide** | **a specific citation (locator)** | **20** ← adopted |
+
+      They are one decision, not two: the 146 label-noise pairs that made #31 keep the sweep scoped are
+      the *same* pairs the locator rule drops, so under that rule widening adds **5** pairs
+      (`39 ~ 53` Christianity ~ Judaism at 0.82, `50 ~ 318` Christianity ~ Diné, `78 ~ 173` Islam ~
+      Sikhism, `87 ~ 187` Islam ~ Zoroastrianism, `175 ~ 332` Sikhism ~ Hopi) and **zero** label noise.
+      Those 5 were invisible to the scoped sweep — a duplicate filed under a second `tradition` label is
+      exactly what the sweep exists to catch, and W1.4's store-side hint generator already compared
+      corpus-wide for that reason. The rejected alternative (adopt the rule, keep the scope: variant C)
+      is recorded in `docs/DECISIONS.md` with why. The locator test is **not re-implemented**: the
+      validator imports `citation_specificity()` from `scripts/garden_normalize.py` so the store and the
+      legacy corpus share one definition of the rule.
+
+      **The count moved 45 → 20** (30 generic-`source_ref` pairs no longer reported at all — 25 the bare
+      `Oral Tradition` label, 5 a real work with no pinpoint — and the 5 cross-tradition overlaps added),
+      so the queue's **D6 item was re-counted in the same unit to 20 pairs to inspect / 0 to skip**. The
+      "skip" class did not shrink, it stopped existing: the validator no longer reports a pair whose only
+      evidence is a shared generic label. `docs/data/DATA_QUALITY_REPORT.md` gained a dated re-derivation
+      section ("Re-derivation 2026-09-13 (issue #34)") carrying the class tables, the guards and the
+      verbatim fresh transcript; the 2026-09-11 and "#31" transcripts are kept **byte-identical** (`git
+      diff` shows **0 deletions** in that file). `quotes.csv` / `sources.csv` are byte-identical
+      (`5675d7e6…` / `10b4c156…`) — every number here is a derivation over the corpus, not an edit to it.
+
+      **Guards (this unit's answer to #31's control c4, "the scope has no automated falsifier"):** four
+      hard checks now cover both rules — the pair set re-derived over every unordered row pair with no
+      grouping (SCOPE), the reversal pass kept from #31 (ORDER), every printed reason re-derived from the
+      rows with the rule inline (CITATION), and the imported rule's two canonical outcomes plus a vacuity
+      check that the corpus still offers pairs the rule suppresses (DRIFT/VACUITY). **6 negative controls**
+      in a throwaway `/tmp` copy (c1 scope regrouped, c2 locator condition dropped, c3 suffix dropped,
+      c4 `LOCATOR_PATTERN` neutered, c5 corpus with no generic shared `source_ref`, c6 scorer reverted to
+      one directional ratio) each exit 1 with the expected `FAIL:` line and no traceback; the unmutated
+      copy exits 0. Recorded in `GARDEN_NEAR_DUPLICATE_SCOPE_HANDOFF.md`. The run went from ~2.3s to
+      ~21s (52,326 unordered pairs); `pair_similarity` carries an exact multiset-overlap pre-filter whose
+      output-neutrality was verified by brute force over all pairs (highest true score among pre-filtered
+      pairs: 0.5062, `16 ~ 87`). **Nothing here is corpus-program W1/W2 work** — no store surface, no
+      schema, no migration, no state vocabulary, and no corpus edit. Decision recorded in
+      `docs/DECISIONS.md` ("The near-duplicate sweep is corpus-wide …").
+
 ## Closed — 2026-09-13 validator near-duplicate score (issue #31)
 
 - [x] **Issue [#31](https://github.com/mschwar/Garden-of-Wisdom/issues/31) — the near-duplicate score
@@ -482,6 +547,12 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       that stay green and why). Decision recorded in `docs/DECISIONS.md` ("The near-duplicate score is a
       property of the pair …"). **Nothing here is corpus-program W1/W2 work** — no store surface, no
       schema, no migration, no state vocabulary touched.
+      **Annotated 2026-09-13 (issue #34):** two numbers in this entry are superseded. "The pair set is
+      unchanged (**45**)" and the D6 re-count "**15 to inspect / 30 to skip**" were correct *under
+      #31's rules*; #34 then widened the sweep to the whole corpus and adopted W1.4's locator rule, so
+      the working counts are **20 pairs — 20 to inspect, 0 to skip**. The "sweep **stays scoped per
+      `tradition`**" sentence records #31's decision, which #34 deliberately reversed, with the
+      measurement, in the closed section below. Everything else in this entry still reproduces.
       **Landed:** commit `d27cb64`, PR [#35](https://github.com/mschwar/Garden-of-Wisdom/pull/35),
       **merged as `f24fae7`** (2026-09-13). CI: PR smoke run
       [34790379227](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34790379227) **success**;

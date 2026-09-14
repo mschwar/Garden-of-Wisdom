@@ -18,11 +18,36 @@ not symmetric (rows 113/114 score 0.6888... one way and 0.6666... the other).
 The number a pair is reported with is therefore a property of the pair, not
 of the order the two rows happen to be visited in -- and the run asserts that
 for every pair it reports.
+
+Near-duplicate scope and citation rule (both decided 2026-09-13, issue #34):
+
+- the sweep is CORPUS-WIDE, not scoped within one `tradition`. A duplicate can
+  be filed under a different `tradition` label, so a sweep scoped to one label
+  cannot see the class of defect it exists to catch. A hard check re-derives the
+  pair set from the rows with no grouping at all and fails if the reported sweep
+  is narrower than that.
+- a shared `source_ref` is evidence only when the citation PINPOINTS a place (a
+  locator: an Arabic digit, a Roman numeral, or the section mark). That is W1.4
+  ruling 2, whose implementation is imported from `garden_normalize`
+  (`citation_specificity`) rather than re-implemented here, so the store and
+  this legacy-corpus validator cannot drift into two definitions of one rule.
+
+The measurement behind both rulings, and what each does to the counts, is in
+`docs/data/DATA_QUALITY_REPORT.md` under "Re-derivation 2026-09-13 (issue #34)".
 """
 import csv
 import difflib
+import pathlib
 import sys
 from collections import Counter
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+# Ruling 2's locator test, imported so there is ONE implementation of it. The
+# import is deliberately not optional: a silently missing rule would weaken the
+# sweep, and a change to the store's rule must show up here as a named drift
+# failure rather than as a quietly moved pair count.
+from garden_normalize import citation_specificity  # noqa: E402
 
 REQUIRED_FIELDS = ["id", "quote_text", "tradition", "source_ref", "author", "tags"]
 VALID_ITEM_TYPES = {"full-passage", "excerpt", "paraphrase", "oral-attribution", "unknown"}
@@ -33,6 +58,17 @@ VALID_VERIFICATION_STATUSES = {"unverified", "verified", "disputed"}
 # similarity is scored.
 NEAR_DUPLICATE_THRESHOLD = 0.6
 
+#: Character multiset per text, memoized across the passes below. Pure cache.
+_CHAR_COUNTS = {}
+
+
+def _char_counts(text):
+    """Character multiset of a text, cached: the pre-filter below needs it per pair."""
+    counts = _CHAR_COUNTS.get(text)
+    if counts is None:
+        counts = _CHAR_COUNTS[text] = Counter(text)
+    return counts
+
 
 def pair_similarity(a, b):
     """Order-independent similarity of two texts.
@@ -40,7 +76,26 @@ def pair_similarity(a, b):
     `SequenceMatcher.ratio()` is asymmetric, so scoring a pair with a single
     directional call makes the reported number a function of which row was
     visited first. Averaging both directions makes it a property of the pair.
+
+    Exact pre-filter. `ratio() == 2*M / (len(a) + len(b))` where `M`, the number
+    of matching characters, cannot exceed the size of the two texts' multiset
+    intersection -- so as soon as that bound cannot clear the threshold the pair
+    needs no scoring at all. The sweep is corpus-wide, i.e. every unordered pair
+    (52,326 of them on this corpus), and this halves the pairs handed to
+    `SequenceMatcher`. It cannot change any output: a pair it declines to score
+    is one that provably could not have been flagged, and a score is only ever
+    printed for a pair that was.
     """
+    la, lb = len(a), len(b)
+    ca, cb = _char_counts(a), _char_counts(b)
+    smaller, larger = (ca, cb) if len(ca) <= len(cb) else (cb, ca)
+    overlap = 0
+    for char, count in smaller.items():
+        other = larger.get(char)
+        if other:
+            overlap += count if count < other else other
+    if 2 * overlap <= NEAR_DUPLICATE_THRESHOLD * (la + lb):
+        return 0.0
     forward = difflib.SequenceMatcher(None, a, b).ratio()
     backward = difflib.SequenceMatcher(None, b, a).ratio()
     return (forward + backward) / 2.0
@@ -121,52 +176,85 @@ def main():
     for t, c in exact_dupes.items():
         print(f"  x{c}: {t[:80]!r}")
 
-    # near-duplicate candidates: same source_ref root (strip trailing verse
-    # variance) or high text similarity within same tradition.
+    # Near-duplicate candidates, corpus-wide (#34). Two rulings decided with the
+    # measurement recorded in docs/data/DATA_QUALITY_REPORT.md ("Re-derivation
+    # 2026-09-13 (issue #34)"):
     #
-    # Scope ruling (#31): the text sweep stays scoped WITHIN one tradition. A
-    # corpus-wide sweep adds 151 pairs on this data, 146 of them the
-    # generic-`source_ref` false-positive class this report already documents,
-    # so widening it now would bury the signal -- see
-    # docs/data/DATA_QUALITY_REPORT.md, "Re-derivation 2026-09-13".
-    by_tradition = {}
-    for r in rows:
-        by_tradition.setdefault(r["tradition"], []).append(r)
+    # SCOPE -- the sweep runs over every row, not within one `tradition`. #31
+    # kept it scoped and recorded why: widening the sweep *as the rules then
+    # were* added 151 pairs, 146 of them the generic-`source_ref` false-positive
+    # class. The citation rule below removes exactly that noise, so the reason
+    # for scoping is gone; measured, corpus-wide under both rules adds 5 pairs,
+    # all text-similarity driven and none of them label noise.
+    #
+    # CITATION RULE -- a shared `source_ref` is evidence only when it is
+    # SPECIFIC (carries a locator). This is W1.4 ruling 2; see the import above.
+    groups = [rows]
 
-    def detect_pairs(groups):
-        """Flag candidate pairs from the given per-tradition row groups."""
+    def detected_reason(a, b):
+        """Why this pair is flagged, or None when it is not flagged at all."""
+        similarity = pair_similarity(a["quote_text"], b["quote_text"])
+        if (a["source_ref"] == b["source_ref"]
+                and citation_specificity(a["source_ref"]) == "specific"):
+            # A specific shared citation is reported even with no text
+            # evidence. When the pair ALSO clears the text threshold the number
+            # is appended: the two kinds of evidence are independent, and the
+            # operator needs both to judge the pair (#31, decision 1).
+            suffix = f"; text similarity {similarity:.2f}" if similarity > NEAR_DUPLICATE_THRESHOLD else ""
+            return f"same specific citation{suffix}"
+        if similarity > NEAR_DUPLICATE_THRESHOLD:
+            return f"text similarity {similarity:.2f}"
+        return None
+
+    def detect_pairs(row_groups):
+        """Flag candidate pairs from the given row groups."""
         found = []
-        for trows in groups:
+        for trows in row_groups:
             for i in range(len(trows)):
                 for j in range(i + 1, len(trows)):
                     a, b = trows[i], trows[j]
                     if a["id"] == b["id"]:
                         continue
-                    similarity = pair_similarity(a["quote_text"], b["quote_text"])
-                    if a["source_ref"] == b["source_ref"]:
-                        # A shared citation is reported even with no text
-                        # evidence. When the pair ALSO clears the text threshold
-                        # the number is appended: the two kinds of evidence are
-                        # independent, and the operator needs both to judge the
-                        # pair (#31, decision 1).
-                        reason = "same source_ref"
-                        if similarity > NEAR_DUPLICATE_THRESHOLD:
-                            reason += f"; text similarity {similarity:.2f}"
+                    reason = detected_reason(a, b)
+                    if reason is not None:
                         found.append((a["id"], b["id"], reason))
-                        continue
-                    if similarity > NEAR_DUPLICATE_THRESHOLD:
-                        found.append((a["id"], b["id"], f"text similarity {similarity:.2f}"))
         return found
 
-    near_dupe_pairs = detect_pairs(by_tradition.values())
-    print(f"near-duplicate candidates: {len(near_dupe_pairs)}")
+    def canonical(pairs):
+        return sorted((min(int(a), int(b)), max(int(a), int(b)), reason) for a, b, reason in pairs)
+
+    near_dupe_pairs = detect_pairs(groups)
+    print(f"near-duplicate candidates: {len(near_dupe_pairs)} (corpus-wide)")
     for a, b, reason in near_dupe_pairs:
         print(f"  {a} ~ {b} ({reason})")
 
-    # Hard check -- the issue this rule exists for (#31): the reported number for
+    # Hard check 1 -- SCOPE (#34). The detection above is handed `groups`; this
+    # walks every unordered pair of rows itself, with no grouping at all, so a
+    # sweep narrowed back to per-`tradition` groups cannot pass. A narrower
+    # report is internally consistent, so nothing else can catch that reversion:
+    # this is the guard #31 recorded as missing (its control c4, "the scope has
+    # no automated falsifier"). It shares the reason rule with `detect_pairs`,
+    # which hard check 3 covers independently -- what it proves on its own is
+    # that the scope really is the whole corpus.
+    blind_scan = []
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            reason = detected_reason(rows[i], rows[j])
+            if reason is not None:
+                blind_scan.append((rows[i]["id"], rows[j]["id"], reason))
+    if canonical(near_dupe_pairs) != canonical(blind_scan):
+        missing = sorted(set(canonical(blind_scan)) - set(canonical(near_dupe_pairs)))
+        extra = sorted(set(canonical(near_dupe_pairs)) - set(canonical(blind_scan)))
+        fail(
+            "the near-duplicate sweep is not corpus-wide: pairs/numbers only in the "
+            f"corpus-wide scan {missing}, only in the reported sweep {extra}"
+        )
+        hard_failures += 1
+
+    # Hard check 2 -- the issue this rule exists for (#31): the reported number for
     # a pair must be reproducible in the other order, i.e. it is a property of
     # the pair and not of the order the rows were visited in. Run the SAME
-    # detection over the same rows with every group reversed and require an
+    # detection over the same rows with the order reversed and require an
     # identical result. Scoring a pair with a single directional
     # `SequenceMatcher.ratio()` call breaks this two ways on this corpus: pair
     # 113 ~ 114 reports 0.69 one way and 0.67 the other, and pair 189 ~ 216
@@ -174,11 +262,8 @@ def main():
     # 0.5909) -- so a directional implementation changes both numbers and
     # membership. This is a hard failure: an order-dependent number is a
     # correctness bug in the validator, not a curation item.
-    def canonical(pairs):
-        return sorted((min(int(a), int(b)), max(int(a), int(b)), reason) for a, b, reason in pairs)
-
-    reversed_pairs = detect_pairs([list(reversed(g)) for g in by_tradition.values()])
-    print(f"pair detection re-run with every tradition's rows reversed: {len(reversed_pairs)} candidates")
+    reversed_pairs = detect_pairs([list(reversed(g)) for g in groups])
+    print(f"pair detection re-run with the corpus rows reversed: {len(reversed_pairs)} candidates")
     if canonical(near_dupe_pairs) != canonical(reversed_pairs):
         only_forward = sorted(set(canonical(near_dupe_pairs)) - set(canonical(reversed_pairs)))
         only_reversed = sorted(set(canonical(reversed_pairs)) - set(canonical(near_dupe_pairs)))
@@ -188,12 +273,12 @@ def main():
         )
         hard_failures += 1
 
-    # Reporting contract, checked independently of detect_pairs(): every reason
-    # printed above must name the evidence that actually holds for that pair, as
-    # re-derived here from the rows themselves. Its own falsifier is the
-    # dual-reason suffix -- a pair that shares a citation AND clears the text
-    # threshold must carry the number, so silently dropping the suffix fails
-    # here rather than passing quietly.
+    # Hard check 3 -- reporting contract, checked independently of
+    # `detected_reason`: every reason printed above must name the evidence that
+    # actually holds for that pair, re-derived here from the rows with the rule
+    # written out inline. Its own falsifiers are a dropped locator condition (a
+    # generic shared `source_ref` reported as citation evidence -- the rule
+    # #34 adopted) and the dropped dual-reason suffix (#31's control c3).
     by_id = {r["id"]: r for r in rows}
     misreported = []
     for a, b, reason in near_dupe_pairs:
@@ -203,15 +288,55 @@ def main():
             continue
         similarity = pair_similarity(ra["quote_text"], rb["quote_text"])
         clears_text = similarity > NEAR_DUPLICATE_THRESHOLD
-        if ra["source_ref"] == rb["source_ref"]:
-            expected = "same source_ref" + (f"; text similarity {similarity:.2f}" if clears_text else "")
-        else:
+        shared_specific = (ra["source_ref"] == rb["source_ref"]
+                           and citation_specificity(ra["source_ref"]) == "specific")
+        if shared_specific:
+            expected = "same specific citation" + (f"; text similarity {similarity:.2f}" if clears_text else "")
+        elif clears_text:
             expected = f"text similarity {similarity:.2f}"
+        else:
+            expected = None  # nothing in the evidence flags this pair
         if reason != expected:
             misreported.append((a, b, reason, expected))
     print(f"near-duplicate reasons re-derived from the rows and matched: {len(near_dupe_pairs) - len(misreported)}")
     if misreported:
         fail(f"near-duplicate reasons do not match the evidence (reported, expected): {misreported}")
+        hard_failures += 1
+
+    # Hard check 4 -- the imported locator rule still means what the ruling
+    # assumes, and it is doing work on this corpus. Because
+    # `citation_specificity` comes from `garden_normalize`, a change to the
+    # store's rule would otherwise move this report silently (both guard 1 and
+    # guard 3 call the same function, so they cannot see it). Pin the two
+    # canonical outcomes -- a bare label is generic, a pinpoint is specific --
+    # and require the corpus to offer at least one pair the rule suppresses, so
+    # the suppression cannot be vacuous.
+    for value, expected_class in (("Oral Tradition", "generic"), ("Gita 2.47", "specific")):
+        actual_class = citation_specificity(value)
+        if actual_class != expected_class:
+            fail(
+                f"citation rule drift: citation_specificity({value!r}) is {actual_class!r}, "
+                f"but this report's ruling assumes {expected_class!r}"
+            )
+            hard_failures += 1
+    shared_ref_pairs = [
+        (rows[i], rows[j])
+        for i in range(len(rows))
+        for j in range(i + 1, len(rows))
+        if rows[i]["source_ref"] == rows[j]["source_ref"]
+    ]
+    suppressed = [p for p in shared_ref_pairs if citation_specificity(p[0]["source_ref"]) != "specific"]
+    print(
+        f"pairs sharing an exact source_ref (corpus-wide): {len(shared_ref_pairs)} "
+        f"-- {len(shared_ref_pairs) - len(suppressed)} specific (citation evidence), "
+        f"{len(suppressed)} generic (suppressed by the locator rule)"
+    )
+    if not suppressed:
+        fail(
+            "vacuity guard: no pair on this corpus shares a generic source_ref, so the locator "
+            "rule's suppression cannot be shown to do work -- re-derive this guard against the "
+            "current corpus rather than letting it pass on nothing"
+        )
         hard_failures += 1
 
     unresolved = [r["id"] for r in rows if not r.get("source_id", "").strip()]
