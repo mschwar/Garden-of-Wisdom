@@ -1151,3 +1151,95 @@ leaves `include-hidden-files`/`path` unguarded, so the guard is needed either wa
 
 `quotes.csv` / `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`) — this unit touches no
 data. No corpus-program surface, no store, no schema, no state vocabulary, no migration.
+
+## 2026-09-13 — D7 executed: 14 unresolved `source_id` links closed, and the Q3 ambiguity ruled on rather than guessed
+
+D7 (2026-09-12, above) was scoped to run after W1. W1 is complete (Gate B frontier review:
+accept, no defects found), so it is executed now.
+
+### What changed
+
+`sources.csv` gains 14 rows (ids 19-32; 18 → 32 rows). `quotes.csv` gains a `source_id` for
+each of the 14 previously-unresolved rows (267, 275, 312, 315, 316, 317, 320, 333, 334, 335,
+339, 342, 343, 344); no other column on any row changed, and no `quote_text` changed. Row-level
+mapping:
+
+| id | new source_id | sources.csv title |
+|---|---|---|
+| 275 | 19 | The Mahabharata |
+| 342 | 20 | Huehuetlahtolli (Discourses of the Elders) |
+| 343 | 21 | Florentine Codex |
+| 267 | 22 | Buddhist Sutras (Paraphrased Compilation) |
+| 312 | 23 | Multitribal Proverb Oral Tradition |
+| 315 | 24 | Shawnee Oral Tradition |
+| 316 | 25 | Cherokee Oral Tradition |
+| 317 | 26 | Chief Joseph's Surrender Speech (1877) |
+| 320 | 27 | Lakota Oral Tradition |
+| 333 | 28 | Tewa (Pueblo) Oral Tradition |
+| 334 | 29 | Zuni (Pueblo) Oral Tradition |
+| 335 | 30 | Nguni (Bantu) Oral Tradition |
+| 339 | 31 | Ethiopian Oral Tradition |
+| 344 | 32 | Modern Mayan Oral Tradition |
+
+The three identifiable works named in the original D7 scope (Mahabharata, Huehuetlahtolli,
+Florentine Codex) each get their own row. Id 267 (Buddhism, "Various Sutras (paraphrased)") and
+id 312 ("Multitribal Proverb") were not named in D7's title but fall under "the rest": neither
+names one identifiable text, so each gets a compilation/oral-tradition-style placeholder row
+rather than an invented specific citation.
+
+### The Q3 ruling (317, 333, 344 — not guessed)
+
+D7's original text filed Nez Perce (317) as one more "per-tradition oral row" alongside
+Shawnee/Cherokee/Lakota/etc. Doing the work surfaced that three of the fourteen rows are not
+plain oral-tradition proverbs, and collapsing them into a generic tradition-named row would be
+a **silent semantic rewrite** (doctrine principle 6) of what kind of thing the source actually
+is — exactly the case `docs/program/CLASSIFICATION_AND_FACETS.md` files as open question **Q3**
+("how is a non-text source represented?"). Rather than pick silently, the ambiguity is written
+into the row and ruled on here:
+
+1. **317 (Nez Perce) is a dated, single-speaker historical speech** (Chief Joseph's 1877
+   surrender), not an undated communal oral-tradition proverb. Folding it into a generic "Nez
+   Perce Oral Tradition" row would misrepresent a specific attributed 1877 utterance as
+   anonymous communal tradition. Ruling: its own row (`sources.csv` id 26), separate from any
+   generic Nez Perce oral-tradition row, with the wording-fidelity caveat (the most-quoted
+   transcription runs through an army lieutenant, and is itself disputed history) recorded in
+   the row's `notes`, not asserted as settled.
+2. **333 (Tewa) names a mediating 20th-century publication** ("via 'Book of the Hopi'", Frank
+   Waters, 1963) rather than the oral tradition directly, and that book's fidelity to actual
+   Hopi/Tewa tradition has been publicly disputed by Hopi religious leaders. Ruling: recorded as
+   a Tewa oral-tradition row (`sources.csv` id 28) with the mediating publication and the
+   fidelity dispute named in `notes`, rather than treated as if "Book of the Hopi" were a
+   Gutenberg-style primary work of the tradition itself.
+3. **344 (Modern Mayan Greeting) is Q3's own worked example** — a colloquial phrase, not a work
+   at all. Ruling: a placeholder row (`sources.csv` id 32) closes the `source_id` link so the
+   validator's unresolved-link count reaches zero, but the row's `notes` say plainly that this
+   is a pragmatic FK closure, not an answer to Q3. **Q3 stays open** (`docs/queue.md`,
+   `docs/program/CLASSIFICATION_AND_FACETS.md`) — this unit does not invent a `source_type`
+   facet or otherwise decide how non-text sources should be modeled; that is a taste/ontology
+   call reserved for the operator per `docs/program/CORPUS_PROGRAM_DOCTRINE.md` §Human gates.
+
+Rejected alternative for all three: silently placing them in the same generic per-tradition
+oral-tradition bucket as the unambiguous rows. That would have closed the link with no visible
+trace of the modeling question, which is exactly the "false certainty" doctrine principle 4
+forbids — a future reader would have no way to tell that 317/333/344 were ever different in
+kind from 315/316/320/334/335/339.
+
+### Doctrine and fixture, re-derived in the same unit
+
+`docs/program/CORPUS_PROGRAM_DOCTRINE.md` R5 and `docs/program/fixtures/w0_scenarios.json`
+`documented_csv_facts` both asserted `unresolved_source_link_count: 14` and `source_rows: 18`;
+both are updated in this commit (`0` and `32`) so `scripts/check_program_contracts.py`
+re-derives the same numbers from the data it just re-derived them from before this change.
+`scripts/validate_quotes.py`'s "unresolved source links" line also goes from 14 ids to `0`.
+Both scripts were run before and after: PASS before (with the then-current 14/18 facts) and
+PASS after (with 0/32).
+
+### Not done here
+
+Q1/Q2/Q4/Q5/Q6 (the other open ontology questions in `CLASSIFICATION_AND_FACETS.md`) are
+untouched. `item_type` is untouched (D8 territory). No `quote_text`, `tradition`, `source_ref`,
+`author`, `tags`, `verification_status`, or `has_unresolved_glyph` value changed on any row.
+
+`quotes.csv` / `sources.csv` are the only data files this unit writes to; `docs/queue.md`,
+`docs/DECISIONS.md` (this entry), `docs/program/CORPUS_PROGRAM_DOCTRINE.md`, and
+`docs/program/fixtures/w0_scenarios.json` are the only docs it writes to.
