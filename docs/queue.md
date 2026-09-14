@@ -517,6 +517,23 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       pairs: 0.5062, `16 ~ 87`). **Nothing here is corpus-program W1/W2 work** — no store surface, no
       schema, no migration, no state vocabulary, and no corpus edit. Decision recorded in
       `docs/DECISIONS.md` ("The near-duplicate sweep is corpus-wide …").
+      **Landed:** commit `f5986c8`, PR
+      [#36](https://github.com/mschwar/Garden-of-Wisdom/pull/36), **merged as `4ce8e8e`** (2026-09-13).
+      CI: PR smoke run
+      [34794438967](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794438967) **success**
+      (the job log shows the new rule running in CI, not just compiling:
+      `near-duplicate candidates: 20 (corpus-wide)`) and GitGuardian **pass**; on `main` after the
+      merge, smoke run
+      [34794547436](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794547436) **success** and
+      Pages deploy run
+      [34794547412](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794547412) **success**.
+      Live acceptance on the merged `main`: `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv`
+      all **200**, and both live CSVs `sha256`-identical to the repo (`5675d7e6…` / `10b4c156…`).
+      Re-ran on merged `main`: all nine stdlib validators under both interpreters → `RESULT: PASS`, and
+      `smoke_quote_browser.py` → `RESULT: PASS` (33 checks). Issue #34 stayed `OPEN` through the merge
+      (verified after it, because this repo has lost that issue twice to a closing keyword in a PR or
+      commit body). Design trail: `GARDEN_NEAR_DUPLICATE_SCOPE_HANDOFF.md` (**6 negative controls** plus
+      a sanity run).
 
 ## Closed — 2026-09-13 validator near-duplicate score (issue #31)
 

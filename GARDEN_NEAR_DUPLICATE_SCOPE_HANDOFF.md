@@ -213,4 +213,30 @@ curation edits themselves (human pass), and any verification-status change.
 
 ## Merged — post-merge record
 
-Filled in by the follow-up docs commit on `main` (merge sha, PR number, CI run ids, live acceptance).
+- Commit `f5986c8` on `fix/near-duplicate-scope-and-citation`, PR
+  [#36](https://github.com/mschwar/Garden-of-Wisdom/pull/36), **merged as `4ce8e8e`** (2026-09-13).
+- CI on the PR: smoke run
+  [34794438967](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794438967) **success**
+  (1m22s), GitGuardian **pass**. The job log shows the new rule itself running in CI, not just
+  compiling:
+  `near-duplicate candidates: 20 (corpus-wide)`,
+  `pairs sharing an exact source_ref (corpus-wide): 189 -- 13 specific (citation evidence), 176 generic
+  (suppressed by the locator rule)`, `RESULT: PASS`.
+- On `main` after the merge: smoke run
+  [34794547436](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794547436) **success**,
+  Pages deploy run
+  [34794547412](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34794547412) **success**.
+- Live acceptance on the merged `main` (`curl`): `/`, `/browser/index.html`, `/quotes.csv`,
+  `/sources.csv` all **200**, and both live CSVs `sha256`-identical to the repo
+  (`5675d7e6…` / `10b4c156…`).
+- Re-ran on the merged `main`: all nine stdlib validators (`validate_quotes.py`,
+  `check_program_contracts.py`, `validate_homepage_preview_export.py`, and the six W1 suites) →
+  `RESULT: PASS` / exit 0 under **both** interpreters; `smoke_quote_browser.py` → `RESULT: PASS`
+  (33 checks).
+- **The issue stayed open through the merge** — checked after merging, because this repo has already
+  lost #34 twice to a closing keyword in a PR/commit body. It is still `OPEN` and now carries this
+  unit's decision.
+- Local environment note (not a repo defect): `smoke_quote_browser.py` could not launch Chromium on
+  this machine — the Playwright browser had never been downloaded — so
+  `.venv/bin/python -m playwright install chromium` was run (81.9 MiB, test-only dependency) before
+  the smoke test could pass locally.
