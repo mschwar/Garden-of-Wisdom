@@ -6,6 +6,46 @@
 **Filed out of scope:** [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41),
 [#43](https://github.com/mschwar/Garden-of-Wisdom/issues/43)
 
+## Landed
+
+**Merge:** `b1d7f39` — "Merge pull request #42 from mschwar/ci/guard-pages-deploy-contract"
+(2026-09-14). Branch commits `f027ed0` (the guard, the CI wiring, the docs) and `294c0d1` (the
+four low findings and eight coverage gaps foreign QA found). Issue #23 and the queue's infra
+item are closed; the deliberate close comment on #23 carries the artifact-level evidence.
+
+**CI.** PR smoke run [34810313815](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810313815)
+**success** on the hardened commit (the earlier PR run
+[34809755989](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34809755989) on `f027ed0`
+was also green) — the job log's own lines show the new step executing under CI's Python 3.12.14
+and printing all sixteen `PASS:` lines plus `RESULT: PASS (16 checks)`, not merely exiting 0.
+GitGuardian **pass**. After the merge, on `main`: smoke run
+[34810466828](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810466828) **success**
+and Pages deploy run [34810466830](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810466830)
+**success**.
+
+**Live acceptance on the merged `main` (2026-09-14):**
+
+```
+200  /
+200  /browser/index.html
+200  /quotes.csv
+200  /sources.csv
+404  /.gitignore
+404  /.git/config
+404  /.github/workflows/pages.yml
+```
+
+Both live CSVs are `sha256`-identical to the repo (`5675d7e6…` / `10b4c156…`), and the artifact
+of the post-merge deploy (id `10334233141`) lists **141 members with zero hidden members at any
+depth** — no `./.gitignore`, `./.git`, `./.github`, `./.venv` — with the root layout intact:
+`./quotes.csv`, `./sources.csv`, `./index.html`, `./browser/index.html`.
+
+**Board hygiene in the same pass:** issue #5 (resolve unverifiable Garden id 30) was a done spec
+that the D3 unit's close-out recorded in `docs/queue.md` but never carried back to the tracker.
+Its adjudication is verifiable in the committed mirror, so it was closed deliberately by comment
+with that evidence (`scripts/garden_ledger.py list --dir data/store` → `legacy row 30:
+unverifiable (T-R6) … evidence_ref=issue #5`). Open specs are now #43, #41, #30, #27, #6, #4.
+
 ## What this unit is
 
 Not a corpus-program unit: no W2 work, no store surface, no schema, no state vocabulary, no

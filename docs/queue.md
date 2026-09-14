@@ -872,3 +872,25 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       negative-control harness, so a checker's own falsifiability is machine-checked instead of
       asserted in a handoff (foreign QA could not verify the author's control table, and a check
       body gutted to `return None` is invisible to the count guard).
+      **Landed:** commits `f027ed0` + `294c0d1`, PR
+      [#42](https://github.com/mschwar/Garden-of-Wisdom/pull/42), **merged as `b1d7f39`**
+      (2026-09-14). CI: PR smoke run
+      [34810313815](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810313815)
+      **success** (the job log shows the new step executing under CI's Python 3.12.14 and printing
+      all sixteen `PASS:` lines plus `RESULT: PASS (16 checks)`, not merely exiting 0);
+      GitGuardian **pass**; on `main` after the merge, smoke run
+      [34810466828](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810466828)
+      **success** and Pages deploy run
+      [34810466830](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34810466830)
+      **success**. Live acceptance on the merged `main`: `/`, `/browser/index.html`,
+      `/quotes.csv`, `/sources.csv` all **200**; `/.gitignore`, `/.git/config` and
+      `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
+      (`5675d7e6…` / `10b4c156…`); and the post-merge artifact (id `10334233141`) lists 141
+      members with **zero hidden members at any depth** and the root layout intact. Design trail:
+      `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
+      **Same pass, board hygiene:** issue
+      [#5](https://github.com/mschwar/Garden-of-Wisdom/issues/5) was a done spec the D3 unit
+      recorded in this queue but never carried back to the tracker; its adjudication is
+      verifiable in the committed mirror, so it was closed deliberately by comment with that
+      evidence (`garden_ledger.py list --dir data/store` → `legacy row 30: unverifiable (T-R6) …
+      evidence_ref=issue #5`).
