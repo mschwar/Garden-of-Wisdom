@@ -4,13 +4,20 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — data curation
 
-- [ ] **ADOPTED SCOPE (D7) — close the 14 unresolved `source_id` links by adding `sources.csv` rows**
+- [x] **ADOPTED SCOPE (D7) — close the 14 unresolved `source_id` links by adding `sources.csv` rows**
       for the identifiable works (Mahabharata 5.1517, Huehuetlahtolli, Florentine Codex) plus
       per-tradition oral rows for the small oral traditions (Shawnee, Cherokee, Nez Perce, Lakota,
       Tewa, Zuni, Ethiopian, Nguni), then re-link `source_id`. Quote text untouched; validator
       before and after. **Sequence: runs AFTER W1** — this writes `sources.csv`, which is
-      READ-ONLY for the whole of W1 (`docs/program/W1_DECOMPOSITION.md` §Cross-unit rules). Not
-      done.
+      READ-ONLY for the whole of W1 (`docs/program/W1_DECOMPOSITION.md` §Cross-unit rules).
+      **DONE 2026-09-13 (D7 executed).** 14 new `sources.csv` rows (ids 19-32; 18 → 32 rows), all
+      14 `quotes.csv` links closed (14 → 0 unresolved). Also covered two rows this item's title
+      did not name (267 Buddhism paraphrase-sutras, 312 Multitribal Proverb), which turned out to
+      account for the remaining count. Three of the named traditions (317 Nez Perce, 333 Tewa,
+      344 Modern Mayan) were genuinely ambiguous rather than plain oral-tradition rows; the
+      ambiguity is written into the added source rows' `notes` and ruled on in `docs/DECISIONS.md`
+      ("D7 executed") rather than silently folded into a generic oral-tradition row. Q3 (below)
+      is not resolved by this — see that entry.
 - [ ] **ADOPTED SCOPE (D6) — curate the near-duplicate pairs that share a *specific citation*;
       explicitly SKIP the pairs that are the validator's generic-`source_ref` false positive**
       (e.g. unrelated rows both labelled `"Oral Tradition"`). Keep both rows for legitimate variant
@@ -492,7 +499,12 @@ Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
 - [ ] **Q1 — should `tradition` become multi-valued?** Some labels overlap in practice.
 - [ ] **Q2 — is `domain` genuinely multi-valued, or effectively single per record?**
 - [ ] **Q3 — how is a non-text "source" represented?** (e.g. id 344 `Modern Mayan Greeting`,
-      which is a greeting rather than a work.)
+      which is a greeting rather than a work.) **Still open after D7 (2026-09-13):** id 344 now
+      has a `source_id` link (`sources.csv` row 32, "Modern Mayan Oral Tradition") so it is no
+      longer one of the *unresolved links*, but that row is documented as a pragmatic FK
+      placeholder, not a modeling answer — there is still no `source_type` distinguishing a
+      text-bearing work from a colloquial phrase or a dated historical speech (see also id 317's
+      `sources.csv` row 26, "Chief Joseph's Surrender Speech (1877)").
 - [ ] **Q4 — does `culture` add anything beyond `tradition` + `source_type` on this corpus?**
 - [ ] **Q5 — does `shape` replace `item_type`, or does `item_type` stay its projection?**
 - [ ] **Q6 — should period/era be recorded at all**, given how many oral records have no
