@@ -59,8 +59,13 @@ the enum guard), `check_pages_contract.py` — all `RESULT: PASS`.
 
 The full committed negative-control table also re-runs clean:
 `python3 scripts/run_negative_controls.py` → `RESULT: PASS (36 controls fired, 9 harness
-self-tests)`, `checkers: 12 of 12 selected, 0 skipped` — none of the five new checks collide with
-an existing control's anchor or expected output, and the table's own coverage floor
+self-tests)`, `checkers: 12 of 12 selected, 0 skipped` on a machine with `playwright` installed
+(the two `smoke_quote_browser.py` controls need it). **Independent QA reproduced this on a
+machine without `playwright`: `RESULT: PASS (34 controls fired, 9 harness self-tests)`,
+`checkers: 12 of 12 selected, 1 skipped`, and confirmed the same 34-vs-36 split already happens
+on unmodified `main` — a pre-existing, environment-dependent condition, not something this unit
+introduced.** Either way, none of the five new checks collide with an existing control's anchor
+or expected output, and the table's own coverage floor
 (`EXPECTED_CONTROLS`/`EXPECTED_SELF_TESTS`) is unchanged because this unit added fixtures/checks
 to the acceptance suites, not new entries to the negative-control table itself. (A future unit
 could add five more controls to the table — one per gap closed here — but that is a harness
@@ -71,6 +76,29 @@ silently.)
 `7aafcb67…`, the D7-updated pair) — no working-tree diff on either file at any point; every
 mutation used for verification was applied to a copy or reverted immediately after its
 observation was recorded.
+
+## Review status (foreign QA)
+
+**Independent reviewer, own harness, own throwaway copies (never read this file or the author's
+transcript): PASS, no high/medium defects.** For each of the five gaps, the reviewer made an
+independent throwaway `git archive` copy of both `main` and this branch, applied issue #45's
+exact anchor/replacement mutation to both, and confirmed: the fix branch's owning suite reports
+its own aimed `FAIL:` line with no traceback, while `main`'s same suite stays `RESULT: PASS` (the
+gap was real). Vacuousness checks the reviewer ran beyond the minimum: confirmed
+`check_garden_review.py`'s new `action` check only iterates `subject_kind='candidate'` rows (so
+research-dimension rows, which use a third `action` value, never enter the binary
+curation/corpus mapping — not accidentally always-true); confirmed `check_garden_e2e.py`'s new
+check reads the T-P7 decision row's own `to_state` field via `decision_rows()`, not the live
+`corpus_state` column; confirmed `check_garden_store.py`'s new message check is mapped
+per-verb by separately mutating only the DELETE trigger's message and observing the
+DELETE-specific mismatch reported (not a shared/wrong string). All eleven other suites plus the
+negative-control table re-ran clean on the fix branch in the reviewer's own environment, and both
+CSVs' sha256 matched between `main` and the branch.
+
+**One low-severity finding, addressed above:** the reviewer's environment had no `playwright`
+installed, so `run_negative_controls.py` reported 34/9 with one skip rather than 36/9 — traced to
+a pre-existing, environment-dependent condition reproducible on unmodified `main`, not introduced
+by this unit. The handoff's regression-check section above now states both outcomes.
 
 ## What this unit did not do
 
