@@ -990,3 +990,38 @@ evidence, and this validator is small enough that 21s is not worth a weaker guar
 **Not corpus-program work and not a corpus edit.** No store surface, no schema, no migration, no state
 vocabulary. `quotes.csv` / `sources.csv` stay byte-identical (`5675d7e6…` / `10b4c156…`): every number
 here is a derivation over the corpus.
+
+## 2026-09-13 — D3 executed (the `unverifiable` side-car ledger)
+
+Decision D3 (2026-09-12) is now implemented in the W1.1 store. The `unverifiable` side-car
+ledger is a `legacy_verification` table keyed by legacy row id (migration `0002_unverifiable_ledger`),
+guarded by `Store.mark_legacy_unverifiable` / `Store.reopen_legacy_unverifiable`, surfaced by
+`scripts/garden_ledger.py`, and accepted by `scripts/check_garden_ledger.py` (43 checks + 7 negative
+controls). Design: `docs/program/D3_UNVERIFIABLE_LEDGER.md`. Issue #5 / Garden id 30 is the live
+instance, seeded into the committed store mirror `data/store/garden.export.txt`.
+
+Rulings this execution makes (each recorded so it can be reconsidered):
+
+1. **The export header stays `garden.export/1` and meta `schema_version` stays `1`.** The ledger is
+   an *additive* section to the same version-1 format; a version bump is reserved for a change to the
+   *meaning* of existing bytes. There are no persisted /1 exports in the wild (the store is
+   git-ignored and was empty), and the store's byte-identity guard still refuses an old text lacking
+   the new section, so no format can silently pass.
+2. **`check_garden_store.py`'s exact-shape assertions were necessarily updated** (migration list,
+   table set, export line count, `counts()` dict) because migration 0002 legitimately extends the
+   schema that suite was written to assert. That is a later-unit extension, not a rewrite of frozen
+   evidence: the W1.1 checks now assert the two-migration schema.
+3. **The store mirror is now populated** with the live instance (id 30) and committed as
+   `data/store/garden.export.txt`. This is consistent with the W1.3 ruling that the first real
+   operator submission populates the mirror: marking id 30 unverifiable is a real operator
+   adjudication. The SQLite DB stays git-ignored.
+4. **`research_state` `from_state` is derived from `transition_id`** (T-R6→`in_research`,
+   T-R7→`needs_more_evidence`, T-R10→`disputed`, T-R11→`verified`), so the audit row always agrees
+   with `STATE_MODEL.md` §2. Because a legacy row's true prior research state is unknown (D4), the
+   declared route is recorded as the operator's stated path, never an invented encounter.
+
+Rejected alternatives: (a) widening the `quotes.csv` `verification_status` enum — already rejected
+by decision D3, reaffirmed; (b) a separate ledger file — would be "two stores", which decision D3
+explicitly avoids; (c) a version bump of the export header — rejected by ruling 1 above.
+
+`quotes.csv` / `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`).

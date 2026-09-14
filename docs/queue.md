@@ -454,12 +454,13 @@ Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
 > IDs `D1`–`D10`. When referring to a *decision*, cite its dated entry in `docs/DECISIONS.md` by
 > title, never by a bare `D<n>`.
 
-- [ ] **D2 — `unverifiable` is not representable in `quotes.csv`.** The 3-valued
+- [x] **D2 — `unverifiable` is not representable in `quotes.csv`.** The 3-valued
       `verification_status` maps every unfinished research state to `unverified`, so a record
       proven unverifiable is indistinguishable from a never-checked row. Issue #5 (Garden id
       30) is the live instance. **Decided 2026-09-12 (decision D3):** represented in a side-car
-      ledger keyed by legacy row id, after W1.1 — see the authorized section above. Do not widen
-      the enum as a side effect of other work.
+      ledger keyed by legacy row id, after W1.1. **RESOLVED 2026-09-13 (decision D3 executed):**
+      the `legacy_verification` side-car ledger is implemented and Garden id 30 is seeded — see
+      the "Closed — 2026-09-13 D3" section. Do not widen the enum as a side effect of other work.
 - [ ] **D3 — no row-level verification evidence store.** The four `verified` rows carry their
       evidence only in `exports/bahai-homepage-preview/v1/` and `docs/DECISIONS.md`. Adding
       evidence fields is W2/W3 work; until then, `verified` in the CSV is a pointer to the
@@ -726,15 +727,28 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       rows), not by widening the donor set first. Expected to surface issue #4 (`source_url`) and
       the D5 `verification_status` / `verification_state` contract question. Garden's frozen data is
       untouched by this lane. This supersedes the earlier "do not start H2B-B" bullet.
-- [ ] **D3 — `unverifiable` side-car ledger (after W1.1).** Authorized 2026-09-12: represent
-      `unverifiable` in a side-car ledger keyed by legacy row id, NOT by widening the 3-valued
-      `quotes.csv` enum. **Sequence: after W1.1 exists**, so there is one store rather than two.
-      Issue #5 / Garden id 30 is the live instance. (Resolves the open question in the debt section
-      below.)
 - [ ] **D4 — ONE batch capture record for the 324 legacy rows.** Authorized 2026-09-12: a single
       batch capture record for the 2026-09-11 rehabilitation import, explicitly marked as such and
       noting the encounter context is unknown — not one synthetic capture per row. (Resolves the
       "human decision" open question in the debt section below.)
+
+## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
+
+- [x] **D3 — `unverifiable` side-car ledger. DONE 2026-09-13** (branch `d3/unverifiable-ledger`,
+      PR [#NN] — see the handoff for the merge). Represent `unverifiable` in a side-car ledger keyed
+      by legacy row id, NOT by widening the 3-valued `quotes.csv` enum, in the W1.1 store (one store,
+      not two). `legacy_verification` table via migration `0002_unverifiable_ledger`;
+      `Store.mark_legacy_unverifiable` / `Store.reopen_legacy_unverifiable` (each writes its audit
+      row in the same transaction); `scripts/garden_ledger.py` CLI (mark/reopen/list);
+      `scripts/check_garden_ledger.py` (**43** checks) + **7** negative controls (each goes
+      `RESULT: FAIL` with its guard's `FAIL:` line, no traceback). Design doc:
+      `docs/program/D3_UNVERIFIABLE_LEDGER.md`. Decision recorded in `docs/DECISIONS.md`
+      ("D3 executed (the unverifiable side-car ledger)"), including the rulings that the export
+      header stays `/1` and that `check_garden_store.py`'s exact-shape assertions were necessarily
+      updated to the two-migration schema. **Live instance seeded:** Garden id 30 (issue #5) is
+      `unverifiable` in the committed store mirror `data/store/garden.export.txt` — the CSV row is
+      now distinguishable from a never-checked row. `quotes.csv`/`sources.csv` byte-identical
+      (`5675d7e6…` / `10b4c156…`). (Resolves the open question in the debt section below.)
 
 ## Explicitly NOT started (do not start without human sign-off)
 
