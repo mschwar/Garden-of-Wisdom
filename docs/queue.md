@@ -53,13 +53,30 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — infra
 
-- [ ] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
+- [x] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
       corpus-program acceptance suites" step runs the six W1 suites but not the new
       `scripts/check_garden_ledger.py` (45 checks) shipped by the D3 unit. A regression in the
       `legacy_verification` table, the `mark`/`reopen` guards, or the export section would pass CI.
       Issue [#39](https://github.com/mschwar/Garden-of-Wisdom/issues/39). CI-step change (guarded
       workflow), so filed rather than fixed inside the D3 unit; the D3 suite already proves its
       negative controls, so wiring it in cannot create a vacuously-green step.
+      **CLOSED 2026-09-13/14 (branch `ci/wire-ledger-suite`, PR
+      [#40](https://github.com/mschwar/Garden-of-Wisdom/pull/40), merged as `5b02b4e`):**
+      `python scripts/check_garden_ledger.py` appended as a seventh line to the existing step,
+      after `check_garden_e2e.py`. All seven suites (six W1 + ledger) re-verified `RESULT: PASS`
+      locally immediately before the edit; one negative control (an injected `SystemExit` in
+      `check_garden_ledger.py`, reverted after) confirmed the step fails fast under `bash -e`.
+      `quotes.csv`/`sources.csv` untouched (`5675d7e6…` / `10b4c156…`). No new dependency, no
+      change to `requirements-dev.txt`, `pages.yml` untouched. CI: PR smoke run
+      [34803423991](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34803423991)
+      **success** — the job log's own `RESULT: PASS` lines confirm `check_garden_ledger.py`
+      genuinely executed and printed its 45-check pass, not merely that the step exited 0; on
+      `main` after the merge, smoke run
+      [34803565944](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34803565944)
+      **success** and Pages deploy run `34803565954` **success**. Live acceptance on the merged
+      `main`: `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` all **200**, both live
+      CSVs `sha256`-identical to the repo (`5675d7e6…` / `10b4c156…`). Design trail:
+      `GARDEN_CI_LEDGER_HANDOFF.md`. Issue #39 closed by the merge.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
 - [ ] Guard the Pages deploy contract: `.github/workflows/pages.yml` must keep
