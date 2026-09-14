@@ -58,3 +58,4 @@ jobs:
           python scripts/check_garden_normalize.py
           python scripts/check_garden_review.py
           python scripts/check_garden_e2e.py
+          python scripts/check_garden_ledger.py
