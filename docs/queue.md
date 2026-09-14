@@ -411,18 +411,38 @@ Living document — update it as items are picked up or closed, don't just appen
       W1 units shipped without it, so it is filed here rather than fixed in W1.2. Decide: extend
       the smoke workflow's validator step to run both W1 acceptance suites, or leave them as
       local-evidence-only.
-      **IN PROGRESS 2026-09-13 (branch `ci/w1-acceptance-suites`):** decided — a new step, "Run
-      the W1 corpus-program acceptance suites", appended to the existing `smoke` job, running all
-      six suites (`check_garden_store.py`, `check_garden_envelope.py`, `check_garden_submit.py`,
-      `check_garden_normalize.py`, `check_garden_review.py`, `check_garden_e2e.py`) after the
-      existing validator step. All six re-verified `RESULT: PASS` locally immediately before the
-      edit; one negative control (an injected `SystemExit` in `check_garden_store.py`, reverted
-      after) confirmed the step fails fast and stops before later suites when a real regression
-      fires. `quotes.csv`/`sources.csv` untouched (`5675d7e6…` / `10b4c156…`). No new dependency,
-      no change to `requirements-dev.txt`, `pages.yml` untouched. See
-      `GARDEN_CI_W1_ACCEPTANCE_HANDOFF.md`. **Next: open the PR, get independent/foreign QA, wait
-      for the PR's own smoke run to actually execute the new step in CI (not just compile), merge,
-      then close this out with the live run id.**
+      **CLOSED 2026-09-13/14 (branch `ci/w1-acceptance-suites`, PR
+      [#37](https://github.com/mschwar/Garden-of-Wisdom/pull/37), merged as `396547b`):** decided —
+      a new step, "Run the W1 corpus-program acceptance suites", appended to the existing `smoke`
+      job, running all six suites (`check_garden_store.py`, `check_garden_envelope.py`,
+      `check_garden_submit.py`, `check_garden_normalize.py`, `check_garden_review.py`,
+      `check_garden_e2e.py`) after the existing validator step. All six re-verified `RESULT: PASS`
+      locally immediately before the edit; one negative control (an injected `SystemExit` in
+      `check_garden_store.py`, reverted after) confirmed the step fails fast under `bash -e` and
+      stops before later suites when a real regression fires. `quotes.csv`/`sources.csv` untouched
+      (`5675d7e6…` / `10b4c156…`). No new dependency, no change to `requirements-dev.txt`,
+      `pages.yml` untouched. Independent/foreign QA (see `docs/DECISIONS.md` if recorded, or the
+      PR's review thread) re-verified all six suites locally, confirmed the diff's scope, confirmed
+      every import across the six suites and their `garden_*.py` modules is stdlib, and pulled the
+      PR's own CI job log line-by-line to confirm the six suites genuinely executed under
+      `bash -e` in the CI environment (not merely parsed) and each printed its own `RESULT: PASS`
+      there — PASS verdict, no defects, flagged only informational notes (job now ~2m23s against
+      a 15-minute timeout, most of it `check_garden_e2e.py`'s ~45s; single shared step means one
+      early failure aborts the rest, which is the intended fail-fast behavior). CI: PR smoke run
+      [34797609209](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34797609209)
+      **success** (the job log shows all six suites' own `RESULT: PASS` lines, not just the step
+      exiting 0); on `main` after the merge, smoke run
+      [34797901059](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34797901059)
+      **success** and Pages deploy run
+      [34797901160](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34797901160)
+      **success**. Live acceptance on the merged `main`: `/`, `/browser/index.html`,
+      `/quotes.csv`, `/sources.csv` all **200**, and both live CSVs `sha256`-identical to the repo
+      (`5675d7e6…` / `10b4c156…`). Design trail: `GARDEN_CI_W1_ACCEPTANCE_HANDOFF.md`. This is the
+      final close-out for this long-open debt item — all six W1 acceptance suites are now
+      CI-protected against regression; the "seventh surface" note from the W1.6 close-out
+      (`garden_review.py` has no dedicated suite of its own beyond what `check_garden_review.py`/
+      `check_garden_e2e.py` exercise) stays open as a separate, unfiled question, not part of this
+      unit's scope.
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
