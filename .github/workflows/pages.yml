@@ -49,8 +49,13 @@ jobs:
         uses: actions/configure-pages@v6
 
       # Uploads the repo root. actions/upload-pages-artifact always excludes .git and
-      # .github (and top-level dotfiles, since include-hidden-files defaults to false),
-      # so "." is safe here; no staging copy is needed.
+      # .github; from v4 on it also excludes top-level dotfiles by default
+      # (include-hidden-files: false makes the action add `--exclude=.[^/]*` to its tar).
+      # v3 had no such exclusion and published ./.gitignore (issue #23), so the major
+      # version below is load-bearing: scripts/check_pages_contract.py fails the pull
+      # request if it drops below v4, if include-hidden-files is switched on, if the
+      # artifact name is overridden, or if `path:` stops being the repo root. See
+      # docs/RUNBOOK.md ("Guard the Pages deploy contract").
       - name: Upload Pages artifact (repo root)
         uses: actions/upload-pages-artifact@v5
         with:

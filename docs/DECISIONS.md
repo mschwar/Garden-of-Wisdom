@@ -1052,3 +1052,102 @@ before merge:
 The D3 acceptance suite is now **45 checks + 10 negative controls** (7 original guards + D-1 + O-1
 + O-2), all `RESULT: FAIL` with the aimed `FAIL:` line and no traceback. `quotes.csv` /
 `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`).
+
+## 2026-09-14 — the Pages deploy contract gets a config guard; issue #23 does not reproduce
+
+The queue carried two open items that turned out to be one: the infra entry "Guard the Pages
+deploy contract" (`.github/workflows/pages.yml` must keep `path: '.'`, and Pages "Source" must
+stay GitHub Actions) and issue #23 ("the Pages artifact publishes top-level dotfiles —
+`/.gitignore` is live and returns 200, despite the exclusion the workflow claims"). Both lived
+only as **prose**: the workflow's comment block, `docs/RUNBOOK.md` ("GitHub Pages"),
+`docs/architecture/QUOTE_BROWSER.md` ("Deployment") — and nothing in the repo could falsify
+any of it. `scripts/smoke_quote_browser.py` drives the page over a *local* server and cannot
+see the artifact; the deploy job **succeeds** whether or not the contract holds.
+
+### What the investigation established (artifact-level, not prose)
+
+1. **The defect does not reproduce on `main` today.** The newest `github-pages` artifact of
+   the newest deploy (run `34803736228`, artifact `10332485746`) has **no hidden member at
+   all**: `tar -tf artifact.tar | grep -E '^\./\.[^/]*$'` and `tar -tf artifact.tar | grep -E
+   '/\.'` are both empty, so `./.gitignore`, `./.git`, `./.github` and `./.venv` are all
+   excluded. Live: `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` are **200** and
+   `/.gitignore` and `/.git/config` are **404**.
+2. **The mechanism is the upload action's major version, read from its own `action.yml`.** v3
+   tars with `--exclude=.git --exclude=.github` only (no hidden-file exclusion) — that is the
+   version this repo ran when #23 was filed, and it published `./.gitignore`. v4 added
+   `--exclude=".[^/]*"`; v5 keeps it (`--exclude=.[^/]*`). So the major bump of 2026-09-12
+   (commit `10d8c31`, PR #22) **removed** the leak. The queue's note that #23 was "not a
+   regression from #19" was right about the cause and wrong about the cure: the same bump
+   removed it, which is why the live 200 the issue recorded could not be reproduced.
+3. **The reason it went unnoticed is the checklist, not the code.** The acceptance checklist
+   probed `/.git/config` (404, correctly — `.git` was always excluded) and never
+   `/.gitignore`. A correctly-rooted artifact can still publish dotfiles; only probing one of
+   the two classes hides the other.
+
+### Decision
+
+1. **Issue #23's premise is recorded as not-reproducing, and the queue item is closed with the
+   artifact-level evidence above.** The issue is closed deliberately by comment after the
+   merge, never by a closing keyword in a PR or commit body (this repo has twice lost an issue
+   that way, and the two failure modes must stay distinguishable).
+2. **The durable fix for the class is a config guard, not a one-off doc edit.**
+   `scripts/check_pages_contract.py` (16 checks: 15 contract checks + a count guard so that
+   deleting a check fails the run) asserts the repository-side half of the contract: the
+   workflow still parses into the shape the guard reads (else it FAILs and asks for a
+   re-derive), the upload `path` is `'.'`, the upload action major is **verified**,
+   `include-hidden-files` is not on, the artifact name is still `github-pages`, the
+   `refs/heads/main` guard is present, the `pages` concurrency group never cancels an
+   in-flight deploy, `pages: write` + `id-token: write` are granted, `browser/app.js` still
+   fetches `../quotes.csv` / `../sources.csv`, both CSVs are at the root, and the root
+   `index.html` shim still redirects to `browser/index.html`, exactly one step uses the upload
+   action and it runs before the deploy step. It is **CI-wired** (`browser-smoke.yml`, step
+   "Guard the Pages deploy contract"), so a pull request that breaks the contract is red before
+   it can deploy. **28 negative controls** (one per check, the shape and count guards, and the
+   valid edits that must stay green) are recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
+   **A foreign QA pass (independent reviewer, own harness, 59 mutations) returned PASS with no
+   high/medium defect and four low findings, all of which were fixed before merge:** the
+   deploy-step check compared the environment URL by substring (fixed: exact comparison, plus a
+   second control for the other half of that check); `_nested` demanded keys at exactly
+   `parent + 2`, so a uniform re-indent of `concurrency:`/`permissions:`/`environment:` produced
+   a FAIL naming a break that did not exist (fixed; three controls now require those edits to
+   stay green); a `vM.N(.P)` tag or a commit pin was rejected as unreadable (fixed: `vN.M.P`
+   reads as major N, and a commit pin FAILs with a "cannot be checked against the table"
+   instruction instead of an "unreadable" one); and only the first upload step was checked, so
+   a second upload step with `path: 'browser/'` was invisible (fixed: exactly one upload step is
+   required). The same pass found the shim check was satisfied by the canonical link with the
+   redirect repointed, and that a workspace with mixed step indents — which is not valid YAML —
+   read as PASS; both are now FAILs. **Documented residual limits**, kept rather than papered
+   over: a push filter that migrates to another trigger still satisfies the trigger check
+   (backstopped by the separately-checked `refs/heads/main` job guard), a duplicate
+   `concurrency:` block is not detected, an empty `quotes.csv` passes (the data guard is
+   `validate_quotes.py`), and the count guard counts *registrations*, so a check body gutted to
+   `return None` is undetectable from inside the guard — which is why the harness itself is
+   filed to be committed and CI-wired as issue #43.
+3. **`VERIFIED_UPLOAD_MAJORS` is a closed set, and an unverified major FAILs.** v4 and v5 are
+   verified; a major below 4 FAILs naming the #23 mechanism, and a major above the set FAILs
+   with an instruction to read the action's `action.yml` and extend the set with the evidence.
+   A future major **can** change the tar invocation — that is exactly how this class appeared
+   — so passing silently on an unknown version would be the same defect one bump later.
+4. **The live acceptance checklist gains the two probes it was missing** (`/.gitignore` and
+   `/.git/config` must be 404, alongside the four 200s), and the artifact itself can be listed
+   without a deploy (`gh api …/artifacts` → download → `tar -tf artifact.tar`; no member may
+   start with `./.`). The "always drops top-level dotfiles" claim in `RUNBOOK.md`,
+   `QUOTE_BROWSER.md` and the workflow comment is qualified with the version dependency that
+   makes it true.
+5. **`path: '.'` is unchanged and is now enforced.** No behavior change to
+   `.github/workflows/pages.yml` in this unit — only its comment. Adding a new step to
+   `browser-smoke.yml` (a guarded workflow) is in scope because the guard is the unit's
+   deliverable.
+
+Rejected alternatives: **(a)** staging the artifact into a temp directory with `rsync`
+— it would satisfy the `../` fetches, but it breaks the documented `path: '.'` contract that
+this guard exists to keep, and it moves the published tree out of the one place every live
+check in the repo points at; **(b)** deleting top-level dotfiles from the runner workspace
+before the upload — smaller, but it deletes `.git` and `.github` too and reads as a hack in a
+guarded deploy workflow; **(c)** documenting the behavior and leaving it unguarded — that is
+the state that produced #23; **(d)** pinning the upload action by full SHA instead of the
+major — it would freeze the exclusion, but it would also freeze security patches and it still
+leaves `include-hidden-files`/`path` unguarded, so the guard is needed either way.
+
+`quotes.csv` / `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`) — this unit touches no
+data. No corpus-program surface, no store, no schema, no state vocabulary, no migration.
