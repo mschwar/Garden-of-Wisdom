@@ -146,6 +146,9 @@ author's in-suite checks exercise. A foreign QA pass is still recommended before
 - Re-opening a legacy row into the candidate flow — the ledger records the terminal fact only.
 - Widening `quotes.csv` `verification_status` — explicitly rejected by decision D3.
 - `docs/architecture/QUOTE_BROWSER.md` was not changed (the browser does not consume the ledger).
+- Wiring `scripts/check_garden_ledger.py` into the `browser-smoke.yml` CI step — a guarded workflow
+  change; **filed as issue #39** (the step runs the six W1 suites but not the new ledger suite). The
+  D3 suite already proves its negative controls, so the wiring cannot create a vacuously-green step.
 
 ## Exact next authorized action
 

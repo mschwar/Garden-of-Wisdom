@@ -53,6 +53,13 @@ Living document — update it as items are picked up or closed, don't just appen
 
 ## Open — infra
 
+- [ ] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
+      corpus-program acceptance suites" step runs the six W1 suites but not the new
+      `scripts/check_garden_ledger.py` (43 checks) shipped by the D3 unit. A regression in the
+      `legacy_verification` table, the `mark`/`reopen` guards, or the export section would pass CI.
+      Issue [#39](https://github.com/mschwar/Garden-of-Wisdom/issues/39). CI-step change (guarded
+      workflow), so filed rather than fixed inside the D3 unit; the D3 suite already proves its
+      negative controls, so wiring it in cannot create a vacuously-green step.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
 - [ ] Guard the Pages deploy contract: `.github/workflows/pages.yml` must keep
