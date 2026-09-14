@@ -1,7 +1,15 @@
 # Handoff — the five checker coverage gaps from issue #45 are closed
 
-**Branch:** `fix/checker-coverage-gaps` · **Closes:** issue
+**Branch:** `fix/checker-coverage-gaps` · **Records:** issue
 [#45](https://github.com/mschwar/Garden-of-Wisdom/issues/45)
+
+> **Process deviation, recorded rather than hidden:** this repo's convention (see #34's and
+> #43's handoffs) is to close a finished issue **deliberately by comment after the merge, never
+> by a closing keyword** in a PR/commit body, because this repo has lost issues to that keyword
+> before. The PR #47 body for this unit included "Closes #45", which GitHub auto-closed at the
+> merge (2026-09-14T17:50:18Z, actor `mschwar` via the PR merge, `commit_id: null`) — before the
+> evidence comment below was posted. The evidence comment was still posted in full immediately
+> after, so the paper trail is intact; the process, not the substance, deviated.
 
 ## What this is
 
