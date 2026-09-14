@@ -195,3 +195,7 @@ local run; CI does not narrow.
   `check_garden_review.py` never inspects a decision row's `action` vocabulary;
   `check_garden_e2e.py` asserts the live `corpus_state` but not the T-P7 audit row's recorded
   `to_state`; and D3's "do not widen the `quotes.csv` enum" ruling has no falsifier anywhere.
+  **Filed as issue #45; all five closed 2026-09-14** — see
+  `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`. This description of the gaps (and this file's list
+  of them) is left as the historical record of what the authoring pass found; none of the five
+  mutations above still passes silently.

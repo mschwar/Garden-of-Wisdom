@@ -30,6 +30,7 @@ repo, never the real tree.
 """
 from __future__ import annotations
 
+import csv
 import hashlib
 import shutil
 import subprocess
@@ -137,8 +138,37 @@ def main() -> int:
     return 0
 
 
+#: D3's own ruling, restated here so this suite falsifies it directly rather than trusting
+#: `validate_quotes.py` to catch a drift it does not own: `unverifiable` lives in the ledger,
+#: never in `quotes.csv`'s `verification_status` column.
+QUOTES_VERIFICATION_ENUM = {"unverified", "verified", "disputed"}
+
+
 def run_checks(scratch: Path) -> None:
     store_dir = scratch / "store"
+
+    # -- 0. D3's own ruling: the ledger is a side-car, and quotes.csv's enum stays 3-valued --
+    with open(QUOTES, newline="", encoding="utf-8") as fh:
+        quote_rows = list(csv.DictReader(fh))
+    check(bool(quote_rows), "quotes.csv is readable as CSV (the fixture source)", str(len(quote_rows)))
+    bad_enum = [
+        r["id"] for r in quote_rows if r.get("verification_status", "") not in QUOTES_VERIFICATION_ENUM
+    ]
+    check(
+        not bad_enum,
+        "issue #45 gap 4: quotes.csv's verification_status stays exactly "
+        f"{sorted(QUOTES_VERIFICATION_ENUM)} -- D3 chose the side-car ledger 'instead of widening "
+        "the 3-valued quotes.csv enum', and this suite (not just validate_quotes.py) falsifies that "
+        "ruling directly",
+        str(bad_enum),
+    )
+    live_row = next((r for r in quote_rows if r["id"] == LIVE_ID), None)
+    check(
+        live_row is not None and live_row["verification_status"] == "unverified",
+        f"the live instance (id {LIVE_ID}, issue #5) stays 'unverified' in quotes.csv -- its "
+        "unverifiable adjudication lives only in the ledger, seeded separately below",
+        str(live_row),
+    )
 
     # -- 1. schema: migration 0002 + the ledger table with its CHECK constraints ---------
     db_path, applied = create_store(store_dir)

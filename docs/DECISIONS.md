@@ -1322,3 +1322,21 @@ anywhere (`check_garden_ledger.py` only hashes the CSVs). Each is a *fixture/che
 existing suite, not part of the harness, so each belongs to the unit that owns that suite.
 
 
+
+## 2026-09-14 — the five checker coverage gaps (issue #45) are closed in the suites that own them
+
+Each of the five gaps measured while authoring the negative-control table (see the entry above)
+is fixed in this unit, in the acceptance suite whose contract it belongs to rather than in the
+harness: `check_garden_normalize.py` gained a case-differing fixture pair asserting the
+documented case-folded comparison; `check_garden_review.py` now asserts every decision row's
+`action` value against its dimension; `check_garden_e2e.py` now reads the T-P7 audit row's own
+`to_state` directly instead of only the live `corpus_state` column; `check_garden_ledger.py`
+gained a new first section reading `quotes.csv` directly and asserting `verification_status`
+stays in the 3-valued enum (D3's ruling, now falsifiable by the suite that made the ruling, not
+only by `validate_quotes.py`'s pre-existing and unrelated enum guard); and `check_garden_store.py`
+now asserts the captures-UPDATE/DELETE trigger's `RAISE` message text, not only that the write is
+rejected. Each fix was verified against the exact anchor/replacement `run_negative_controls.py`'s
+authoring pass recorded for that gap, confirmed to turn the corresponding suite red where it had
+previously stayed green. All twelve stdlib suites and the full 36-control negative-control table
+re-run `RESULT: PASS` after the fixes; `quotes.csv`/`sources.csv` untouched. Design trail:
+`GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`.

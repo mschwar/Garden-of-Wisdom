@@ -601,10 +601,18 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
     _, generic_exact_b = submit_raw(repeated_text, next(iter(generic_labels)))
     NFD_CAPTURE, NFD_CANDIDATE = submit_raw(NFD_TEXT, "none")
     _, whitespace_candidate = submit_raw(WHITESPACE_ONLY, "none")
+    CASE_LOWER, CASE_UPPER = repeated_text, repeated_text.upper()
+    _, case_lower_candidate = submit_raw(CASE_LOWER, "none")
+    _, case_upper_candidate = submit_raw(CASE_UPPER, "none")
 
     check(
         NFD_TEXT != unicodedata.normalize("NFC", NFD_TEXT),
         "the NFC fixture really is decomposed (so the NFC check cannot pass vacuously)",
+    )
+    check(
+        CASE_LOWER.casefold() == CASE_UPPER.casefold() and CASE_LOWER != CASE_UPPER,
+        "the case fixture pair really differs only in letter case (so the check below cannot pass "
+        "vacuously)",
     )
 
     # -- 2. normalization ------------------------------------------------------------------
@@ -967,6 +975,21 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
         "normalized text identical" in exact_basis and "case-folded" in exact_basis,
         "the exact-text basis says what was identical and how it was compared",
         exact_basis,
+    )
+
+    print("-- the documented case-folded comparison (issue #45, gap 1) --")
+    case_kinds = kinds_between(case_lower_candidate, case_upper_candidate)
+    check(
+        "exact-text" in case_kinds,
+        "two candidates whose text differs only in letter case still get an exact-text hint -- "
+        "the comparison view is case-folded, as W1_4_NORMALIZATION_HINTS.md documents",
+        str(sorted(case_kinds)),
+    )
+    check(
+        "near-text" not in case_kinds,
+        "the case-only pair is exact-text, not merely near-text (case-folded, the two texts are "
+        "identical, not just similar)",
+        str(sorted(case_kinds)),
     )
 
     print("-- hints are derived data, not states --")

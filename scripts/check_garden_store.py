@@ -470,16 +470,28 @@ def run_checks(scratch: Path) -> None:
     # -- 8. capture immutability -------------------------------------------------------
     with Store(store_dir) as store:
         before_rows = [tuple(r) for r in store.conn.execute("SELECT * FROM captures ORDER BY capture_id")]
+        expected_messages = {
+            "UPDATE": "captures is immutable: UPDATE rejected",
+            "DELETE": "captures is immutable: DELETE rejected",
+        }
         for statement in (
             "UPDATE captures SET captured_text = 'cleaned' WHERE capture_id = '%s'" % CAPTURE_A,
             "DELETE FROM captures WHERE capture_id = '%s'" % CAPTURE_A,
         ):
+            verb = statement.split()[0]
             try:
                 store.conn.execute(statement)
                 store.conn.commit()
-                fail(f"captures accepted {statement.split()[0]}: captures are not immutable")
+                fail(f"captures accepted {verb}: captures are not immutable")
             except sqlite3.IntegrityError as exc:
-                ok(f"captures rejects {statement.split()[0]} ({str(exc).splitlines()[0]})")
+                ok(f"captures rejects {verb} ({str(exc).splitlines()[0]})")
+                # issue #45 gap 5: only the abort itself was guarded, never the trigger's own
+                # message -- a `RAISE(ABORT, 'rewritten')` would pass silently.
+                check(
+                    expected_messages[verb] in str(exc),
+                    f"the {verb} trigger's own RAISE message names the invariant it enforces",
+                    f"{str(exc).splitlines()[0]!r} does not contain {expected_messages[verb]!r}",
+                )
         after_rows = [tuple(r) for r in store.conn.execute("SELECT * FROM captures ORDER BY capture_id")]
         check(before_rows == after_rows, "no capture row changed after the rejected writes")
 
