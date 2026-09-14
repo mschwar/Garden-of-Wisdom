@@ -270,30 +270,52 @@ pre-fix revision, and its flag and the fix agree. Its attacks 1–14 all target 
 **Pass 2 — time-boxed re-run against the frozen, fixed revision. FINAL VERDICT: PASS — no
 high/medium defects found.** All 8 attacks (10 invocations) behaved exactly as the unit claims;
 the `p36` vacuity class — the reason this unit exists — is genuinely closed: gutting a check body
-while keeping its registration turns the run red with `COVERAGE_GAP`. Its own words, verbatim
-from its transcript (`~/.hermes/cache/delegation/live/deleg_c98767ce/task-0.log`):
+while keeping its registration turns the run red with `COVERAGE_GAP`, and a pre-red checker is
+reported as `FAIL: baseline` with 0 credited, never as a fired control. Its report, verbatim
+(`~/.hermes/cache/delegation/live/deleg_c98767ce/task-0.log`):
 
-> Workspace: all attacks ran in copies (`/tmp/fqa2` + `/tmp/fqa_a*`); the real repo was never
-> written to by me. … Every attack used `--checker scripts/check_pages_contract.py`
-> (sub-second); the full harness ran once, from the real repo path, and finished (270 s).
->
-> ### FINAL VERDICT: **PASS** — no high/medium defects found
->
-> All 8 attacks (10 invocations) behaved exactly as the unit claims. The `p36` vacuity class —
-> the reason this unit exists — is genuinely closed: gutting a check body while keeping its
-> registration turns the run red with `COVERAGE_ …`
->
-> … the reviewed bytes match the commit (`scripts/run_negative_controls.py` = `adf6cf93…86b0` in
-> both the repo and my pristine copy). A harness write into the repo would have shown as
-> dirtiness …
+| # | attack (what it changed, in a copy) | exit | decisive output line (verbatim) | verdict |
+|---|---|---|---|---|
+| 1 | gutted `check_upload_path()` to `return None` (registration + `@check` kept) | 1 | `FAIL: scripts/check_pages_contract.py p2 (COVERAGE_GAP) -- expected a FAIL line but the run stayed GREEN -- this check has no falsifier (or the mutation no longer models a real break)` | BLOCKED |
+| 2 | rewrote `p2`'s expected line to the strict substring `"FAIL: the uploaded path is the repo root"` | 1 | `FAIL: scripts/check_pages_contract.py p2 (MASKED) -- a different check refused first; expected 'FAIL: the uploaded path is the repo root"'` | BLOCKED |
+| 3a | rewrote `p1`'s expected line to the (real, plausible) `p2` path-refusal line | 1 | `FAIL: scripts/check_pages_contract.py p1 (MASKED) -- a different check refused first; expected "FAIL: the upload path is 'browser/', not '.': …"` | BLOCKED |
+| 3b | set `p3`'s `replacement` equal to its `anchor` (no-op) | 1 | `FAIL: scripts/check_pages_contract.py p3 (ROTTEN_ANCHOR) -- the replacement is identical to the anchor: the mutation is a no-op (.github/workflows/pages.yml)` | BLOCKED |
+| 4a | deleted the whole `p4` `Mutation(...)` registration | 1 | `FAIL: control table -- EXPECTED_CONTROLS is 36 but 35 are registered; re-derive this harness rather than deleting a control` | BLOCKED |
+| 4b | emptied the table (`CHECKERS = ()`) | 1 | `FAIL: control table -- no checkers are registered: a run that checks nothing must not print PASS` | BLOCKED |
+| 5 | pre-red baseline (`EXPECTED_CHECKS = 99` in the copy's checker) | 1 | `FAIL: baseline -- scripts/check_pages_contract.py is already red on the unmutated copy: exit=1 RESULT: FAIL (1 of 16 checks failed)` + `controls: 0 fired, 4 not fired of 4 selected` | BLOCKED |
+| 6a | skip path, no playwright, no CI | 0 | `SKIP scripts/smoke_quote_browser.py: requirement not met -- playwright; these controls were NOT run on this machine` + `controls: 0 fired, 0 not fired of 2 selected` | BLOCKED |
+| 6b | same, with `CI=1` | 1 | `RESULT: FAIL (1 of 2 selected controls failed, 0 self-test(s) failed) [negative controls]` | BLOCKED |
+| 7 | broke the harness's own judgement (`judge()` returns `FIRED` unconditionally) | 1 | `FAIL: self-test s2 -- …: expected COVERAGE_GAP, got FIRED (fired as aimed)` (also s3, s5; `harness self-tests: 6 of 9 passed`) | BLOCKED |
+| 8 | full author harness from the **real** repo path | 0 | `RESULT: PASS (36 controls fired, 9 harness self-tests) [negative controls]` · `SECONDS=270` · `checkers: 12 of 12 selected, 0 skipped` | BLOCKED (no repo writes) |
 
-The transcripts are truncated mid-sentence where the subagent's stream was captured (the
-per-attack table lives in that log, outside the repo). Two facts from it are worth keeping
-because they are the ones a reader would otherwise have to take on trust: the reviewed
-`scripts/run_negative_controls.py` hashed **`adf6cf93…86b0`** in both the repo and the
-reviewer's own pristine copy — i.e. the review is of the committed bytes, not of an earlier
-edit — and the harness never dirtied the repo (its `git status --short` went from the unit's 7
-paths to empty after the author's commit, with no harness-caused change).
+Attack 8's state evidence, in its own words: `shasum -a 256 quotes.csv sources.csv` before **and**
+after read `b3bb7848…257e6` / `7aafcb67…27da` — identical — and the repo's top-level dirs
+(`bootstrap/ browser/ data/ docs/ exports/ scripts/`) were unchanged with no new directory.
+
+Its observations, none of which it raised as a defect: `EXPECTED_CONTROLS`/`EXPECTED_CHECKS` remain
+floors and are backed by the verdict-level `COVERAGE_GAP` guard it confirmed in attack 1; the
+checker's baseline line prints `RESULT: PASS (16 checks)` while `EXPECTED_CHECKS = 15` because that
+guard counts itself in the total (pre-existing Pages-guard behaviour, documented in the RUNBOOK as
+"16 checks: 15 contract checks plus a guard on the check count"); and the full run is ~270s here,
+comfortably inside the 300s per-checker timeout.
+
+**State note the reviewer flagged, recorded here rather than glossed:** the author committed the
+artefact *mid-review* (`0f140cc`), so its `git status --short` went from the unit's 7 paths to
+empty. That is a commit, not a harness write, and the reviewed bytes still match the commit — the
+reviewed `scripts/run_negative_controls.py` hashed **`adf6cf93…86b0`** in both the repo and the
+reviewer's own pristine copy. A follow-up docs commit was deliberately held until this report
+landed so the landed revision would not drift under it a second time.
+
+**What this pass did NOT verify (its own list, kept because it is the honest boundary of the
+verdict):** the duplicate-anchor "rot" branch against a real file (only the no-op branch was
+proven end-to-end; `ROTTEN_ANCHOR` is covered by self-test `s4` and by the author's control `h6`);
+the `TIMEOUT`, `CRASH` and `INCONSISTENT` verdicts, `--check` anchor-only mode, `--list` and
+`--require-all` (the CI env var was used as its proxy); and — the largest untested surface —
+per-checker adversarial attacks on the other ten checkers' control tables, which are covered only
+at the "did the control fire" level by the single full run (36/36, 0 skipped), not by gutting each
+of their guards. Multi-file and deletion-style mutations are out of the table's vocabulary by
+design. Closing that last gap is what issue
+[#45](https://github.com/mschwar/Garden-of-Wisdom/issues/45) is for, one suite at a time.
 
 
 ## Evidence
