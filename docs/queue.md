@@ -167,6 +167,28 @@ Living document — update it as items are picked up or closed, don't just appen
       `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`. **Not done in this unit:** wiring these same
       five mutations into `run_negative_controls.py`'s own 36-control table as new registered
       controls — that is a harness change, a natural follow-on, not required to close #45.
+      **Independent QA (own harness, own throwaway copies): PASS, no high/medium defects** — all
+      five gaps re-verified to turn red pre-fix and stay green post-fix, plus vacuousness checks
+      on each new assertion (the `action` check only reaches curation/corpus rows; the T-P7 check
+      reads the audit row, not the live column; the trigger-message check is mapped per-verb).
+      One low-severity note folded back into the handoff: the negative-control table's
+      "36 controls fired" needs `playwright` installed (34/9 with one skip otherwise, reproducible
+      on unmodified `main`, not introduced by this unit).
+      **Landed:** commits `79bcba3` + `122f381`, PR
+      [#47](https://github.com/mschwar/Garden-of-Wisdom/pull/47), **merged as `2c5afe8`**
+      (2026-09-14). CI: PR smoke run
+      [34876100080](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34876100080)
+      **success** — the job log's own lines show all six W1 suites and the negative-control step
+      genuinely executing (`RESULT: PASS (36 controls fired, 9 harness self-tests) [negative
+      controls]`, `checkers: 12 of 12 selected, 0 skipped`), not merely the step exiting 0; on
+      `main` after the merge, smoke run
+      [34877150921](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34877150921)
+      **success** and Pages deploy run
+      [34877150908](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/34877150908)
+      **success**. Live acceptance on the merged `main`: `/`, `/browser/index.html`,
+      `/quotes.csv`, `/sources.csv` all **200**; `/.gitignore`, `/.git/config` and
+      `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
+      (`b3bb7848…` / `7aafcb67…`).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
