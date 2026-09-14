@@ -475,6 +475,14 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
     check(n02["curation_state"] == "rejected" and n02["corpus_state"] == "candidate_only",
           "the reversal strands no dimension: curation=rejected, corpus=candidate_only",
           f"curation={n02['curation_state']} corpus={n02['corpus_state']}")
+    # issue #45 gap 3: the T-P7 audit row's own recorded to_state, not only the live column.
+    tp7_rows = [
+        row for row in decision_rows(store, "cand-N02")
+        if row["transition_id"] == "T-P7"
+    ]
+    check(bool(tp7_rows) and tp7_rows[0]["to_state"] == "candidate_only",
+          "the T-P7 audit row itself records to_state=candidate_only (not just the live corpus_state)",
+          str(tp7_rows[0] if tp7_rows else None))
 
     reopen = decide("reopen", store, "cand-W01", "new information arrived")
     check(reopen.returncode == 0, "reopen cand-W01 (exit 0)", out_text(reopen).strip()[:170])

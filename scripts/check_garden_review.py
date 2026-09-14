@@ -401,6 +401,17 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
                     and row.get("transition_id") and row.get("occurred_at")):
                 audited = False
     check(audited, "every decision row carries actor, reason, from/to (in the vocab), transition_id and a timestamp")
+
+    # issue #45 gap 2: the `action` vocabulary itself was never inspected.
+    action_ok = True
+    for d in all_candidate_ids(trans_store):
+        for row in decision_rows(trans_store, d):
+            expected_action = "curation-decision" if row["dimension"] == "curation" else "corpus-follow-on"
+            if row.get("action") != expected_action:
+                action_ok = False
+    check(action_ok,
+          "every curation-dimension row is recorded as 'curation-decision' and every corpus-dimension "
+          "follow-on row as 'corpus-follow-on'")
     for d in ("cand-t08", "cand-t09"):
         for row in decision_rows(trans_store, d):
             try:

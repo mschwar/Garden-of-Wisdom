@@ -137,19 +137,36 @@ Living document — update it as items are picked up or closed, don't just appen
       was raised rather than the coverage trimmed. Design trail:
       `GARDEN_NEGATIVE_CONTROLS_HANDOFF.md` (8 author controls + two review passes; the second
       returned **PASS, no high/medium defects**).
-- [ ] **OPEN — five checker coverage gaps found while authoring the control table.** A green
-      mutation is the signature of a documented contract with no falsifier, and the authoring
-      pass found five, each re-verified independently (fresh copy, one substitution, checker run
-      from the copy root): `garden_normalize._comparison_view()`'s documented case-folding has
-      no case-differing fixture; `check_garden_review.py` never inspects a decision row's
-      `action` vocabulary; `check_garden_e2e.py` asserts the live `corpus_state` but not the
-      T-P7 audit row's recorded `to_state`; D3's "do not widen the `quotes.csv` enum" ruling has
-      no falsifier anywhere (`check_garden_ledger.py` only hashes the CSVs); and the
-      captures-UPDATE trigger's `RAISE` *message* is unguarded. Filed as
+- [x] **CLOSED 2026-09-14 — five checker coverage gaps found while authoring the control
+      table.** A green mutation is the signature of a documented contract with no falsifier, and
+      the authoring pass found five, each re-verified independently (fresh copy, one
+      substitution, checker run from the copy root): `garden_normalize._comparison_view()`'s
+      documented case-folding has no case-differing fixture; `check_garden_review.py` never
+      inspects a decision row's `action` vocabulary; `check_garden_e2e.py` asserts the live
+      `corpus_state` but not the T-P7 audit row's recorded `to_state`; D3's "do not widen the
+      `quotes.csv` enum" ruling has no falsifier anywhere (`check_garden_ledger.py` only hashes
+      the CSVs); and the captures-UPDATE trigger's `RAISE` *message* is unguarded. Filed as
       [#45](https://github.com/mschwar/Garden-of-Wisdom/issues/45) with the exact mutation and
       observed output for each. Not fixed in the harness unit: every one is a fixture/check
-      change to the acceptance suite that owns it, so it belongs to the unit that owns that
+      change to the acceptance suite that owns it, so it belonged to the unit that owns that
       suite.
+      **Fixed in this unit** (branch `fix/checker-coverage-gaps`): each gap closed inside the
+      suite that owns its contract, not the harness — a case-differing fixture pair in
+      `check_garden_normalize.py`; an `action`-vocabulary assertion in `check_garden_review.py`;
+      a direct read of the T-P7 audit row's own `to_state` in `check_garden_e2e.py`; a new first
+      section in `check_garden_ledger.py` reading `quotes.csv` directly and asserting the
+      3-valued `verification_status` enum (D3's own suite now falsifies D3's own ruling, rather
+      than relying on `validate_quotes.py`'s pre-existing, unrelated enum guard); and a
+      RAISE-message assertion alongside the existing `IntegrityError` check in
+      `check_garden_store.py`. Each fix was verified against the exact anchor/replacement #45
+      recorded, confirmed to turn the suite red where it had previously stayed green, then
+      reverted. All twelve stdlib suites and the full 36-control negative-control table re-run
+      `RESULT: PASS` after the fixes (`checkers: 12 of 12 selected, 0 skipped`).
+      `quotes.csv`/`sources.csv` untouched throughout (byte-identical `b3bb7848…` / `7aafcb67…`,
+      the D7-updated pair; no working-tree diff on either file at any point). Design trail:
+      `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`. **Not done in this unit:** wiring these same
+      five mutations into `run_negative_controls.py`'s own 36-control table as new registered
+      controls — that is a harness change, a natural follow-on, not required to close #45.
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
