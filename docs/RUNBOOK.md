@@ -351,7 +351,7 @@ Checking only `/.git/config` is what let #23 ship: the artifact can be rooted co
 still publish dotfiles, so probe both. The artifact itself can be listed without a deploy —
 `gh api repos/mschwar/Garden-of-Wisdom/actions/artifacts?per_page=5` to find the newest
 `github-pages` artifact, then download its zip and `tar -tf artifact.tar` (no member should
-start with `./.`).
+start with `./.` — `tar -tf artifact.tar | grep -E '/\.'` must be empty, at any depth).
 
 To watch a deploy instead: `gh run list --workflow pages.yml --limit 3` then
 `gh run watch <id>`.
@@ -363,7 +363,7 @@ python3 scripts/check_pages_contract.py
 ```
 
 Exits 0 with `RESULT: PASS` / non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
-check (**15** checks: 14 contract checks plus a guard on the check count, so deleting a
+check (**16** checks: 15 contract checks plus a guard on the check count, so deleting a
 check fails the run). Stdlib only, no network, writes nothing.
 
 The live page fetches `../quotes.csv` and `../sources.csv`, so a Pages artifact rooted
@@ -372,21 +372,34 @@ action's hidden-file exclusion silently publishes tracked dotfiles. Neither fail
 the deploy job fail, and no other test in this repo can see the workflow files at all — the
 contract lived only in prose until this guard. It reads `.github/workflows/pages.yml` and
 asserts the parts a repo change can break: the workflow still parses into the shape the
-guard understands (else it FAILs and asks for a re-derive rather than passing), `path:` is
-`'.'`, the upload action is a **verified** major (`VERIFIED_UPLOAD_MAJORS` — v4/v5 exclude
-top-level dotfiles, v3 does not), `include-hidden-files` is not switched on, the artifact
-name is still `github-pages`, the `refs/heads/main` guard is present, the `pages`
-concurrency group never cancels an in-flight deploy, `pages: write` + `id-token: write` are
-granted — and then that `browser/app.js` still fetches those two `../` paths, that both CSVs
-are at the repo root, and that the root `index.html` shim still forwards to
-`browser/index.html`.
+guard understands (a single `steps:` list whose entries all sit at one indent — anything else
+FAILs and asks for a re-derive rather than passing), `path:` is `'.'`, exactly one step uses
+the upload action and it runs **before** the deploy step, that action's major is
+**verified** (`VERIFIED_UPLOAD_MAJORS` — v4/v5 exclude top-level dotfiles, v3 does not; `@vN.M.P`
+tags are read as major N, and a commit pin FAILs because it cannot be checked against the
+table), `include-hidden-files` is not switched on, the artifact name is still `github-pages`,
+the `refs/heads/main` guard is present, the `pages` concurrency group never cancels an
+in-flight deploy, `pages: write` + `id-token: write` are granted — and then that
+`browser/app.js` still fetches those two `../` paths (with `//` comments stripped, so keeping
+the old path in a comment does not count), that both CSVs are at the repo root, and that the
+root `index.html` shim still **redirects** to `browser/index.html` (its meta-refresh or
+`location.replace`, not merely the canonical link).
+
+Two checks exist because they were caught failing to do their job, both by a control rather
+than by reading the code: the environment URL is compared **exactly** (a `page_url` →
+`page_url_unused` mutation stayed green against a substring test), and the shim is checked at
+the level of the redirect mechanism (a substring test was satisfied by the shim's
+`<link rel="canonical">` even after the redirect was repointed).
 
 CI runs it (`browser-smoke.yml`, step "Guard the Pages deploy contract"), so a pull request
 that breaks the contract is red before it can deploy. It is a *config* guard: it proves the
 workflow still asks for a rooted artifact from an action version that excludes hidden files,
 not what a given deployment published — that is what the live probes above are for. It was
-added after issue #23; its 16 negative controls (one per check, plus the shape and
-count guards) are recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
+added after issue #23; its **28** negative controls — one per check, the two shape guards, the
+count guard, and the regression cases that must stay green — are recorded in
+`GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`. Opening the harness itself (so the controls are
+re-runnable by someone other than the author, and a gutted check body cannot hide behind the
+count guard) is filed as issue #43 and is deliberately not part of this unit.
 
 
 ## Re-derive the canonical CSVs from the frozen originals

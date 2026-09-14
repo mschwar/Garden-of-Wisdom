@@ -80,7 +80,7 @@ DEPLOY_ACTION = "actions/deploy-pages"
 # deploy step then fails to find an artifact.
 REQUIRED_ARTIFACT_NAME = "github-pages"
 
-EXPECTED_CHECKS = 14
+EXPECTED_CHECKS = 15
 
 CHECKS = []
 
@@ -111,34 +111,48 @@ def _indent(line):
 
 
 def _blocks(text):
-    """Return (header_lines, steps) for the workflow's first ``steps:`` list.
+    """Return (header_lines, steps) for the workflow's single ``steps:`` list.
 
     A step is ``{"dash_indent": int, "lines": [str, ...]}``. Raises ContractShapeError when
-    no ``steps:`` list is found -- a silent pass on an unreadable file is the defect class
-    this guard exists to stop, so the caller turns that into a FAIL.
+    the file is not shaped the way this guard reads it -- a single step list whose entries all
+    sit at one indent. A silent pass on an unreadable file is the defect class this guard
+    exists to stop, so the caller turns that into a FAIL: a second ``steps:`` list (a job
+    inserted before the deploy job) or a step at a different indent (which is not valid YAML
+    and would not run) must send a human back to re-derive the guard, never pass quietly.
     """
     lines = [ln.rstrip("\n") for ln in text.splitlines()]
-    for index, line in enumerate(lines):
-        if not re.match(r"^\s*steps:\s*$", line):
-            continue
-        base = _indent(line)
-        body = []
-        for later in lines[index + 1:]:
-            if later.strip() and _indent(later) <= base:
-                break
-            body.append(later)
-        step_indents = sorted({_indent(ln) for ln in body if re.match(r"^\s*- ", ln)})
-        if not step_indents:
-            raise ContractShapeError("found a `steps:` list with no step entries")
-        dash_indent = step_indents[0]
-        starts = [i for i, ln in enumerate(body) if re.match(r"^\s*- ", ln)
-                  and _indent(ln) == dash_indent]
-        steps = []
-        for position, start in enumerate(starts):
-            end = starts[position + 1] if position + 1 < len(starts) else len(body)
-            steps.append({"dash_indent": dash_indent, "lines": body[start:end]})
-        return lines, steps
-    raise ContractShapeError("no `steps:` list found in the workflow")
+    starts_of_lists = [i for i, line in enumerate(lines)
+                       if re.match(r"^\s*steps:\s*$", line)]
+    if not starts_of_lists:
+        raise ContractShapeError("no `steps:` list found in the workflow")
+    if len(starts_of_lists) > 1:
+        raise ContractShapeError(
+            f"{len(starts_of_lists)} `steps:` lists found; this guard reads the single "
+            "deploy job's list -- re-derive it"
+        )
+    index = starts_of_lists[0]
+    base = _indent(lines[index])
+    body = []
+    for later in lines[index + 1:]:
+        if later.strip() and _indent(later) <= base:
+            break
+        body.append(later)
+    step_indents = sorted({_indent(ln) for ln in body if re.match(r"^\s*- ", ln)})
+    if not step_indents:
+        raise ContractShapeError("found a `steps:` list with no step entries")
+    if len(step_indents) > 1:
+        raise ContractShapeError(
+            f"step entries sit at {step_indents} instead of one indent; the file is not the "
+            "shape this guard reads -- re-derive it"
+        )
+    dash_indent = step_indents[0]
+    starts = [i for i, ln in enumerate(body) if re.match(r"^\s*- ", ln)
+              and _indent(ln) == dash_indent]
+    steps = []
+    for position, start in enumerate(starts):
+        end = starts[position + 1] if position + 1 < len(starts) else len(body)
+        steps.append({"dash_indent": dash_indent, "lines": body[start:end]})
+    return lines, steps
 
 
 def _parse_step(step):
@@ -197,9 +211,30 @@ def _find_step(steps, action):
     return [s for s in steps if (_step_uses(s) or "").startswith(action + "@")]
 
 
-def _action_major(reference):
-    match = re.match(r"^[^@]+@v(\d+)$", reference or "")
-    return int(match.group(1)) if match else None
+def _find_step_index(steps, action):
+    for index, step in enumerate(steps):
+        if (_step_uses(step) or "").startswith(action + "@"):
+            return index
+    return None
+
+
+def _action_version(reference):
+    """Classify a `uses:` reference: ("major", N) for @vN / @vN.M(.P), ("sha", None) for a
+    commit pin, ("unknown", None) otherwise.
+
+    A commit pin is its own case rather than an error: it is a legitimate pinning choice, but
+    it cannot be checked against the verified-major table, so it must FAIL with a re-derive
+    instruction instead of being silently accepted (foreign QA L2).
+    """
+    if not reference or "@" not in reference:
+        return ("unknown", None)
+    tag = reference.split("@", 1)[1]
+    match = re.match(r"^v(\d+)(?:\.\d+){0,2}$", tag)
+    if match:
+        return ("major", int(match.group(1)))
+    if re.match(r"^[0-9a-f]{7,40}$", tag):
+        return ("sha", None)
+    return ("unknown", None)
 
 
 def _nested(lines, parent, key):
@@ -214,10 +249,13 @@ def _nested(lines, parent, key):
             continue
         indent = _indent(line)
         if parent_indent is not None and indent > parent_indent:
-            if indent == parent_indent + 2:
-                match = re.match(r"^\s*(\S+):\s*(.*)$", line)
-                if match and match.group(1) == key:
-                    return match.group(2).strip()
+            # Any indent deeper than the parent counts: a mapping's keys may be indented
+            # freely, and requiring exactly parent+2 made a uniform re-indent of
+            # `environment:`/`permissions:`/`concurrency:` fail naming a break that does not
+            # exist (found by foreign QA, L1).
+            match = re.match(r"^\s*(\S+):\s*(.*)$", line)
+            if match and match.group(1) == key:
+                return match.group(2).strip()
             continue
         parent_indent = None
         match = re.match(r"^(\s*)([A-Za-z0-9_.-]+):\s*$", line)
@@ -340,25 +378,54 @@ def check_main_guard():
 
 # ---------------------------------------------------------------- upload step
 
-@check("an upload step uses actions/upload-pages-artifact")
+@check("exactly one step uses actions/upload-pages-artifact")
 def check_upload_step_present():
     parsed = _workflow_or_none()
     if parsed is None:
         return "workflow unreadable (see the shape check above)"
-    if not _find_step(parsed["steps"], UPLOAD_ACTION):
-        return f"no step uses {UPLOAD_ACTION}@vN; re-derive this guard"
+    uploads = _find_step(parsed["steps"], UPLOAD_ACTION)
+    if len(uploads) != 1:
+        return (
+            f"{len(uploads)} step(s) use {UPLOAD_ACTION}@vN; exactly one is required, because "
+            "the checks below read that step -- re-derive this guard"
+        )
+    return None
+
+
+@check("the upload step runs before the deploy step")
+def check_step_order():
+    parsed = _workflow_or_none()
+    if parsed is None:
+        return "workflow unreadable (see the shape check above)"
+    upload = _find_step_index(parsed["steps"], UPLOAD_ACTION)
+    deploy = _find_step_index(parsed["steps"], DEPLOY_ACTION)
+    if upload is None or deploy is None:
+        return "a step is missing (see the checks above)"
+    if upload > deploy:
+        return (
+            "the deploy step runs before the upload step; the artifact it deploys would not "
+            "exist yet"
+        )
     return None
 
 
 @check("the upload action major excludes top-level hidden files")
 def check_upload_major():
-    uploads = _upload_steps()
-    if not uploads:
-        return "upload step missing (see the step-presence check above)"
-    reference = _step_uses(uploads[0])
-    major = _action_major(reference)
-    if major is None:
-        return f"could not read a major version from {reference!r}; re-derive this guard"
+    step = _the_upload_step()
+    if step is None:
+        return "the single upload step is missing (see the step-presence check above)"
+    reference = _step_uses(step)
+    kind, major = _action_version(reference)
+    if kind == "unknown":
+        return (
+            f"could not read a version from {reference!r}; re-derive this guard"
+        )
+    if kind == "sha":
+        return (
+            f"{reference} pins a commit, which cannot be checked against the verified-major "
+            "table: confirm the pinned commit still tars with the hidden-file exclusion "
+            "(read its action.yml) and extend this guard with the evidence"
+        )
     if major < MIN_UPLOAD_MAJOR:
         return (
             f"{UPLOAD_ACTION}@{major} is below the minimum verified major {MIN_UPLOAD_MAJOR} "
@@ -376,10 +443,10 @@ def check_upload_major():
 
 @check("the uploaded path is the repo root ('.')")
 def check_upload_path():
-    uploads = _upload_steps()
-    if not uploads:
-        return "upload step missing (see the step-presence check above)"
-    path = _step_with(uploads[0]).get("path")
+    step = _the_upload_step()
+    if step is None:
+        return "the single upload step is missing (see the step-presence check above)"
+    path = _step_with(step).get("path")
     if path is None:
         return "the upload step sets no `path:` -- the action default is `_site/`, not the repo root"
     if path.strip("'\"") != ".":
@@ -392,10 +459,10 @@ def check_upload_path():
 
 @check("the upload step does not include hidden files")
 def check_upload_hidden_files():
-    uploads = _upload_steps()
-    if not uploads:
-        return "upload step missing (see the step-presence check above)"
-    value = _step_with(uploads[0]).get("include-hidden-files")
+    step = _the_upload_step()
+    if step is None:
+        return "the single upload step is missing (see the step-presence check above)"
+    value = _step_with(step).get("include-hidden-files")
     if value is not None and value.strip("'\"").lower() == "true":
         return (
             "include-hidden-files is 'true': top-level dotfiles would be published "
@@ -406,10 +473,10 @@ def check_upload_hidden_files():
 
 @check("the upload step keeps the artifact name `github-pages`")
 def check_artifact_name():
-    uploads = _upload_steps()
-    if not uploads:
-        return "upload step missing (see the step-presence check above)"
-    name = _step_with(uploads[0]).get("name")
+    step = _the_upload_step()
+    if step is None:
+        return "the single upload step is missing (see the step-presence check above)"
+    name = _step_with(step).get("name")
     if name is not None and name.strip("'\"") != REQUIRED_ARTIFACT_NAME:
         return (
             f"the artifact name is {name!r}, not {REQUIRED_ARTIFACT_NAME!r}: "
@@ -437,17 +504,32 @@ def check_deploy_step():
     return None
 
 
-def _upload_steps():
+def _the_upload_step():
+    """The single upload step, or None when there is not exactly one (see the presence check)."""
     parsed = _workflow_or_none()
-    return [] if parsed is None else _find_step(parsed["steps"], UPLOAD_ACTION)
+    if parsed is None:
+        return None
+    uploads = _find_step(parsed["steps"], UPLOAD_ACTION)
+    return uploads[0] if len(uploads) == 1 else None
 
 
 # ---------------------------------------------------------------- the layout it serves
 
+def _without_js_comments(text):
+    """Drop `//` line comments: a fetch that was repointed but left in a comment must not
+    satisfy this check (foreign QA gap p43)."""
+    return "\n".join(re.sub(r"//.*$", "", line) for line in text.splitlines())
+
+
+def _without_html_comments(text):
+    """Drop `<!-- ... -->` blocks, same reason as `_without_js_comments` (gap p49)."""
+    return re.sub(r"<!--.*?-->", "", text, flags=re.S)
+
+
 @check("browser/app.js still fetches ../quotes.csv and ../sources.csv")
 def check_app_fetches():
     try:
-        app = _read(APP_JS)
+        app = _without_js_comments(_read(APP_JS))
     except ContractShapeError as exc:
         return str(exc)
     for target in ("../quotes.csv", "../sources.csv"):
@@ -475,11 +557,23 @@ def check_csvs_at_root():
 @check("the root index.html shim still forwards to browser/index.html")
 def check_root_shim():
     try:
-        shim = _read(ROOT_INDEX)
+        shim = _without_html_comments(_read(ROOT_INDEX))
     except ContractShapeError as exc:
         return str(exc)
-    if "browser/index.html" not in shim:
-        return "the root index.html no longer forwards to browser/index.html"
+    # Mechanism-level, not "the path appears somewhere": the shim's <link rel="canonical">
+    # also names browser/index.html, so a substring test stayed green with the redirect
+    # itself repointed (foreign QA gap p49). Comments are stripped first, so keeping the old
+    # path in a comment does not count as a redirect.
+    redirect_patterns = (
+        r'http-equiv=["\']refresh["\'][^>]*url=browser/index\.html',
+        r'url=browser/index\.html[^>]*http-equiv=["\']refresh["\']',
+        r'location\.replace\(\s*["\']browser/index\.html["\']\s*\)',
+    )
+    if not any(re.search(pattern, shim) for pattern in redirect_patterns):
+        return (
+            "the root index.html has no meta-refresh or location.replace redirect to "
+            "browser/index.html (the canonical link alone is not a redirect)"
+        )
     return None
 
 

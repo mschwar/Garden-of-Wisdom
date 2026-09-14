@@ -810,7 +810,7 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 - [x] **The Pages deploy contract now has an automated falsifier, and issue #23's premise was
       checked against the artifact rather than the prose: it does not reproduce.** Branch
-      `ci/guard-pages-deploy-contract`. New `scripts/check_pages_contract.py` (**15** checks: 14
+      `ci/guard-pages-deploy-contract`. New `scripts/check_pages_contract.py` (**16** checks: 15
       contract checks + a count guard so that deleting a check fails the run), wired into CI as a
       new `browser-smoke.yml` step ("Guard the Pages deploy contract"), so a pull request that
       breaks the contract is red **before** it can deploy.
@@ -824,12 +824,30 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       in-flight deploy; `pages: write` + `id-token: write` are granted; and the layout it
       serves — `browser/app.js` still fetches `../quotes.csv` / `../sources.csv`, both CSVs are
       at the repo root, the root `index.html` shim still forwards to `browser/index.html`.
-      **16 negative controls** (one per check plus the shape and count guards), each turning the
-      run red with its own aimed first `FAIL:` line, recorded in
-      `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`. The harness earned its keep: control `c13`
-      (a `page_url` → `page_url_unused` mutation) initially left the run **green**, exposing a
-      prefix-match in the deploy-step check; the check now compares the environment URL exactly,
-      and `c16` (the deploy step's `id`) gives the other half of that check its own falsifier.
+      **28 negative controls** (one per check, the shape and count guards, and the valid edits
+      that must stay green), each turning the run red with its own aimed first `FAIL:` line —
+      recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`. The harness earned its keep twice:
+      control `c13` (a `page_url` → `page_url_unused` mutation) and control `c23` (repointing the
+      root shim's redirect while its `<link rel="canonical">` still named the old path) both
+      initially left the run **green**, exposing a substring test in the deploy-step check and a
+      mechanism-free substring test in the shim check; both checks were rebuilt (exact URL
+      comparison; meta-refresh/`location.replace` at the mechanism level) and `c16` gives the
+      other half of the deploy-step check its own falsifier.
+      **Foreign QA (independent reviewer, own harness, 59 mutations): PASS, no high/medium
+      defect, four low findings — all fixed before merge.** The deploy-step substring test above;
+      `_nested` demanding keys at exactly `parent + 2`, which made a uniform re-indent of
+      `concurrency:`/`permissions:`/`environment:` FAIL naming a break that did not exist
+      (three controls now require those edits to stay green); `@vM.N(.P)` and commit pins
+      rejected as "unreadable" (now: `vN.M.P` reads as major N, a commit pin FAILs with a
+      "cannot be checked against the verified-major table" instruction); and only the first
+      upload step being validated, so a second one with `path: 'browser/'` was invisible (now:
+      exactly one upload step is required, plus a step-order check). The reviewer also found a
+      workspace with mixed step indents — not valid YAML — read as PASS; the shape guard now
+      rejects both that and a second `steps:` list. **Documented residual limits:** a push filter
+      that migrates to another trigger still satisfies the trigger check (backstopped by the
+      `refs/heads/main` job guard), a duplicate `concurrency:` block is not detected, an empty
+      `quotes.csv` passes (`validate_quotes.py` is the data guard), and the count guard counts
+      *registrations*, so a gutted check body is undetectable from inside the guard.
       **Issue #23's evidence, re-measured (2026-09-14):** the newest `github-pages` artifact of
       the newest deploy (run `34803736228`, artifact `10332485746`) contains **no hidden member
       at all** — `tar -tf artifact.tar | grep -E '^\./\.[^/]*$'` and `tar -tf artifact.tar |
@@ -849,4 +867,8 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       Decision recorded in `docs/DECISIONS.md` ("the Pages deploy contract gets a config guard").
       `quotes.csv` / `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`). Out of scope,
       filed as [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41): automating the live
-      acceptance checklist (see the infra section above).
+      acceptance checklist (see the infra section above) — and as
+      [#43](https://github.com/mschwar/Garden-of-Wisdom/issues/43): committing and CI-wiring the
+      negative-control harness, so a checker's own falsifiability is machine-checked instead of
+      asserted in a handoff (foreign QA could not verify the author's control table, and a check
+      body gutted to `return None` is invisible to the count guard).

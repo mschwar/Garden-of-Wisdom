@@ -1091,7 +1091,7 @@ see the artifact; the deploy job **succeeds** whether or not the contract holds.
    merge, never by a closing keyword in a PR or commit body (this repo has twice lost an issue
    that way, and the two failure modes must stay distinguishable).
 2. **The durable fix for the class is a config guard, not a one-off doc edit.**
-   `scripts/check_pages_contract.py` (15 checks: 14 contract checks + a count guard so that
+   `scripts/check_pages_contract.py` (16 checks: 15 contract checks + a count guard so that
    deleting a check fails the run) asserts the repository-side half of the contract: the
    workflow still parses into the shape the guard reads (else it FAILs and asks for a
    re-derive), the upload `path` is `'.'`, the upload action major is **verified**,
@@ -1099,10 +1099,30 @@ see the artifact; the deploy job **succeeds** whether or not the contract holds.
    `refs/heads/main` guard is present, the `pages` concurrency group never cancels an
    in-flight deploy, `pages: write` + `id-token: write` are granted, `browser/app.js` still
    fetches `../quotes.csv` / `../sources.csv`, both CSVs are at the root, and the root
-   `index.html` shim still forwards to `browser/index.html`. It is **CI-wired**
-   (`browser-smoke.yml`, step "Guard the Pages deploy contract"), so a pull request that
-   breaks the contract is red before it can deploy. 16 negative controls (one per check plus
-   the shape and count guards) are recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
+   `index.html` shim still redirects to `browser/index.html`, exactly one step uses the upload
+   action and it runs before the deploy step. It is **CI-wired** (`browser-smoke.yml`, step
+   "Guard the Pages deploy contract"), so a pull request that breaks the contract is red before
+   it can deploy. **28 negative controls** (one per check, the shape and count guards, and the
+   valid edits that must stay green) are recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
+   **A foreign QA pass (independent reviewer, own harness, 59 mutations) returned PASS with no
+   high/medium defect and four low findings, all of which were fixed before merge:** the
+   deploy-step check compared the environment URL by substring (fixed: exact comparison, plus a
+   second control for the other half of that check); `_nested` demanded keys at exactly
+   `parent + 2`, so a uniform re-indent of `concurrency:`/`permissions:`/`environment:` produced
+   a FAIL naming a break that did not exist (fixed; three controls now require those edits to
+   stay green); a `vM.N(.P)` tag or a commit pin was rejected as unreadable (fixed: `vN.M.P`
+   reads as major N, and a commit pin FAILs with a "cannot be checked against the table"
+   instruction instead of an "unreadable" one); and only the first upload step was checked, so
+   a second upload step with `path: 'browser/'` was invisible (fixed: exactly one upload step is
+   required). The same pass found the shim check was satisfied by the canonical link with the
+   redirect repointed, and that a workspace with mixed step indents — which is not valid YAML —
+   read as PASS; both are now FAILs. **Documented residual limits**, kept rather than papered
+   over: a push filter that migrates to another trigger still satisfies the trigger check
+   (backstopped by the separately-checked `refs/heads/main` job guard), a duplicate
+   `concurrency:` block is not detected, an empty `quotes.csv` passes (the data guard is
+   `validate_quotes.py`), and the count guard counts *registrations*, so a check body gutted to
+   `return None` is undetectable from inside the guard — which is why the harness itself is
+   filed to be committed and CI-wired as issue #43.
 3. **`VERIFIED_UPLOAD_MAJORS` is a closed set, and an unverified major FAILs.** v4 and v5 are
    verified; a major below 4 FAILs naming the #23 mechanism, and a major above the set FAILs
    with an instruction to read the action's `action.yml` and extend the set with the evidence.
