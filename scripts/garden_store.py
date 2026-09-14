@@ -186,6 +186,31 @@ DECISION_COLUMNS = (
     "to_state",
     "reason",
 )
+#: The `unverifiable` side-car ledger (decision D3, 2026-09-12): one row per LEGACY row id
+#: adjudicated unverifiable, so a record proven unverifiable is no longer indistinguishable
+#: from a never-checked row in the 3-valued `quotes.csv` enum. Keyed by the legacy `id`
+#: column, never a `candidates` FK -- legacy rows are not store candidates and may never be.
+#: See `docs/program/D3_UNVERIFIABLE_LEDGER.md`.
+LEGACY_VERIFICATION_COLUMNS = (
+    "legacy_row_id",
+    "research_state",
+    "transition_id",
+    "reason",
+    "evidence_ref",
+    "decided_by",
+    "decided_at",
+)
+#: The four research transitions that terminate in `unverifiable`, exactly as
+#: `docs/program/STATE_MODEL.md` section 2 lists them, mapped to their documented `From`
+#: state. The `From` is derived from the transition so the audit row always agrees with the
+#: model; a legacy row's *true* prior research state is unknown (D4), so the declared route
+#: is recorded as the operator's stated path, never an invented encounter.
+UNVERIFIABLE_FROM_STATE: dict[str, str] = {
+    "T-R6": "in_research",
+    "T-R7": "needs_more_evidence",
+    "T-R10": "disputed",
+    "T-R11": "verified",
+}
 
 #: Export sections, in fixed order: (name, columns, ORDER BY). Deterministic ordering is the
 #: whole point -- the export must be a pure function of the store.
@@ -195,6 +220,7 @@ EXPORT_SECTIONS = (
     ("candidates", CANDIDATE_COLUMNS, "ORDER BY candidate_id"),
     ("duplicate_hints", HINT_COLUMNS, "ORDER BY candidate_id, hint_seq"),
     ("decisions", DECISION_COLUMNS, "ORDER BY seq"),
+    ("legacy_verification", LEGACY_VERIFICATION_COLUMNS, "ORDER BY legacy_row_id"),
 )
 ROW_TABLES = {
     "captures": "captures",
@@ -202,6 +228,7 @@ ROW_TABLES = {
     "candidates": "candidates",
     "duplicate_hints": "duplicate_hints",
     "decisions": "decisions",
+    "legacy_verification": "legacy_verification",
 }
 
 
@@ -363,7 +390,28 @@ _DDL_0001 = (
 
 #: (migration_id, statements). Appending here is how schema change happens; never edit an
 #: applied migration's statements in place -- add a new id.
-MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (("0001_create_core", _DDL_0001),)
+_DDL_0002 = (
+    # The `unverifiable` side-car ledger (decision D3, 2026-09-12). Keyed by legacy row id;
+    # asserts the terminal research state `unverifiable` and the STATE_MODEL transition that
+    # produced it. The row is NOT a `candidates` FK: legacy rows are not store candidates.
+    # `evidence_ref` names the source of the adjudication (an issue, an export review, 'none').
+    f"""
+    CREATE TABLE IF NOT EXISTS legacy_verification(
+        legacy_row_id  TEXT PRIMARY KEY,
+        research_state TEXT NOT NULL CHECK(research_state = 'unverifiable'),
+        transition_id  TEXT NOT NULL CHECK(transition_id IN ('T-R6','T-R7','T-R10','T-R11')),
+        reason         TEXT NOT NULL CHECK(length(reason) > 0),
+        evidence_ref   TEXT NOT NULL CHECK(length(evidence_ref) > 0),
+        decided_by     TEXT NOT NULL CHECK(length(decided_by) > 0),
+        decided_at     TEXT NOT NULL
+    )
+    """,
+)
+
+MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("0001_create_core", _DDL_0001),
+    ("0002_unverifiable_ledger", _DDL_0002),
+)
 
 
 def connect(db_path: Path | str) -> sqlite3.Connection:
@@ -882,6 +930,167 @@ class Store:
             "seq": seqs,
         }
 
+    def mark_legacy_unverifiable(
+        self,
+        legacy_row_id: str,
+        *,
+        transition_id: str,
+        reason: str,
+        evidence_ref: str = "none",
+        decided_by: str = "operator",
+        decided_at: str | None = None,
+    ) -> dict:
+        """Record that a legacy row (a `quotes.csv` `id`) is `unverifiable` (decision D3).
+
+        The `unverifiable` side-car ledger is keyed by the legacy row id and leaves the
+        `quotes.csv` enum untouched, so a record proven unverifiable is no longer
+        indistinguishable from a never-checked row. Every write appends a `research`
+        `decisions` audit row (the declared STATE_MODEL transition) in the SAME transaction,
+        so there is never a ledger row without its audit row.
+
+        Guarded before anything is written: the id, `reason`, `evidence_ref` and `decided_by`
+        must be non-empty; `transition_id` must be one of the four transitions that terminate
+        in `unverifiable` (T-R6 / T-R7 / T-R10 / T-R11); and the row must not already be in
+        the ledger -- a legacy row is either `unverifiable` or it is not, so re-adjudicating
+        means `reopen` (T-R12) then `mark` again, never a silent overwrite.
+
+        `from_state` for the audit row is derived from `transition_id` per STATE_MODEL.md
+        section 2. The legacy row's true prior research state is unknown (D4), so the
+        declared route is what the operator records as the path to the terminal outcome.
+
+        Returns `{legacy_row_id, research_state, transition_id, seq}`.
+        """
+        _require(bool(legacy_row_id), "legacy_row_id must be non-empty")
+        _require(bool(reason), "every unverifiable adjudication must carry a reason")
+        _require(bool(evidence_ref), "evidence_ref is required ('none' is the explicit no-reference assertion)")
+        _require(bool(decided_by), "decided_by must be non-empty")
+        _require(
+            transition_id in UNVERIFIABLE_FROM_STATE,
+            f"transition_id {transition_id!r} does not terminate in unverifiable "
+            f"(STATE_MODEL.md lists {sorted(UNVERIFIABLE_FROM_STATE)})",
+        )
+        row = self.conn.execute(
+            "SELECT legacy_row_id FROM legacy_verification WHERE legacy_row_id = ?",
+            (legacy_row_id,),
+        ).fetchone()
+        if row is not None:
+            raise StoreError(
+                f"legacy row {legacy_row_id!r} is already in the unverifiable ledger; "
+                f"re-adjudicate with reopen (T-R12) then mark again, never a silent overwrite"
+            )
+        from_state = UNVERIFIABLE_FROM_STATE[transition_id]
+        # One clock read for the whole adjudication: the ledger row's decided_at and the
+        # audit row's occurred_at MUST be the same instant. When decided_at is omitted, take
+        # a single now_iso() here and reuse it -- two separate reads (the audit path calls
+        # now_iso() again) would record two different clocks for one decision (foreign-QA D-1).
+        stamp = decided_at or now_iso()
+        try:
+            self.conn.execute(
+                f"INSERT INTO legacy_verification ({', '.join(LEGACY_VERIFICATION_COLUMNS)}) "
+                f"VALUES ({', '.join('?' * len(LEGACY_VERIFICATION_COLUMNS))})",
+                (
+                    legacy_row_id,
+                    "unverifiable",
+                    transition_id,
+                    reason,
+                    evidence_ref,
+                    decided_by,
+                    stamp,
+                ),
+            )
+            seq = self._insert_decision(
+                subject_kind="research_case",
+                subject_id=legacy_row_id,
+                dimension="research",
+                action="research-adjudication",
+                transition_id=transition_id,
+                from_state=from_state,
+                to_state="unverifiable",
+                actor=decided_by,
+                actor_kind="operator",
+                reason=reason,
+                occurred_at=stamp,
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self.conn.rollback()
+            raise StoreError(
+                f"unverifiable adjudication for legacy row {legacy_row_id!r} rejected: {exc}"
+            ) from None
+        return {
+            "legacy_row_id": legacy_row_id,
+            "research_state": "unverifiable",
+            "transition_id": transition_id,
+            "seq": seq,
+        }
+
+    def reopen_legacy_unverifiable(
+        self,
+        legacy_row_id: str,
+        *,
+        reason: str,
+        decided_by: str = "operator",
+        decided_at: str | None = None,
+    ) -> dict:
+        """Reverse an `unverifiable` adjudication when a new witness appears (STATE_MODEL T-R12).
+
+        The row leaves the side-car ledger and the reversal is recorded as a `research`
+        audit transition `unverifiable -> in_research`, in ONE transaction. Guarded: the row
+        must currently be in the ledger, and `reason` / `decided_by` must be non-empty.
+
+        Returns `{legacy_row_id, from_state, to_state, transition_id, seq}`.
+        """
+        _require(bool(legacy_row_id), "legacy_row_id must be non-empty")
+        _require(bool(reason), "every reopen decision must carry a reason")
+        _require(bool(decided_by), "decided_by must be non-empty")
+        row = self.conn.execute(
+            "SELECT legacy_row_id FROM legacy_verification WHERE legacy_row_id = ?",
+            (legacy_row_id,),
+        ).fetchone()
+        if row is None:
+            raise StoreError(
+                f"legacy row {legacy_row_id!r} is not in the unverifiable ledger; nothing to reopen"
+            )
+        try:
+            seq = self._insert_decision(
+                subject_kind="research_case",
+                subject_id=legacy_row_id,
+                dimension="research",
+                action="research-adjudication",
+                transition_id="T-R12",
+                from_state="unverifiable",
+                to_state="in_research",
+                actor=decided_by,
+                actor_kind="operator",
+                reason=reason,
+                occurred_at=decided_at,
+            )
+            self.conn.execute(
+                "DELETE FROM legacy_verification WHERE legacy_row_id = ?", (legacy_row_id,)
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self.conn.rollback()
+            raise StoreError(
+                f"reopen of legacy row {legacy_row_id!r} rejected: {exc}"
+            ) from None
+        return {
+            "legacy_row_id": legacy_row_id,
+            "from_state": "unverifiable",
+            "to_state": "in_research",
+            "transition_id": "T-R12",
+            "seq": seq,
+        }
+
+    def unverifiable_ledger(self) -> list[sqlite3.Row]:
+        """Every legacy row adjudicated `unverifiable`, ordered by legacy row id."""
+        return list(
+            self.conn.execute(
+                "SELECT " + ", ".join(LEGACY_VERIFICATION_COLUMNS)
+                + " FROM legacy_verification ORDER BY legacy_row_id"
+            )
+        )
+
     # -- reads -------------------------------------------------------------------------
     def counts(self) -> dict[str, int]:
         return {
@@ -892,6 +1101,7 @@ class Store:
                 "candidate_captures",
                 "duplicate_hints",
                 "decisions",
+                "legacy_verification",
             )
         }
 
@@ -983,7 +1193,7 @@ class Store:
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?), ('created_at', ?)",
                 (str(meta["schema_version"]), meta.get("created_at", "")),
             )
-            for section in ("captures", "candidates", "candidate_captures", "duplicate_hints", "decisions"):
+            for section in ("captures", "candidates", "candidate_captures", "duplicate_hints", "decisions", "legacy_verification"):
                 for record in records[section]:
                     columns = tuple(record)
                     self.conn.execute(

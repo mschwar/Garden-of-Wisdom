@@ -224,6 +224,25 @@ dimension, and that **no curation action implies verification** (`research_state
 outside the temp dir. See `docs/program/W1_6_E2E_TEST_PACK.md` and the Gate B packet
 `docs/program/W1_6_GATE_B_PACKET.md`.
 
+## Record and query the `unverifiable` side-car ledger (D3)
+
+Decision D3 represents a record proven `unverifiable` in a **side-car ledger keyed by legacy
+row id** (a `legacy_verification` table in the store), so it is no longer indistinguishable
+from a never-checked row. Issue #5 / Garden id 30 is the seeded live instance.
+
+```bash
+python3 scripts/garden_ledger.py mark   --dir data/store --row 30 --transition T-R6 \
+    --reason "why" [--evidence-ref REF] [--actor NAME]     # mark a legacy row unverifiable
+python3 scripts/garden_ledger.py reopen --dir data/store --row 30 --reason "why"   # T-R12 reversal
+python3 scripts/garden_ledger.py list   --dir data/store                          # read-only
+python3 scripts/check_garden_ledger.py                    # the D3 acceptance + evidence run (45 checks)
+```
+
+`mark`/`reopen` each write their `research` audit row in the same transaction and refuse a
+bad input before writing anything. The ledger is the `[legacy_verification]` export section,
+so it round-trips with the store and diffs in git; the mirror is committed at
+`data/store/garden.export.txt`. See `docs/program/D3_UNVERIFIABLE_LEDGER.md`.
+
 ## Run the browser locally
 
 ```

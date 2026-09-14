@@ -1,0 +1,11 @@
+garden.export/1
+[meta]
+{"created_at":"2026-09-13T20:28:37-06:00","schema_version":1}
+[captures]
+[candidate_captures]
+[candidates]
+[duplicate_hints]
+[decisions]
+{"action":"research-adjudication","actor":"operator","actor_kind":"operator","dimension":"research","from_state":"in_research","occurred_at":"2026-09-13T09:00:00-06:00","reason":"G4 rejected from the homepage-preview export: the sentence was not found on the Bahá'í Reference Library; Paris Talks has no Dec 2 1911 meeting (its last 1911 Paris talk is 1 December); the closest official wording differs in word, date and talk (Meditation is the key for opening the doors of mysteries, London 12 Jan 1913).","seq":1,"subject_id":"30","subject_kind":"research_case","to_state":"unverifiable","transition_id":"T-R6"}
+[legacy_verification]
+{"decided_at":"2026-09-13T09:00:00-06:00","decided_by":"operator","evidence_ref":"issue #5","legacy_row_id":"30","reason":"G4 rejected from the homepage-preview export: the sentence was not found on the Bahá'í Reference Library; Paris Talks has no Dec 2 1911 meeting (its last 1911 Paris talk is 1 December); the closest official wording differs in word, date and talk (Meditation is the key for opening the doors of mysteries, London 12 Jan 1913).","research_state":"unverifiable","transition_id":"T-R6"}

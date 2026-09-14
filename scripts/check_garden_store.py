@@ -154,7 +154,8 @@ def run_checks(scratch: Path) -> None:
     # -- 1. create from empty ----------------------------------------------------------
     db_path, applied = create_store(store_dir)
     check(
-        db_path.exists() and applied == ["0001_create_core"],
+        db_path.exists()
+        and applied == ["0001_create_core", "0002_unverifiable_ledger"],
         f"create-from-empty applied migration {applied} into an empty directory",
     )
     with Store(store_dir) as store:
@@ -172,14 +173,18 @@ def run_checks(scratch: Path) -> None:
             "decisions",
             "meta",
             "schema_migrations",
+            "legacy_verification",
         }
         check(
             expected_tables <= tables,
-            "schema has the capture / candidate / hint / decision / migration tables",
+            "schema has the capture / candidate / hint / decision / ledger / migration tables",
             f"missing={sorted(expected_tables - tables)}",
         )
         ledger = [row[0] for row in store.conn.execute("SELECT migration_id FROM schema_migrations")]
-        check(ledger == ["0001_create_core"], "the migration ledger holds exactly 0001_create_core")
+        check(
+            ledger == ["0001_create_core", "0002_unverifiable_ledger"],
+            "the migration ledger holds 0001_create_core and 0002_unverifiable_ledger",
+        )
         version = store.conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()[0]
         check(int(version) == SCHEMA_VERSION, f"meta.schema_version is {SCHEMA_VERSION}")
 
@@ -383,7 +388,10 @@ def run_checks(scratch: Path) -> None:
         "duplicate hints export ordered by (candidate_id, hint_seq)",
         str(hint_keys),
     )
-    expected_lines = 3 + sum(1 + len(records[s]) for s in ("captures", "candidate_captures", "candidates", "duplicate_hints", "decisions"))
+    expected_lines = 3 + sum(
+        1 + len(records[s])
+        for s in ("captures", "candidate_captures", "candidates", "duplicate_hints", "decisions", "legacy_verification")
+    )
     actual_lines = export_a.decode("utf-8").count("\n")
     check(
         actual_lines == expected_lines,
@@ -421,6 +429,7 @@ def run_checks(scratch: Path) -> None:
             "candidate_captures": 4,
             "duplicate_hints": 2,
             "decisions": 3,
+            "legacy_verification": 0,
         },
         "every record survived the round-trip",
         str(Store(store_dir).counts()),
