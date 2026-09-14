@@ -96,6 +96,12 @@ curation pass will want to re-derive those pairs.
 > 2026-09-13 (issue #31)" and the `docs/DECISIONS.md` entry of the same date. This note is an
 > annotation; the section above is left byte-identical as the W1.4 record.
 
+> **Updated 2026-09-13 again (issue #34).** The legacy report's pair set is no longer 45: the
+> validator now sweeps **corpus-wide** and applies this document's **ruling 2** to a shared
+> `source_ref`, so its count is **20**. The "45 pairs stay the reference data" sentence above records
+> what W1.4 had to compare against when it was written. See `docs/data/DATA_QUALITY_REPORT.md` →
+> "Re-derivation 2026-09-13 (issue #34)".
+
 ## 4. Ruling 2 — a shared citation is only evidence when the citation pinpoints something
 
 This is the fix for the false-positive class `docs/data/DATA_QUALITY_REPORT.md` describes: *"many
@@ -141,6 +147,11 @@ Documented divergence from the legacy heuristic, beyond ruling 2: the legacy rep
 **within one `tradition`**; the W1 store has no `tradition` column, so W1.4 compares every candidate
 against every other. That is the right direction for a duplicate hint (a duplicate can be filed
 under a different label) and it is recorded here so it is a decision rather than an accident.
+
+> **Divergence closed 2026-09-13 (issue #34).** The legacy validator now also compares corpus-wide and
+> applies ruling 2 to a shared `source_ref`, so the two surfaces agree on the scope as well as on the
+> rule. The paragraph above is kept as the W1.4 record of where the divergence came from and why the
+> store took the wider scope first.
 
 ## 6. Ruling 3 — what a batch run does with a candidate it cannot normalize
 

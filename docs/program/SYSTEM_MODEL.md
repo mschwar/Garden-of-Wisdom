@@ -22,7 +22,8 @@ duplicate hints.
 The conceptual text unit the Garden may retain. A passage can have multiple textual
 witnesses, translations, or paraphrases. Sibling translations/paraphrases are *separate
 representations of one passage*, not duplicates of each other — the distinction the current
-repo's 45 near-duplicate candidate pairs keep forcing.
+repo's near-duplicate candidate pairs keep forcing (45 when this was written; **20** after the
+2026-09-13 scope/citation ruling).
 
 ### Attribution
 A claim that a person, collective, tradition, or source is responsible for a passage or a

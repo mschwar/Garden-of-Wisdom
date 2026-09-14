@@ -166,7 +166,8 @@ grouped, while the current repo's near-duplicate report shows how easily hints b
 
 **Inputs / dependencies:** W1.2 (envelope); W1.3 (submissions to normalize);
 `docs/program/CANDIDATE_ENVELOPE.md` §Duplicate hints (kind/target/basis);
-`docs/data/DATA_QUALITY_REPORT.md` (the 45 near-duplicate pairs and the generic-`source_ref`
+`docs/data/DATA_QUALITY_REPORT.md` (the near-duplicate pairs — 45 when this was written, **20** after
+the 2026-09-13 scope/citation ruling — and the generic-`source_ref`
 false-positive caveat that the hints must not reproduce).
 
 **In scope:** deterministic normalization (whitespace/quoting-mark/diacritic-form handling)

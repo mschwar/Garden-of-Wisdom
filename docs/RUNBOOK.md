@@ -13,14 +13,26 @@ other order). Everything else it prints (near-duplicates, unresolved source link
 unresolved-glyph rows, counts by `item_type`/`verification_status`) is curation-queue signal,
 not a failure — read `docs/data/DATA_QUALITY_REPORT.md` for how to interpret it.
 
-Two lines of the near-duplicate block are checks, not signal: `pair detection re-run with every
-tradition's rows reversed` (the same sweep over the same rows in the other order must produce an
-identical result — a pair's number is a property of the pair, not of row order) and
-`near-duplicate reasons re-derived from the rows and matched` (every printed reason must name the
-evidence that actually holds, including a shared citation that also clears the text threshold).
-Either failing is a `RESULT: FAIL`. The score itself is the **mean of both directional
-`difflib.SequenceMatcher.ratio()` values**, because that ratio is asymmetric; see the rule in the
-script's docstring and `docs/DECISIONS.md` ("The near-duplicate score is a property of the pair").
+Four lines of the near-duplicate block are checks, not signal:
+
+- `pair detection re-run with the corpus rows reversed` — the same sweep over the same rows in the
+  other order must produce an identical result, because a pair's number is a property of the pair,
+  not of row order;
+- `near-duplicate reasons re-derived from the rows and matched` — every printed reason must name the
+  evidence that actually holds, including a shared citation that also clears the text threshold;
+- the pair set is also re-derived over **every unordered pair of rows with no grouping** and compared
+  with the reported sweep, so narrowing the scope (e.g. back to one `tradition`) fails the run naming
+  the pairs it would have missed;
+- the imported locator rule is pinned on two canonical values and the corpus must still offer pairs
+  that rule suppresses, so a silent redefinition of the rule or an empty suppression fails loudly.
+
+Any of them failing is a `RESULT: FAIL`. The score is the **mean of both directional
+`difflib.SequenceMatcher.ratio()` values** (that ratio is asymmetric); the sweep is **corpus-wide**,
+and a shared `source_ref` counts as evidence only when the citation carries a locator (an Arabic digit,
+a Roman numeral or `§`) — the same rule W1.4's store-side hint generator applies, imported from
+`scripts/garden_normalize.py`. See the script's docstring and `docs/DECISIONS.md` ("The near-duplicate
+sweep is corpus-wide …"). The corpus-wide sweep is every unordered pair (52,326 of them), so the run
+takes ~21s; `pair_similarity` pre-filters pairs that provably cannot clear the threshold.
 
 To re-freeze `docs/data/DATA_QUALITY_REPORT.md` after changing the heuristic: run the validator,
 paste its stdout verbatim into a new dated section (never overwrite the point-in-time transcript),
