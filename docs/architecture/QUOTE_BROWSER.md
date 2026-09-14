@@ -32,18 +32,28 @@ Site URLs (deployed from `main` by `.github/workflows/pages.yml`):
   `index.html` that forwards to the app
 
 The workflow publishes the **repo root** (`path: '.'`; `actions/upload-pages-artifact` drops
-`.git` and `.github`, plus top-level dotfiles by default) via `actions/deploy-pages` under the
-`github-pages` environment. It runs on push to `main` and on manual `workflow_dispatch` from
-`main` (the job is guarded so a dispatch from another branch is a no-op). Pages "Source" must
-be **GitHub Actions**, not "Deploy from a branch" — that setting is created out of band
-(`GITHUB_TOKEN` cannot enable it) and the workflow assumes it; see `docs/RUNBOOK.md`.
+`.git` and `.github`, plus — **from v4 on** — top-level dotfiles by default) via
+`actions/deploy-pages` under the `github-pages` environment. It runs on push to `main` and on
+manual `workflow_dispatch` from `main` (the job is guarded so a dispatch from another branch
+is a no-op). Pages "Source" must be **GitHub Actions**, not "Deploy from a branch" — that
+setting is created out of band (`GITHUB_TOKEN` cannot enable it) and the workflow assumes it;
+see `docs/RUNBOOK.md`.
+
+The action's major version is part of that path, not a cosmetic pin: v3 had no hidden-file
+exclusion and published `./.gitignore` (issue #23), so
+`scripts/check_pages_contract.py` fails if the upload action drops below v4, if
+`include-hidden-files` is switched on, or if `path:`/the artifact name/the deploy job's main
+guard change. It also fails if the app's `../` fetches, the root CSVs, or the root shim move
+out from under the layout this deploy serves.
 
 **Why the site root cannot change:** `browser/index.html` fetches `../quotes.csv` and
 `../sources.csv` relative to itself, and both files live at the repo root. Publishing only
 `browser/` as the site root would make those fetches 404 and the page would load with zero
-quotes. The artifact path must stay `'.'` (repo root) and the equivalent live check is that
-`https://mschwar.github.io/Garden-of-Wisdom/quotes.csv` returns 200. This mirrors the local
-`python3 -m http.server` layout exactly — same relative paths, no separate build.
+quotes. The artifact path must stay `'.'` (repo root) and the equivalent live checks are that
+`https://mschwar.github.io/Garden-of-Wisdom/quotes.csv` returns 200 **and** that
+`/.gitignore` returns 404 (a mis-rooted artifact is not the only silent failure — a
+published dotfile is the other; the full probe list is in `docs/RUNBOOK.md`). This mirrors the
+local `python3 -m http.server` layout exactly — same relative paths, no separate build.
 
 ## Features implemented
 

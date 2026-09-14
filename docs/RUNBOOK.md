@@ -280,7 +280,8 @@ A green run prints 33 `PASS:` lines. Sixteen negative controls are recorded — 
 `GARDEN_CARD_EMPTY_STATE_HANDOFF.md`.
 
 CI runs the same script on every PR and on every push to `main`
-(`.github/workflows/browser-smoke.yml`), together with the three validators below.
+(`.github/workflows/browser-smoke.yml`), together with the three validators, the Pages
+deploy-contract guard, and the seven corpus-program acceptance suites below.
 
 ## GitHub Pages (static site)
 
@@ -320,10 +321,13 @@ the folder), the page still loads but renders 0 quotes because both fetches 404.
 `exports/`, and the frozen `data/archive/` originals — because the app's
 `../quotes.csv` / `../sources.csv` fetches require the root layout. All of it is already
 public on GitHub, so this adds no exposure. `actions/upload-pages-artifact` always drops
-`.git` and `.github` and, by default (`include-hidden-files: false`), all top-level dotfiles,
-so a committed `.nojekyll` would never reach the artifact. That is fine here: an
-Actions-deployed artifact is served as-is and is never run through Jekyll, so `.nojekyll` is
-not needed.
+`.git` and `.github` and — **from v4 on** — all top-level dotfiles
+(`include-hidden-files: false` makes the action add `--exclude=.[^/]*` to its `tar`). **v3
+did not**: it published `./.gitignore`, which is what issue #23 was filed about, so the
+action's major version is part of the contract and
+`scripts/check_pages_contract.py` fails the pull request if it drops below v4. An
+Actions-deployed artifact is served as-is and is never run through Jekyll, so a committed
+`.nojekyll` would make no difference and is not needed.
 
 Verify a deploy (all four must be 200):
 
@@ -334,8 +338,55 @@ curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wis
 curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/sources.csv
 ```
 
+and these two must both be **404** (they cover the two ways a deploy can be wrong without
+failing: a published top-level dotfile — the #23 class — and a `.git` directory that should
+never have been tarred):
+
+```
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.gitignore
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.git/config
+```
+
+Checking only `/.git/config` is what let #23 ship: the artifact can be rooted correctly and
+still publish dotfiles, so probe both. The artifact itself can be listed without a deploy —
+`gh api repos/mschwar/Garden-of-Wisdom/actions/artifacts?per_page=5` to find the newest
+`github-pages` artifact, then download its zip and `tar -tf artifact.tar` (no member should
+start with `./.`).
+
 To watch a deploy instead: `gh run list --workflow pages.yml --limit 3` then
 `gh run watch <id>`.
+
+## Guard the Pages deploy contract
+
+```
+python3 scripts/check_pages_contract.py
+```
+
+Exits 0 with `RESULT: PASS` / non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
+check (**15** checks: 14 contract checks plus a guard on the check count, so deleting a
+check fails the run). Stdlib only, no network, writes nothing.
+
+The live page fetches `../quotes.csv` and `../sources.csv`, so a Pages artifact rooted
+anywhere else loads and silently renders **0 quotes**, and a regression in the upload
+action's hidden-file exclusion silently publishes tracked dotfiles. Neither failure makes
+the deploy job fail, and no other test in this repo can see the workflow files at all — the
+contract lived only in prose until this guard. It reads `.github/workflows/pages.yml` and
+asserts the parts a repo change can break: the workflow still parses into the shape the
+guard understands (else it FAILs and asks for a re-derive rather than passing), `path:` is
+`'.'`, the upload action is a **verified** major (`VERIFIED_UPLOAD_MAJORS` — v4/v5 exclude
+top-level dotfiles, v3 does not), `include-hidden-files` is not switched on, the artifact
+name is still `github-pages`, the `refs/heads/main` guard is present, the `pages`
+concurrency group never cancels an in-flight deploy, `pages: write` + `id-token: write` are
+granted — and then that `browser/app.js` still fetches those two `../` paths, that both CSVs
+are at the repo root, and that the root `index.html` shim still forwards to
+`browser/index.html`.
+
+CI runs it (`browser-smoke.yml`, step "Guard the Pages deploy contract"), so a pull request
+that breaks the contract is red before it can deploy. It is a *config* guard: it proves the
+workflow still asks for a rooted artifact from an action version that excludes hidden files,
+not what a given deployment published — that is what the live probes above are for. It was
+added after issue #23; its 16 negative controls (one per check, plus the shape and
+count guards) are recorded in `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`.
 
 
 ## Re-derive the canonical CSVs from the frozen originals

@@ -79,25 +79,14 @@ Living document — update it as items are picked up or closed, don't just appen
       `GARDEN_CI_LEDGER_HANDOFF.md`. Issue #39 closed by the merge.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
-- [ ] Guard the Pages deploy contract: `.github/workflows/pages.yml` must keep
-      `path: '.'` (repo root) and Pages "Source" must stay **GitHub Actions**. Rooting the
-      artifact at `browser/` breaks the `../quotes.csv` / `../sources.csv` fetches and the
-      live page silently renders 0 quotes. Live checks are listed in `docs/RUNBOOK.md`.
-      (`scripts/smoke_quote_browser.py` now fails loudly on the same mistake locally — but only
-      when someone runs it against a mis-rooted tree; it cannot see the live Pages setting.)
-- [ ] **OPEN — Pages artifact publishes top-level dotfiles.** Issue
-      [#23](https://github.com/mschwar/Garden-of-Wisdom/issues/23): `/.gitignore` is live and
-      returns **200**, even though the comment in `.github/workflows/pages.yml` claims top-level
-      dotfiles are excluded. **Not a regression from #19** — the pre-bump artifact from run
-      34713537851 already contained `./.gitignore` (the only diff between the two artifacts is the
-      two new handoff files). Only three dotfiles are tracked repo-wide:
-      `.github/workflows/browser-smoke.yml` and `.github/workflows/pages.yml` (both correctly
-      **404** — they are not at the artifact root) and `.gitignore` (**published**). The acceptance
-      checklist in `docs/RUNBOOK.md` only probes `/.git/config`, which is why this was missed.
-      Candidate mechanism — the action's `--exclude=.[^/]*` pattern cannot match the `./`-prefixed
-      names this tar invocation emits — is a **hypothesis to confirm on the runner, not a proven
-      cause.** Filed rather than fixed (the fix is a deploy-path change needing its own live
-      re-verification).
+- [ ] **OPEN — the live Pages acceptance checklist is still manual.** The four 200 probes and
+      the two 404 probes in `docs/RUNBOOK.md` are run by hand at the end of every unit (they
+      were run by hand in this unit too). Automating them into one command with the CSV
+      `sha256` comparison would remove a repeated manual step and the transcription risk that
+      goes with it. Not fixed in the deploy-contract guard unit: that unit's deliverable is the
+      **config** guard CI can run offline, and a live check cannot run in CI (it would need
+      network + a successful deploy to be meaningful). Filed as
+      [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41).
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
@@ -816,3 +805,48 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 - [x] G3 static quote browser
 - [x] Phase 0 frontier review — accept with documented debt
       (`docs/audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`)
+
+## Closed — 2026-09-14 Pages deploy-contract guard (closes the "Guard the Pages deploy contract" infra item and resolves issue #23)
+
+- [x] **The Pages deploy contract now has an automated falsifier, and issue #23's premise was
+      checked against the artifact rather than the prose: it does not reproduce.** Branch
+      `ci/guard-pages-deploy-contract`. New `scripts/check_pages_contract.py` (**15** checks: 14
+      contract checks + a count guard so that deleting a check fails the run), wired into CI as a
+      new `browser-smoke.yml` step ("Guard the Pages deploy contract"), so a pull request that
+      breaks the contract is red **before** it can deploy.
+      **What it guards:** the workflow parses into the shape the guard reads (else it FAILs and
+      asks for a re-derive, never a silent pass); `path: '.'` (the repo root the `../` fetches
+      need); the upload action major is in the verified set (**v4/v5** exclude top-level
+      dotfiles, **v3 does not** — v3 is the version that published `./.gitignore`); a major above
+      the set FAILs with a re-derive instruction rather than passing silently;
+      `include-hidden-files` is not switched on; the artifact name is still `github-pages`; the
+      `refs/heads/main` guard is present; the `pages` concurrency group never cancels an
+      in-flight deploy; `pages: write` + `id-token: write` are granted; and the layout it
+      serves — `browser/app.js` still fetches `../quotes.csv` / `../sources.csv`, both CSVs are
+      at the repo root, the root `index.html` shim still forwards to `browser/index.html`.
+      **16 negative controls** (one per check plus the shape and count guards), each turning the
+      run red with its own aimed first `FAIL:` line, recorded in
+      `GARDEN_PAGES_CONTRACT_GUARD_HANDOFF.md`. The harness earned its keep: control `c13`
+      (a `page_url` → `page_url_unused` mutation) initially left the run **green**, exposing a
+      prefix-match in the deploy-step check; the check now compares the environment URL exactly,
+      and `c16` (the deploy step's `id`) gives the other half of that check its own falsifier.
+      **Issue #23's evidence, re-measured (2026-09-14):** the newest `github-pages` artifact of
+      the newest deploy (run `34803736228`, artifact `10332485746`) contains **no hidden member
+      at all** — `tar -tf artifact.tar | grep -E '^\./\.[^/]*$'` and `tar -tf artifact.tar |
+      grep -E '/\.'` are both empty — and live `/.gitignore` and `/.git/config` are both **404**
+      while `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` are all **200**. The
+      mechanism is the upload action's own `action.yml`: **v3** tars with
+      `--exclude=.git --exclude=.github` only, **v4** added `--exclude=".[^/]*"`, **v5** keeps
+      it — so the major bump of 2026-09-12 (`10d8c31`, PR #22) *removed* the leak, and the
+      queue's candidate mechanism ("the pattern cannot match `./`-prefixed names") was a
+      hypothesis that the artifact refutes. The queue item's own "Not a regression from #19"
+      note was right about the cause and wrong about the cure. The issue is closed deliberately
+      by comment after the merge, never by a closing keyword. The **missing probe** was the real
+      gap: the checklist tested `/.git/config` and never `/.gitignore`, so the docs now probe
+      both (and `RUNBOOK.md` / `QUOTE_BROWSER.md` / the workflow comment all qualify the
+      "always drops top-level dotfiles" claim with the v4-onward dependency that makes it true).
+      **No deploy-path change:** `path: '.'` is unchanged, `pages.yml` changed by comment only.
+      Decision recorded in `docs/DECISIONS.md` ("the Pages deploy contract gets a config guard").
+      `quotes.csv` / `sources.csv` byte-identical (`5675d7e6…` / `10b4c156…`). Out of scope,
+      filed as [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41): automating the live
+      acceptance checklist (see the infra section above).
