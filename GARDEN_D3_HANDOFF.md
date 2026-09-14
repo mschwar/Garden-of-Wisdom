@@ -1,7 +1,7 @@
 # GARDEN_D3_HANDOFF.md
 
 **Unit:** D3 — the `unverifiable` side-car ledger.
-**Branch:** `d3/unverifiable-ledger` · **PR:** [#38](https://github.com/mschwar/Garden-of-Wisdom/pull/38) · **Merge:** (filled after merge).
+**Branch:** `d3/unverifiable-ledger` · **PR:** [#38](https://github.com/mschwar/Garden-of-Wisdom/pull/38) · **Merge:** `2861094`.
 **Date:** 2026-09-13.
 
 ## Summary
