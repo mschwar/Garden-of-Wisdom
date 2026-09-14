@@ -735,7 +735,7 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 ## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
 
 - [x] **D3 — `unverifiable` side-car ledger. DONE 2026-09-13** (branch `d3/unverifiable-ledger`,
-      PR [#NN] — see the handoff for the merge). Represent `unverifiable` in a side-car ledger keyed
+      PR [#38](https://github.com/mschwar/Garden-of-Wisdom/pull/38) — see the handoff for the merge). Represent `unverifiable` in a side-car ledger keyed
       by legacy row id, NOT by widening the 3-valued `quotes.csv` enum, in the W1.1 store (one store,
       not two). `legacy_verification` table via migration `0002_unverifiable_ledger`;
       `Store.mark_legacy_unverifiable` / `Store.reopen_legacy_unverifiable` (each writes its audit
