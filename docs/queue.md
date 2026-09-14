@@ -411,6 +411,18 @@ Living document — update it as items are picked up or closed, don't just appen
       W1 units shipped without it, so it is filed here rather than fixed in W1.2. Decide: extend
       the smoke workflow's validator step to run both W1 acceptance suites, or leave them as
       local-evidence-only.
+      **IN PROGRESS 2026-09-13 (branch `ci/w1-acceptance-suites`):** decided — a new step, "Run
+      the W1 corpus-program acceptance suites", appended to the existing `smoke` job, running all
+      six suites (`check_garden_store.py`, `check_garden_envelope.py`, `check_garden_submit.py`,
+      `check_garden_normalize.py`, `check_garden_review.py`, `check_garden_e2e.py`) after the
+      existing validator step. All six re-verified `RESULT: PASS` locally immediately before the
+      edit; one negative control (an injected `SystemExit` in `check_garden_store.py`, reverted
+      after) confirmed the step fails fast and stops before later suites when a real regression
+      fires. `quotes.csv`/`sources.csv` untouched (`5675d7e6…` / `10b4c156…`). No new dependency,
+      no change to `requirements-dev.txt`, `pages.yml` untouched. See
+      `GARDEN_CI_W1_ACCEPTANCE_HANDOFF.md`. **Next: open the PR, get independent/foreign QA, wait
+      for the PR's own smoke run to actually execute the new step in CI (not just compile), merge,
+      then close this out with the live run id.**
 
 ## Open — debt and open questions discovered during W0 (specs only, not scheduled)
 
