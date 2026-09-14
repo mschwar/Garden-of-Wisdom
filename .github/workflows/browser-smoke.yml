@@ -49,3 +49,12 @@ jobs:
           python scripts/validate_quotes.py
           python scripts/check_program_contracts.py
           python scripts/validate_homepage_preview_export.py
+
+      - name: Run the W1 corpus-program acceptance suites
+        run: |
+          python scripts/check_garden_store.py
+          python scripts/check_garden_envelope.py
+          python scripts/check_garden_submit.py
+          python scripts/check_garden_normalize.py
+          python scripts/check_garden_review.py
+          python scripts/check_garden_e2e.py
