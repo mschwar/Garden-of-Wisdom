@@ -90,14 +90,31 @@ Living document — update it as items are picked up or closed, don't just appen
       `GARDEN_CI_LEDGER_HANDOFF.md`. Issue #39 closed by the merge.
 - [ ] Consider adding a duplicate/near-duplicate review view to the browser if the curation
       pass above finds the CLI report insufficient (see `docs/architecture/QUOTE_BROWSER.md`).
-- [ ] **OPEN — the live Pages acceptance checklist is still manual.** The four 200 probes and
-      the two 404 probes in `docs/RUNBOOK.md` are run by hand at the end of every unit (they
-      were run by hand in this unit too). Automating them into one command with the CSV
-      `sha256` comparison would remove a repeated manual step and the transcription risk that
-      goes with it. Not fixed in the deploy-contract guard unit: that unit's deliverable is the
-      **config** guard CI can run offline, and a live check cannot run in CI (it would need
-      network + a successful deploy to be meaningful). Filed as
-      [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41).
+- [x] **CLOSED 2026-09-16 — the live Pages acceptance checklist is automated into one command
+      (issue [#41](https://github.com/mschwar/Garden-of-Wisdom/issues/41)).** New
+      `scripts/check_live_pages.py`: runs the four 200 probes (`/`, `/browser/index.html`,
+      `/quotes.csv`, `/sources.csv`), the three 404 probes (`/.gitignore`, `/.git/config`,
+      `/.github/workflows/pages.yml`), and downloads both live CSVs to verify byte-identity
+      (`sha256`) against the local repository in one command, eliminating manual curl + shasum
+      probes and transcription risk. Includes built-in offline negative controls (`--self-test`)
+      with **10 self-tests** run against an in-process ephemeral loopback server in <0.2s without
+      network dependencies (mis-rooted app 404, missing CSV 404, published dotfile 200, published
+      git config 200, published workflow 200, stale quotes/sources CSV sha256 mismatch, unreachable
+      server, missing local CSV). Both total probes (`EXPECTED_CHECKS = 9`) and self-tests
+      (`EXPECTED_SELF_TESTS = 10`) are count-guarded. `docs/RUNBOOK.md` updated to document the
+      command. `quotes.csv`/`sources.csv` untouched throughout (byte-identical `b3bb7848…` /
+      `7aafcb67…`).
+      **Independent QA:** PASS, no high/medium defects (one low design note addressed immediately:
+      dynamically bound ephemeral closed socket for unreachable self-test).
+      **Landing:** commit `2de55d9`, PR
+      [#48](https://github.com/mschwar/Garden-of-Wisdom/pull/48), **merged as `13d7326`**
+      (2026-09-16). CI: PR smoke run
+      [35161326634](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35161326634)
+      **success**; on `main` after merge, Pages deploy run
+      [35161969117](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35161969117)
+      **success**. Live acceptance on the merged `main` (executed via the new script): all 9
+      checks **PASS**, live CSVs byte-identical (`b3bb7848…` / `7aafcb67…`). Design trail:
+      `GARDEN_LIVE_PAGES_ACCEPTANCE_HANDOFF.md`. Issue #41 closed deliberately by comment post-merge.
 - [x] **CLOSED — the negative-control harness is committed and CI-wired (issue
       [#43](https://github.com/mschwar/Garden-of-Wisdom/issues/43)).** New
       `scripts/run_negative_controls.py`: a table of **36 controls** over all **12** checkers,

@@ -1340,3 +1340,36 @@ authoring pass recorded for that gap, confirmed to turn the corresponding suite 
 previously stayed green. All twelve stdlib suites and the full 36-control negative-control table
 re-run `RESULT: PASS` after the fixes; `quotes.csv`/`sources.csv` untouched. Design trail:
 `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`.
+
+## 2026-09-16 — the live Pages acceptance checklist is automated into one command (issue #41)
+
+The post-merge acceptance checklist previously required running six `curl` commands and two `shasum`
+comparisons by hand from `docs/RUNBOOK.md` ("GitHub Pages") and transcribing the numbers into each
+handoff. This created transcription risk and made it easy to omit a probe (the exact mechanism that let
+issue #23 go unnoticed when the checklist only tested `/.git/config` and omitted `/.gitignore`).
+
+### Decision
+
+1. **Automate the full live acceptance checklist into one command:** `scripts/check_live_pages.py`
+   (stdlib only, no third-party dependencies) runs the four 200 probes (`/`, `/browser/index.html`,
+   `/quotes.csv`, `/sources.csv`), the three 404 exclusion probes (`/.gitignore` [dotfile exclusion],
+   `/.git/config` [.git exclusion], and `/.github/workflows/pages.yml` [.github exclusion]), and
+   downloads both live CSVs to assert byte-identity (`sha256`) against the local repository in one
+   deterministic invocation.
+2. **Offline negative controls:** The checker provides `--self-test`, running 10 distinct negative
+   controls against an in-process ephemeral loopback HTTP server (`http.server` / `socketserver`)
+   verifying that mis-rooted artifacts, missing CSVs, published dotfiles, published git directories,
+   published workflows, stale CSVs, unreachable servers, and missing local files all turn the checker
+   red with their aimed `FAIL:` lines, completing in <0.2s without making external network calls.
+3. **No live check in CI:** The script complements `scripts/check_pages_contract.py` (which is the
+   offline config guard for the same contract and is CI-wired). This script is designed for live
+   acceptance after a deployment and cannot run in CI without a deployment to point at.
+
+Rejected alternatives: (a) leaving the checklist manual — perpetuates transcription risk and omission
+hazards; (b) embedding live network requests in CI — introduces network flakiness and dependency on
+pre-existing deploys; (c) checking only HTTP status codes without byte-for-byte CSV comparison — leaves
+data drift undetectable.
+
+`quotes.csv` / `sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`). Design trail:
+`GARDEN_LIVE_PAGES_ACCEPTANCE_HANDOFF.md`.
+
