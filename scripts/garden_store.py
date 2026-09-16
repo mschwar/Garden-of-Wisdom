@@ -1169,6 +1169,11 @@ class Store:
         Returns `{capture_id, row_count, status}` where status is ``created`` or ``no-op``.
         """
         _require(len(legacy_row_ids) > 0, "legacy_row_ids must be non-empty")
+        _require(
+            len(legacy_row_ids) == LEGACY_BATCH_EXPECTED_ROW_COUNT,
+            f"legacy_row_ids has {len(legacy_row_ids)} entries; D4 expects exactly "
+            f"{LEGACY_BATCH_EXPECTED_ROW_COUNT}",
+        )
         cleaned: list[str] = []
         seen: set[str] = set()
         for raw in legacy_row_ids:

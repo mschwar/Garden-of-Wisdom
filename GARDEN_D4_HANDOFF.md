@@ -102,3 +102,13 @@ operator-gated: D6 (near-duplicate curation — human look), D8 (cheap `item_typ
 document the 27-tradition list), and the optional follow-on of wiring the five #45 gap
 mutations into the negative-control table as registered controls. Re-confirm with
 `gh issue list --state open`. W2 remains unauthorized.
+
+## Review status (independent QA)
+
+**Independent reviewer, fresh subagent: PASS** — no high defects; one medium
+defense-in-depth note folded back before merge: `Store.seed_legacy_batch_capture` now
+refuses a list whose length is not exactly 324 (CLI already did; the Store API is the
+documented write gate and now matches). Low notes (committed export not CI-validated;
+archive digest verify soft when archives absent; sibling conflict paths lack dedicated
+controls; CSV byte-identity was fail-only) recorded as residual, not merge blockers. The
+CSV check now also prints an explicit PASS line.

@@ -216,7 +216,11 @@ def run_checks(scratch: Path) -> None:
             str(again),
         )
         try:
-            store.seed_legacy_batch_capture(ids[:-1])
+            # Same cardinality, different membership: swap one id for a non-corpus id so
+            # the cardinality guard is not the one that fires.
+            alt = list(ids)
+            alt[0] = "999999"
+            store.seed_legacy_batch_capture(alt)
             fail("a conflicting membership set was accepted")
         except StoreError as exc:
             check(
@@ -226,7 +230,7 @@ def run_checks(scratch: Path) -> None:
             )
         check(store.export_bytes() == before, "the refused conflicting seed wrote nothing")
 
-        # Empty / duplicate id list refused before any write.
+        # Empty / wrong-sized / duplicate id list refused before any write.
         try:
             store.seed_legacy_batch_capture([])
             fail("an empty legacy_row_ids list was accepted")
@@ -237,7 +241,20 @@ def run_checks(scratch: Path) -> None:
                 str(exc),
             )
         try:
-            store.seed_legacy_batch_capture([ids[0], ids[0]])
+            store.seed_legacy_batch_capture(ids[:-1])
+            fail("a wrong-sized legacy_row_ids list was accepted by the Store API")
+        except StoreError as exc:
+            check(
+                f"expects exactly {LEGACY_BATCH_EXPECTED_ROW_COUNT}" in str(exc),
+                "the Store API refuses a legacy_row_ids list whose length is not 324",
+                str(exc),
+            )
+        try:
+            # Pad a duplicate into a 324-length list so the cardinality guard is not
+            # the one that fires — the duplicate guard must have its own falsifier.
+            dup_list = list(ids)
+            dup_list[-1] = ids[0]
+            store.seed_legacy_batch_capture(dup_list)
             fail("a duplicate legacy_row_id inside the seed set was accepted")
         except StoreError as exc:
             check(
@@ -245,7 +262,10 @@ def run_checks(scratch: Path) -> None:
                 "a duplicate legacy_row_id inside the seed set is refused",
                 str(exc),
             )
-        check(store.export_bytes() == before, "refused empty/duplicate seeds wrote nothing")
+        check(
+            store.export_bytes() == before,
+            "refused empty/wrong-sized/duplicate seeds wrote nothing",
+        )
 
     # -- 4. export section + round-trip -----------------------------------------------
     with Store(store_dir) as store:
@@ -350,10 +370,16 @@ def main() -> int:
     except Exception as exc:  # no traceback on a broken store: RESULT must still print
         fail(f"unexpected {type(exc).__name__}: {exc}")
     finally:
-        if quotes_before is not None and sha256(QUOTES) != quotes_before:
-            fail("quotes.csv changed during the run")
-        if sources_before is not None and sha256(SOURCES) != sources_before:
-            fail("sources.csv changed during the run")
+        if quotes_before is not None:
+            if sha256(QUOTES) != quotes_before:
+                fail("quotes.csv changed during the run")
+            else:
+                ok("quotes.csv is byte-identical before and after the run")
+        if sources_before is not None:
+            if sha256(SOURCES) != sources_before:
+                fail("sources.csv changed during the run")
+            else:
+                ok("sources.csv is byte-identical before and after the run")
         shutil.rmtree(scratch, ignore_errors=True)
 
     if failures:
