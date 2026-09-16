@@ -243,6 +243,23 @@ bad input before writing anything. The ledger is the `[legacy_verification]` exp
 so it round-trips with the store and diffs in git; the mirror is committed at
 `data/store/garden.export.txt`. See `docs/program/D3_UNVERIFIABLE_LEDGER.md`.
 
+## Seed and verify the D4 legacy batch capture
+
+Decision D4 gives the 324 legacy `quotes.csv` rows **ONE batch capture** for the 2026-09-11
+rehabilitation import (`cap-2026-09-11-legacy-batch`), explicitly marked `legacy-import` and
+explicitly noting that encounter context is unknown. Membership links every legacy row id to
+that single capture — no per-row captures, no store candidates.
+
+```bash
+python3 scripts/garden_legacy_batch.py seed   --dir data/store   # create capture + 324 membership rows
+python3 scripts/garden_legacy_batch.py show   --dir data/store   # summary
+python3 scripts/garden_legacy_batch.py verify --dir data/store   # membership == quotes.csv; archive digests match
+python3 scripts/check_garden_legacy_batch.py                     # the D4 acceptance + evidence run
+```
+
+`seed` is idempotent for the same id set and refuses a conflicting capture or membership.
+`quotes.csv` / `sources.csv` are never written. See `docs/program/D4_LEGACY_BATCH_CAPTURE.md`.
+
 ## Run the browser locally
 
 ```

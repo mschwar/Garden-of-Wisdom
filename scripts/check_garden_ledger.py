@@ -174,8 +174,13 @@ def run_checks(scratch: Path) -> None:
     db_path, applied = create_store(store_dir)
     check(
         db_path.exists()
-        and applied == ["0001_create_core", "0002_unverifiable_ledger"],
-        f"create applies 0001 and 0002 in order ({applied})",
+        and applied
+        == [
+            "0001_create_core",
+            "0002_unverifiable_ledger",
+            "0003_legacy_batch_capture",
+        ],
+        f"create applies 0001, 0002 and 0003 in order ({applied})",
     )
     with Store(store_dir) as store:
         tables = {
@@ -226,6 +231,7 @@ def run_checks(scratch: Path) -> None:
                 "duplicate_hints",
                 "decisions",
                 "legacy_verification",
+                "legacy_batch_membership",
             },
             "counts() exposes the legacy_verification table",
         )
@@ -339,6 +345,7 @@ def run_checks(scratch: Path) -> None:
             "[duplicate_hints]",
             "[decisions]",
             "[legacy_verification]",
+            "[legacy_batch_membership]",
         ],
         "the export sections appear in the documented fixed order (O-2)",
         str(section_headers),

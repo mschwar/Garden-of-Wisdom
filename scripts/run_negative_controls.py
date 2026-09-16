@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 36
+EXPECTED_CONTROLS = 39
 EXPECTED_SELF_TESTS = 9
 
 
@@ -346,7 +346,8 @@ CHECKERS: tuple[Checker, ...] = (
                 '"0001_create_core"',
                 '"0001_create_core_v2"',
                 "FAIL: create-from-empty applied migration ['0001_create_core_v2', "
-                "'0002_unverifiable_ledger'] into an empty directory",
+                "'0002_unverifiable_ledger', '0003_legacy_batch_capture'] into an empty "
+                "directory",
             ),
         ),
     ),
@@ -480,6 +481,60 @@ CHECKERS: tuple[Checker, ...] = (
                 "BEFORE UPDATE ON decisions",
                 "BEFORE UPDATE OF seq ON decisions",
                 "FAIL: decisions accepted UPDATE: the log is not append-only",
+            ),
+        ),
+    ),
+    Checker(
+        "scripts/check_garden_legacy_batch.py",
+        (
+            Mutation(
+                "b1", "the conflicting-membership guard is disabled: a partial re-seed is accepted",
+                "scripts/garden_store.py",
+                "            if existing_members != cleaned_sorted:\n"
+                "                raise StoreError(\n"
+                '                    "legacy batch membership already exists with a different id set "\n'
+                '                    f"(have {len(existing_members)}, asked {len(cleaned_sorted)}); "\n'
+                '                    "refusing a silent overwrite"\n'
+                "                )\n",
+                "            if False:\n"
+                "                raise StoreError('unreachable')\n",
+                "FAIL: a conflicting membership set was accepted",
+            ),
+            Mutation(
+                "b2", "seed also writes a candidate, breaking D4's no-candidates ruling",
+                "scripts/garden_store.py",
+                "            self.conn.executemany(\n"
+                '                "INSERT INTO legacy_batch_membership (legacy_row_id, capture_id) VALUES (?, ?)",\n'
+                "                [(row_id, LEGACY_BATCH_CAPTURE_ID) for row_id in cleaned_sorted],\n"
+                "            )\n"
+                "            self.conn.commit()\n",
+                "            self.conn.executemany(\n"
+                '                "INSERT INTO legacy_batch_membership (legacy_row_id, capture_id) VALUES (?, ?)",\n'
+                "                [(row_id, LEGACY_BATCH_CAPTURE_ID) for row_id in cleaned_sorted],\n"
+                "            )\n"
+                "            self.conn.execute(\n"
+                '                "INSERT INTO candidates (candidate_id, candidate_text, candidate_author, "\n'
+                '                "candidate_source_ref, normalization_notes, intake_schema_version, "\n'
+                '                "external_id, curation_state, research_state, corpus_state, work_state, "\n'
+                '                "created_at) VALUES (\'cand-d4-leak\', \'leak\', \'unknown\', \'none\', "\n'
+                '                "\'identical to capture\', \'garden.candidate-envelope/1\', NULL, "\n'
+                '                "\'new\', \'not_started\', \'candidate_only\', \'queued\', "\n'
+                "                \"'2026-09-11T00:00:00-06:00')\")\n"
+                "            self.conn.commit()\n",
+                "FAIL: seed creates no candidates and no candidate_captures links -- "
+                "{'captures': 1, 'candidates': 1, 'candidate_captures': 0, 'duplicate_hints': 0, "
+                "'decisions': 0, 'legacy_verification': 0, 'legacy_batch_membership': 324}",
+            ),
+            Mutation(
+                "b3", "the export-section-order assertion drops the membership section",
+                "scripts/check_garden_legacy_batch.py",
+                '            "[legacy_verification]",\n'
+                '            "[legacy_batch_membership]",\n',
+                '            "[legacy_verification]",\n',
+                "FAIL: the export sections appear in the documented fixed order -- "
+                "['[meta]', '[captures]', '[candidate_captures]', '[candidates]', "
+                "'[duplicate_hints]', '[decisions]', '[legacy_verification]', "
+                "'[legacy_batch_membership]']",
             ),
         ),
     ),

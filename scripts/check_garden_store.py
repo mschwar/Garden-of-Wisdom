@@ -155,7 +155,12 @@ def run_checks(scratch: Path) -> None:
     db_path, applied = create_store(store_dir)
     check(
         db_path.exists()
-        and applied == ["0001_create_core", "0002_unverifiable_ledger"],
+        and applied
+        == [
+            "0001_create_core",
+            "0002_unverifiable_ledger",
+            "0003_legacy_batch_capture",
+        ],
         f"create-from-empty applied migration {applied} into an empty directory",
     )
     with Store(store_dir) as store:
@@ -174,6 +179,7 @@ def run_checks(scratch: Path) -> None:
             "meta",
             "schema_migrations",
             "legacy_verification",
+            "legacy_batch_membership",
         }
         check(
             expected_tables <= tables,
@@ -182,8 +188,14 @@ def run_checks(scratch: Path) -> None:
         )
         ledger = [row[0] for row in store.conn.execute("SELECT migration_id FROM schema_migrations")]
         check(
-            ledger == ["0001_create_core", "0002_unverifiable_ledger"],
-            "the migration ledger holds 0001_create_core and 0002_unverifiable_ledger",
+            ledger
+            == [
+                "0001_create_core",
+                "0002_unverifiable_ledger",
+                "0003_legacy_batch_capture",
+            ],
+            "the migration ledger holds 0001_create_core, 0002_unverifiable_ledger, "
+            "and 0003_legacy_batch_capture",
         )
         version = store.conn.execute("SELECT value FROM meta WHERE key = 'schema_version'").fetchone()[0]
         check(int(version) == SCHEMA_VERSION, f"meta.schema_version is {SCHEMA_VERSION}")
@@ -390,7 +402,15 @@ def run_checks(scratch: Path) -> None:
     )
     expected_lines = 3 + sum(
         1 + len(records[s])
-        for s in ("captures", "candidate_captures", "candidates", "duplicate_hints", "decisions", "legacy_verification")
+        for s in (
+            "captures",
+            "candidate_captures",
+            "candidates",
+            "duplicate_hints",
+            "decisions",
+            "legacy_verification",
+            "legacy_batch_membership",
+        )
     )
     actual_lines = export_a.decode("utf-8").count("\n")
     check(
@@ -430,6 +450,7 @@ def run_checks(scratch: Path) -> None:
             "duplicate_hints": 2,
             "decisions": 3,
             "legacy_verification": 0,
+            "legacy_batch_membership": 0,
         },
         "every record survived the round-trip",
         str(Store(store_dir).counts()),

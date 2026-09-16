@@ -66,6 +66,7 @@ jobs:
           python scripts/check_garden_review.py
           python scripts/check_garden_e2e.py
           python scripts/check_garden_ledger.py
+          python scripts/check_garden_legacy_batch.py
 
       # Proven falsifiability, not a claim about it: each entry in the committed control table
       # is re-applied to a throwaway copy of this tree and the checker must go red with that
