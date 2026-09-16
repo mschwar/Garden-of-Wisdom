@@ -329,7 +329,21 @@ action's major version is part of the contract and
 Actions-deployed artifact is served as-is and is never run through Jekyll, so a committed
 `.nojekyll` would make no difference and is not needed.
 
-Verify a deploy (all four must be 200):
+Verify a deploy (automated checklist):
+
+```bash
+python3 scripts/check_live_pages.py                                      # live acceptance check against default URL
+python3 scripts/check_live_pages.py --base-url https://...               # custom base URL
+python3 scripts/check_live_pages.py --self-test                         # offline negative controls & self-tests
+```
+
+Exits 0 with `RESULT: PASS` / non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
+check (**9** checks: 4 x 200 probes, 3 x 404 probes, and byte-identical sha256 comparison for
+both `quotes.csv` and `sources.csv`). Stdlib only; downloads and compares both CSVs against the
+local repository bytes. It replaces the manual curl + shasum commands and eliminates transcription
+risk (issue #41).
+
+Under the hood, it performs the four 200 probes:
 
 ```
 curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/
@@ -338,17 +352,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wis
 curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/sources.csv
 ```
 
-and these two must both be **404** (they cover the two ways a deploy can be wrong without
-failing: a published top-level dotfile — the #23 class — and a `.git` directory that should
-never have been tarred):
+and these three must all be **404** (they cover the ways a deploy can be wrong without
+failing: a published top-level dotfile — the #23 class — an unexcluded `.git` directory, and
+an unexcluded `.github` directory):
 
 ```
 curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.gitignore
 curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.git/config
+curl -s -o /dev/null -w '%{http_code}\n' https://mschwar.github.io/Garden-of-Wisdom/.github/workflows/pages.yml
 ```
 
 Checking only `/.git/config` is what let #23 ship: the artifact can be rooted correctly and
-still publish dotfiles, so probe both. The artifact itself can be listed without a deploy —
+still publish dotfiles, so probe all three. The artifact itself can be listed without a deploy —
 `gh api repos/mschwar/Garden-of-Wisdom/actions/artifacts?per_page=5` to find the newest
 `github-pages` artifact, then download its zip and `tar -tf artifact.tar` (no member should
 start with `./.` — `tar -tf artifact.tar | grep -E '/\.'` must be empty, at any depth).
