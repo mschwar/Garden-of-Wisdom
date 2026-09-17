@@ -946,6 +946,20 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       only inside the harness's throwaway copy: `quotes.csv`/`sources.csv` are byte-identical
       (`9766db8c…` / `7aafcb67…`), the D8-updated pair. Design trail:
       `GARDEN_45_CONTROLS_HANDOFF.md`.
+      **Landing:** commit `097e144`, PR
+      [#52](https://github.com/mschwar/Garden-of-Wisdom/pull/52), **merged as `63ef60e`**
+      (2026-09-16). CI: PR smoke run
+      [35179689288](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35179689288)
+      **success** (11m20s; the job log's own lines show `checkers: 13 of 13 selected, 0 skipped`,
+      `controls: 44 fired, 0 not fired of 44 selected (44 registered in the table)` and
+      `RESULT: PASS (44 controls fired, 9 harness self-tests)`, so the five new controls genuinely
+      executed in CI, not merely that the step exited 0; GitGuardian pass); on `main` after the
+      merge, smoke run
+      [35180454864](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35180454864)
+      **success** and Pages deploy run
+      [35180455000](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35180455000)
+      **success**. Live acceptance on the merged `main` (via `check_live_pages.py`): all 9 checks
+      **PASS**, live CSVs byte-identical (`quotes.csv` `9766db8c…` / `sources.csv` `7aafcb67…`).
 
 ## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
 
