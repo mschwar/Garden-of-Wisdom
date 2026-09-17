@@ -1466,3 +1466,26 @@ assertion leaves no trace anywhere.
 Rejected alternative: leaving the five mutations in the handoff prose where #45's close-out left
 them — it preserves the precise defect #43 was filed for, one level down. `quotes.csv` /
 `sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`). Design trail: `GARDEN_45_CONTROLS_HANDOFF.md`.
+
+## 2026-09-16 — D6 executed (near-duplicate curation: keep all 20)
+
+Decision D6 (2026-09-12) is executed against the post-#34 working list of **20** pairs.
+
+### What landed
+
+1. **Human look at all 20 pairs.** Disposition: **KEEP BOTH** for every pair. Classes covered:
+   different excerpts from one pinpoint citation (Bahá'í *Gleanings*/Epistle pages, Pirkei Avot
+   4:1, Yasna clauses), variant English translations of one verse (Dhammapada v. 1, Gita 2.47,
+   Yasna 30:9, Yasna 43:1 happiness line), cross-tradition parallels (Matthew ~ Leviticus;
+   "Walk in love" ~ "Walk in beauty"), and threshold noise across traditions.
+2. **Operator ruling on the three borderline same-passage pairs:** keep `201 ~ 306` and
+   `209 ~ 301` as variant translations; keep `73 ~ 240` as short mnemonic + full Deuteronomy
+   30:19. Rejected: merging any of those three.
+3. **No CSV edits.** `quotes.csv` / `sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`).
+   The validator still reports 20 WARN-level candidates — a reviewed-keep is not a request to
+   silence the detector.
+4. **Transcript** in `docs/data/DATA_QUALITY_REPORT.md` → "Curation 2026-09-16 (D6)".
+
+Rejected alternatives: (a) merge the Zoroastrian near-copies only; (b) merge those plus the
+Deuteronomy short/long pair — both collapse legitimate variant / memorization-length forms
+that D6's own rule prefers to keep. Design trail: `GARDEN_D6_HANDOFF.md`.

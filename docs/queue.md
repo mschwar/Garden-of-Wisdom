@@ -22,7 +22,7 @@ Living document — update it as items are picked up or closed, don't just appen
       CSVs, so every pre-D7 entry in this file that quotes `5675d7e6…` / `10b4c156…` is describing
       the **pre-D7** bytes. The current pair is `b3bb7848…` (quotes.csv) / `7aafcb67…`
       (sources.csv), read off `main`; no unit before this one had recorded it.
-- [ ] **ADOPTED SCOPE (D6) — curate the near-duplicate pairs that share a *specific citation*;
+- [x] **ADOPTED SCOPE (D6) — curate the near-duplicate pairs that share a *specific citation*;
       explicitly SKIP the pairs that are the validator's generic-`source_ref` false positive**
       (e.g. unrelated rows both labelled `"Oral Tradition"`). Keep both rows for legitimate variant
       translations; only merge/remove accidental duplication. **Sequence: runs AFTER W1** — this
@@ -43,12 +43,20 @@ Living document — update it as items are picked up or closed, don't just appen
       only evidence is a shared generic label, so the "explicitly SKIP the pairs that are the
       validator's generic-`source_ref` false positive" instruction in this item's own title is now
       vacuous — there is nothing in the list to skip.** The class table and the verbatim transcript are
-      in `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #34)". Not done.
+      in `docs/data/DATA_QUALITY_REPORT.md` → "Re-derivation 2026-09-13 (issue #34)".
       **Related spec [#34](https://github.com/mschwar/Garden-of-Wisdom/issues/34) — settled
       2026-09-13**: the sweep is now corpus-wide and applies W1.4's locator rule, so the per-`tradition`
       scope and the 196-pair / 45-pair measurements quoted in the filing are historical — the working
       count is **20**. See the "Closed — 2026-09-13 near-duplicate sweep scope + citation rule
       (issue #34)" section below.
+      **DONE 2026-09-16 (D6 executed):** all **20** pairs inspected; **0 merges / 0 deletes** —
+      every pair is KEEP BOTH (variant translations, different excerpts from one pinpoint citation,
+      cross-tradition parallels, or threshold noise). Operator explicitly kept the three borderline
+      same-passage pairs (`201 ~ 306`, `209 ~ 301`, `73 ~ 240`). The validator still reports the 20
+      as WARN-level candidates (correct — a reviewed-keep is not a silence request).
+      `quotes.csv`/`sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`). Disposition table:
+      `docs/data/DATA_QUALITY_REPORT.md` → "Curation 2026-09-16 (D6)". Design trail:
+      `GARDEN_D6_HANDOFF.md`.
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess. **D8 (2026-09-12)
       leaves these 4 rows for the operator** — guessing stays forbidden.

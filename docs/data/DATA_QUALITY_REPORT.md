@@ -20,6 +20,12 @@ below is unedited.
 > 2026-09-13 (issue #34)" at the end. The 2026-09-11 and "#31" transcripts above are kept
 > byte-identical as point-in-time records; **the `45` in them is superseded by the `20` here**, and
 > the queue's D6 item has been re-counted against it.
+>
+> **Curated 2026-09-16 (D6).** Every one of the **20** pairs was inspected. **0 merges / 0 deletes** —
+> all 20 are **KEEP BOTH** (variant translations, different excerpts from one pinpoint citation,
+> cross-tradition parallels, or threshold noise). The validator still reports the 20 as WARN-level
+> candidates; that is correct. See "Curation 2026-09-16 (D6)" at the end. `quotes.csv` /
+> `sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`).
 
 
 ## Summary
@@ -458,3 +464,57 @@ RESULT: PASS (no hard-integrity failures; see WARN-level items above for curatio
 `quotes.csv` changed (7 `item_type` cells); `sources.csv` is byte-identical to the
 2026-09-11 state (`7aafcb67…`). The prior transcripts above are frozen point-in-time
 records and are left byte-identical.
+
+## Curation 2026-09-16 (D6 — near-duplicate human look)
+
+Decision D6 (2026-09-12): keep both rows for legitimate variant translations; only
+merge/remove accidental duplication. The working list after #34 is **20 pairs, all worth a
+look**. Operator ruling for this pass: **KEEP ALL THREE** borderline same-passage pairs
+(201~306, 209~301, 73~240) and keep every other pair — zero row deletes.
+
+### Disposition table (all 20 → KEEP BOTH)
+
+| pair | evidence | class | why keep |
+|---|---|---|---|
+| `3 ~ 283` | text 0.74 | parallel theme, different works | Bahá'u'lláh *Gleanings* CXVII (verified) vs ‘Abdu’l-Bahá *Selections* 255 — related image, not the same passage |
+| `4 ~ 14` | same specific citation | different excerpts | *Gleanings* CV — two distinct sentences from one chapter |
+| `21 ~ 24` | same specific citation | different excerpts | *Epistle to the Son of the Wolf* p. 26 — two distinct sentences from one page |
+| `39 ~ 53` | text 0.82 | cross-tradition parallel | Matthew 22:39 ~ Leviticus 19:18 — same commandment in two traditions |
+| `50 ~ 318` | text 0.71 | threshold / parallel image | "Walk in love" (Ephesians) ~ "Walk in beauty" (Diné) — different meaning |
+| `65 ~ 66` | same specific citation | different excerpts | Pirkei Avot 4:1 — Ben Zoma's "who is wise" vs "who is strong" |
+| `65 ~ 67` | same specific citation | different excerpts | Pirkei Avot 4:1 — "who is wise" vs "who is rich" |
+| `66 ~ 67` | same specific citation; text 0.60 | different excerpts | Pirkei Avot 4:1 — "who is strong" vs "who is rich" |
+| `73 ~ 240` | same specific citation | short vs full of one verse | Deuteronomy 30:19 — mnemonic "Choose life." vs the longer verse; both useful for memorization |
+| `78 ~ 173` | text 0.62 | threshold noise | Qur'an 24:35 ~ GGS Ang 48 — different meanings across traditions |
+| `87 ~ 187` | text 0.61 | threshold noise | Qur'an 2:148 ~ Yasna 27:14 — different meanings across traditions |
+| `105 ~ 266` | same specific citation | variant translations | Dhammapada v. 1 — two English renderings of the same verse |
+| `113 ~ 114` | text 0.68 | adjacent verses | Dhammapada v. 277 (anicca) ~ v. 278 (dukkha) — related but distinct |
+| `132 ~ 279` | same specific citation | variant translations | Gita 2.47 — two English renderings of the same verse |
+| `175 ~ 332` | text 0.61 | threshold noise | GGS Ang 17 ~ Hopi proverb — unrelated across traditions |
+| `186 ~ 303` | same specific citation | different excerpts | Yasna 30:3 — consecutive clauses of the twin-spirits verse |
+| `201 ~ 306` | same specific citation; text 0.86 | variant translations | Yasna 30:9 — two near-identical English renderings of the renovation line |
+| `209 ~ 216` | same specific citation | different excerpts | Yasna 43:1 — happiness-for-others line vs good-thinking/Mazda line |
+| `209 ~ 301` | same specific citation; text 0.82 | variant translations | Yasna 43:1 — two English renderings of the happiness-for-others line |
+| `216 ~ 301` | same specific citation | different excerpts | Yasna 43:1 — good-thinking/Mazda line vs happiness-for-others (variant of 209) |
+
+### Borderline pairs the operator ruled on explicitly
+
+| pair | texts | ruling |
+|---|---|---|
+| `201 ~ 306` | "May we be among those who are to bring about the renovation of this world." ~ "May we be such as those who bring about the renovation of the world." | **KEEP BOTH** — variant translations |
+| `209 ~ 301` | "Happiness comes to him who seeks happiness for others." ~ "Happiness comes to the one who brings happiness to others." | **KEEP BOTH** — variant translations |
+| `73 ~ 240` | "Choose life." ~ the full Deuteronomy 30:19 sentence | **KEEP BOTH** — short mnemonic + full verse |
+
+Rejected alternative for those three: merge (drop 306, 301, and/or 73). Rejected because D6's
+own rule prefers keeping legitimate variant translations and memorization-length variants over
+collapsing them.
+
+### What this does *not* change
+
+- The validator still reports **20** near-duplicate candidates (WARN). A reviewed-keep is not a
+  reason to silence the detector; the pairs remain true near-duplicates under the heuristic.
+- `quotes.csv` / `sources.csv` are byte-identical (`9766db8c…` / `7aafcb67…`).
+- No browser "duplicate review" view was added — the CLI report + this table were sufficient for
+  the pass (the optional infra queue item stays open as a future UX choice, not a D6 blocker).
+
+Design trail: `GARDEN_D6_HANDOFF.md`. Decision: `docs/DECISIONS.md` → "D6 executed".
