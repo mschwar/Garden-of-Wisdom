@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 39
+EXPECTED_CONTROLS = 44
 EXPECTED_SELF_TESTS = 9
 
 
@@ -349,6 +349,16 @@ CHECKERS: tuple[Checker, ...] = (
                 "'0002_unverifiable_ledger', '0003_legacy_batch_capture'] into an empty "
                 "directory",
             ),
+            Mutation(
+                "g4", "the captures UPDATE trigger still aborts but its RAISE message no longer "
+                "names the invariant (issue #45 gap 5)",
+                "scripts/garden_store.py",
+                "RAISE(ABORT, 'captures is immutable: UPDATE rejected')",
+                "RAISE(ABORT, 'captures is immutable (trigger)')",
+                "FAIL: the UPDATE trigger's own RAISE message names the invariant it enforces "
+                "-- 'captures is immutable (trigger)' does not contain 'captures is immutable: "
+                "UPDATE rejected'",
+            ),
         ),
     ),
     Checker(
@@ -430,6 +440,15 @@ CHECKERS: tuple[Checker, ...] = (
                 "FAIL: rebuilding every hint exports byte-identical text (derived, deterministic, "
                 "not appended)",
             ),
+            Mutation(
+                "n4", "the comparison view stops case-folding (issue #45 gap 1)",
+                "scripts/garden_normalize.py",
+                '        "text": normalize_text(row["candidate_text"]).casefold(),',
+                '        "text": normalize_text(row["candidate_text"]),',
+                "FAIL: two candidates whose text differs only in letter case still get an "
+                "exact-text hint -- the comparison view is case-folded, as "
+                "W1_4_NORMALIZATION_HINTS.md documents -- []",
+            ),
         ),
     ),
     Checker(
@@ -462,6 +481,15 @@ CHECKERS: tuple[Checker, ...] = (
                 "'in_research' WHERE candidate_id = ?\",",
                 "FAIL: accept: cand-t01 research_state stayed not_started -- in_research",
             ),
+            Mutation(
+                "r4", "the corpus follow-on is filed under the curation action vocabulary "
+                "(issue #45 gap 2)",
+                "scripts/garden_store.py",
+                '                        action="corpus-follow-on",',
+                '                        action="curation-decision",',
+                "FAIL: every curation-dimension row is recorded as 'curation-decision' and every "
+                "corpus-dimension follow-on row as 'corpus-follow-on'",
+            ),
         ),
     ),
     Checker(
@@ -481,6 +509,17 @@ CHECKERS: tuple[Checker, ...] = (
                 "BEFORE UPDATE ON decisions",
                 "BEFORE UPDATE OF seq ON decisions",
                 "FAIL: decisions accepted UPDATE: the log is not append-only",
+            ),
+            Mutation(
+                "x3", "the T-P7 audit row records the wrong to_state while the live column stays "
+                "right (issue #45 gap 3)",
+                "scripts/garden_store.py",
+                '                follow.append(("corpus", "eligible", "candidate_only", "T-P7", '
+                '"operator"))',
+                '                follow.append(("corpus", "eligible", "eligible", "T-P7", '
+                '"operator"))',
+                "FAIL: the T-P7 audit row itself records to_state=candidate_only (not just the "
+                "live corpus_state) -- to_state='eligible'",
             ),
         ),
     ),
@@ -580,6 +619,17 @@ CHECKERS: tuple[Checker, ...] = (
                 "            )\n",
                 "        # guard removed\n",
                 "FAIL: reopen on a missing row was accepted",
+            ),
+            Mutation(
+                "l4", "quotes.csv's enum is widened by hand: a row leaves the 3-valued "
+                "verification_status (issue #45 gap 4, D3's ruling)",
+                "quotes.csv",
+                '"kindness, speech, influence, heart",unknown,unverified,12,true',
+                '"kindness, speech, influence, heart",unknown,unverifiable,12,true',
+                "FAIL: issue #45 gap 4: quotes.csv's verification_status stays exactly "
+                "['disputed', 'unverified', 'verified'] -- D3 chose the side-car ledger 'instead "
+                "of widening the 3-valued quotes.csv enum', and this suite (not just "
+                "validate_quotes.py) falsifies that ruling directly -- ['1']",
             ),
         ),
     ),
