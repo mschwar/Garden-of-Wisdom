@@ -52,7 +52,7 @@
     "tradition_values": 27,
     "unresolved_glyph_ids": ["1", "16", "314", "320"],
     "unresolved_source_link_count": 0,
-    "item_type_counts": {"excerpt": 270, "oral-attribution": 34, "unknown": 20},
+    "item_type_counts": {"excerpt": 274, "oral-attribution": 34, "paraphrase": 2, "unknown": 14},
     "source_rows": 32
   },
   "scenarios": [

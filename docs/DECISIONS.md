@@ -1404,3 +1404,36 @@ Decision D4 is implemented: the 324 legacy `quotes.csv` rows get **ONE batch cap
 Rejected alternatives remain those in the 2026-09-12 D4 entry: (a) no capture at all; (b) one
 synthetic capture per row. Design trail: `docs/program/D4_LEGACY_BATCH_CAPTURE.md`,
 `GARDEN_D4_HANDOFF.md`. `quotes.csv` / `sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`).
+
+## 2026-09-16 — D8 executed (the cheap deterministic item_type hygiene + the 27-tradition controlled list)
+
+Decision D8 (2026-09-12) is implemented: the cheap deterministic subset of legacy `item_type`
+hygiene is done, and the 27-value `tradition` list is documented as the controlled list.
+
+### What landed
+
+1. **Retyped the five Roman-numeral Gleanings rows** still in `item_type = unknown` (ids 4, 7,
+   14, 22, 285) → `excerpt`. The "digit or `:` → excerpt" heuristic missed Roman numerals; ids
+   3 and 15 were already retyped by G4. `item_type` counts moved `{unknown: 20, excerpt: 270,
+   oral-attribution: 34}` → `{unknown: 14, excerpt: 274, paraphrase: 2, oral-attribution: 34}`.
+2. **Retyped the two paraphrase-shaped rows** → `paraphrase`: id 31 (author "‘Abdu’l-Bahá
+   (paraphrased)") and id 267 ("Various Sutras (paraphrased)").
+3. **Documented the 27-value `tradition` list as the controlled list** in `README.md`
+   §"Traditions in use" (decision D8), replacing the prose that named only 8 + "19 distinct
+   Indigenous…".
+4. **Re-derived the doctrine fixture's `item_type_counts`** in `w0_scenarios.json` in the same
+   unit (a stale count is the same class of defect as a stale report number).
+
+### Rulings held
+
+- `item_type` enum was **not** widened.
+- The four `_`-glyph rows (ids 1, 16, 314, 320) were **left for the operator** — guessing stays
+  forbidden.
+- The other `unknown` rows (Tablets-of-Bahá'u'lláh 5/19/23/25, the Sutta rows 261/262/268/270,
+  and 164/188/213/304) are **not** part of D8's cheap deterministic subset — they need real
+  classification judgment and were left untouched.
+- `quotes.csv` changed (7 `item_type` cells only, byte-surgical); `sources.csv` byte-identical
+  (`7aafcb67…`).
+
+Rejected alternatives remain those in the 2026-09-12 D8 entry: (a) leaving all hygiene to
+post-W1 tools; (b) doing the `_` rows now by guessing. Design trail: `GARDEN_D8_HANDOFF.md`.

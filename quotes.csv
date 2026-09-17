@@ -2,17 +2,17 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 1,"A kindly tongue is the lodestone of the heart of men. It is the bread of the spirit, it clotheth the words with meaning, it is the fountain of the light of wisdom and understanding.",Baha'i,Gleanings from the Writings of Bahá_u'lláh,Bahá_u'lláh,"kindness, speech, influence, heart",unknown,unverified,12,true
 2,So powerful is the light of unity that it can illuminate the whole earth.,Baha'i,"Epistle to the Son of the Wolf, p. 14",Bahá’u’lláh,"unity,light,world,humanity",excerpt,unverified,12,false
 3,"The earth is but one country, and mankind its citizens.",Baha'i,"Gleanings, CXVII",Bahá’u’lláh,"unity,humanity,world,citizenship",excerpt,verified,12,false
-4,"Let your vision be world-embracing, rather than confined to your own self.",Baha'i,"Gleanings, CV",Bahá’u’lláh,"vision,world,perspective,selflessness",unknown,unverified,12,false
+4,"Let your vision be world-embracing, rather than confined to your own self.",Baha'i,"Gleanings, CV",Bahá’u’lláh,"vision,world,perspective,selflessness",excerpt,unverified,12,false
 5,"Ye are the fruits of one tree, and the leaves of one branch.",Baha'i,"Tablets of Bahá’u’lláh, Words of Paradise",Bahá’u’lláh,"unity,humanity,metaphor,nature",unknown,unverified,12,false
 6,"Let deeds, not words, be your adorning.",Baha'i,"The Hidden Words, Persian 5",Bahá’u’lláh,"action,deeds,character,integrity",excerpt,unverified,12,false
-7,"Be generous in prosperity, and thankful in adversity.",Baha'i,"Gleanings, CLIII",Bahá’u’lláh,"generosity,gratitude,adversity,character",unknown,unverified,12,false
+7,"Be generous in prosperity, and thankful in adversity.",Baha'i,"Gleanings, CLIII",Bahá’u’lláh,"generosity,gratitude,adversity,character",excerpt,unverified,12,false
 8,The best-beloved of all things in My sight is Justice.,Baha'i,"The Hidden Words, Arabic 2",Bahá’u’lláh,"justice,virtue,god,character",excerpt,unverified,12,false
 9,"Speak no evil, that thou mayest not hear it spoken unto thee.",Baha'i,"The Hidden Words, Persian 44",Bahá’u’lláh,"speech,gossip,backbiting,karma",excerpt,unverified,12,false
 10,"If you desire mercy, show mercy to the weak.",Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 130",‘Abdu’l-Bahá,"mercy,compassion,action,kindness",excerpt,unverified,12,false
 11,Love is light in whatsoever house it may shine.,Baha'i,"Paris Talks, Oct 10 1911",‘Abdu’l-Bahá,"love,light,home,spirit",excerpt,unverified,12,false
 12,Truthfulness is the foundation of all human virtues.,Baha'i,"Tablet of ‘Abdu’l-Bahá; cited in The Advent of Divine Justice",‘Abdu’l-Bahá,"truthfulness,virtue,foundation,character",excerpt,verified,12,false
 13,O Son of Being! Bring thyself to account each day.,Baha'i,"The Hidden Words, Arabic 31",Bahá’u’lláh,"accountability,reflection,self-improvement,discipline",excerpt,unverified,12,false
-14,Be anxiously concerned with the needs of the age ye live in.,Baha'i,"Gleanings, CV",Bahá’u’lláh,"service,society,relevance,purpose",unknown,unverified,12,false
+14,Be anxiously concerned with the needs of the age ye live in.,Baha'i,"Gleanings, CV",Bahá’u’lláh,"service,society,relevance,purpose",excerpt,unverified,12,false
 15,Regard man as a mine rich in gems of inestimable value.,Baha'i,"Gleanings, CXXII",Bahá’u’lláh,"potential,humanity,virtue,education",excerpt,verified,12,false
 16,The source of all learning is the knowledge of God.,Baha'i,"Tablets of Bahá’u’lláh, Law_-i-_ikmat",Bahá’u’lláh,"knowledge,learning,god,spirituality",unknown,unverified,12,true
 17,"If thou seekest justice, choose for others what thou choosest for thyself.",Baha'i,"Epistle to the Son of the Wolf, p. 30",Bahá’u’lláh,"justice,empathy,goldenrule,fairness",excerpt,unverified,12,false
@@ -20,7 +20,7 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 19,Prefer ye others to yourselves.,Baha'i,"Tablets of Bahá’u’lláh, Words of Paradise",Bahá’u’lláh,"altruism,selflessness,service,sacrifice",unknown,unverified,12,false
 20,"In the garden of thy heart, plant naught but the rose of love.",Baha'i,"The Hidden Words, Persian 3",Bahá’u’lláh,"love,heart,purity,metaphor",excerpt,unverified,12,false
 21,"Knowledge is as wings to man’s life, and a ladder for his ascent.",Baha'i,"Epistle to the Son of the Wolf, p. 26",Bahá’u’lláh,"knowledge,learning,progress,ascent",excerpt,unverified,12,false
-22,Occupy yourselves with that whereby the welfare of mankind can be secured.,Baha'i,"Gleanings, CXXI",Bahá’u’lláh,"service,work,purpose,humanity",unknown,unverified,12,false
+22,Occupy yourselves with that whereby the welfare of mankind can be secured.,Baha'i,"Gleanings, CXXI",Bahá’u’lláh,"service,work,purpose,humanity",excerpt,unverified,12,false
 23,The essence of faith is fewness of words and abundance of deeds.,Baha'i,"Tablets of Bahá’u’lláh, Words of Paradise",Bahá’u’lláh,"faith,action,deeds,integrity",unknown,unverified,12,false
 24,"Arts, crafts and sciences uplift the world of being.",Baha'i,"Epistle to the Son of the Wolf, p. 26",Bahá’u’lláh,"arts,science,work,progress,civilization",excerpt,unverified,12,false
 25,"Arise to serve, and let not the sweetness of repose enchain you.",Baha'i,"Tablets of Bahá’u’lláh, Ishráqát",Bahá’u’lláh,"service,action,sacrifice,detachment",unknown,unverified,12,false
@@ -29,7 +29,7 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 28,"When a thought of war comes, oppose it by a stronger thought of peace.",Baha'i,"Paris Talks, Feb 23 1913",‘Abdu’l-Bahá,"peace,war,mind,thought",excerpt,unverified,12,false
 29,Love ye all mankind; no one should wish for another what he doth not wish for himself.,Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 201",‘Abdu’l-Bahá,"love,humanity,empathy,goldenrule",excerpt,unverified,12,false
 30,Prayer is the key of the doors of mercy.,Baha'i,"Paris Talks, Dec 2 1911",‘Abdu’l-Bahá,"prayer,mercy,spirituality,connection",excerpt,unverified,12,false
-31,"Where there is love, nothing is too much trouble and there is always time.",Baha'i,"The Chosen Highway, p. 167",‘Abdu’l-Bahá (paraphrased),"love,service,time,action,devotion",excerpt,unverified,12,false
+31,"Where there is love, nothing is too much trouble and there is always time.",Baha'i,"The Chosen Highway, p. 167",‘Abdu’l-Bahá (paraphrased),"love,service,time,action,devotion",paraphrase,unverified,12,false
 32,Blessed are the peacemakers: for they shall be called the children of God.,Christianity,Matthew 5:9,Jesus,"peace,blessing,reconciliation,god",excerpt,unverified,9,false
 33,"Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.",Christianity,Matthew 5:16,Jesus,"light,example,action,witness,influence",excerpt,unverified,9,false
 34,"For where your treasure is, there will your heart be also.",Christianity,Matthew 6:21,Jesus,"treasure,heart,priority,devotion,values",excerpt,unverified,9,false
@@ -255,7 +255,7 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 264,"There is, monks, an unborn, unbecome, unmade, unconditioned. If there were not that unborn...there would be no escape from the born, become, made, conditioned.",Buddhism,Udana 8.3,The Buddha,"nirvana,unconditioned,freedom,liberation,reality",excerpt,unverified,16,false
 265,"Though one may conquer a thousand times a thousand men in battle, yet he is the noblest victor who conquers himself.",Buddhism,"Dhammapada, v. 103",The Buddha,"victory,self-control,mastery,mind,strength",excerpt,unverified,6,false
 266,All that we are is the result of what we have thought.,Buddhism,"Dhammapada, v. 1",The Buddha,"mind,thought,creation,responsibility,karma",excerpt,unverified,6,false
-267,Holding on to anger is like grasping a hot coal with the intent of throwing it at someone else; you are the one who gets burned.,Buddhism,Various Sutras (paraphrased),The Buddha,"anger,letting-go,harm,wisdom,mind",unknown,unverified,22,false
+267,Holding on to anger is like grasping a hot coal with the intent of throwing it at someone else; you are the one who gets burned.,Buddhism,Various Sutras (paraphrased),The Buddha,"anger,letting-go,harm,wisdom,mind",paraphrase,unverified,22,false
 268,"This is the noble truth of suffering: birth is suffering, aging is suffering, illness is suffering, death is suffering... In short, the five clinging-aggregates are suffering.",Buddhism,Dhammacakkappavattana Sutta,The Buddha,"fournobletruths,suffering,dukkha,reality,diagnosis",unknown,unverified,16,false
 269,"Just as the great ocean has one taste, the taste of salt, so this teaching and discipline has one taste, the taste of freedom.",Buddhism,Udana 5.5,The Buddha,"freedom,liberation,dharma,path,taste",excerpt,unverified,16,false
 270,"Radiate boundless love towards the entire world—above, below, and across—unhindered, without ill will, without enmity.",Buddhism,Metta Sutta,The Buddha,"love,metta,compassion,world,oneness",unknown,unverified,16,false
@@ -273,7 +273,7 @@ id,quote_text,tradition,source_ref,author,tags,item_type,verification_status,sou
 282,"O Son of Man! I have created thee rich, why dost thou bring thyself down to poverty? Noble have I made thee, wherewith dost thou abase thyself?",Baha'i,"The Hidden Words, Arabic 13",Bahá’u’lláh,"potential,nobility,spirit,wealth,purpose",excerpt,unverified,12,false
 283,The earth is one home and mankind its family.,Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 255",‘Abdu’l-Bahá,"unity,family,humanity,home,world",excerpt,unverified,12,false
 284,"The reality of man is his thought, not his material body.",Baha'i,"Paris Talks, p. 17",‘Abdu’l-Bahá,"thought,mind,reality,spirit,body",excerpt,unverified,12,false
-285,"The purpose of the one true God in manifesting Himself is to summon all mankind to truthfulness and sincerity, to piety and trustworthiness, to resignation and submissiveness to the Will of God.",Baha'i,"Gleanings, CXXXV",Bahá’u’lláh,"purpose,god,virtue,truthfulness,sincerity",unknown,unverified,12,false
+285,"The purpose of the one true God in manifesting Himself is to summon all mankind to truthfulness and sincerity, to piety and trustworthiness, to resignation and submissiveness to the Will of God.",Baha'i,"Gleanings, CXXXV",Bahá’u’lláh,"purpose,god,virtue,truthfulness,sincerity",excerpt,unverified,12,false
 286,The light of men is Justice. Quench it not with the contrary winds of oppression and tyranny.,Baha'i,"Epistle to the Son of the Wolf, p. 28",Bahá’u’lláh,"justice,light,oppression,tyranny,society",excerpt,unverified,12,false
 287,Let your heart burn with loving kindness for all who may cross your path.,Baha'i,"Selections from the Writings of ‘Abdu’l-Bahá, 1",‘Abdu’l-Bahá,"love,kindness,heart,compassion,action",excerpt,unverified,12,false
 288,"Religion and science are the two wings upon which man's intelligence can soar into the heights, with which the human soul can progress.",Baha'i,"Paris Talks, p. 143",‘Abdu’l-Bahá,"science,religion,harmony,progress,intelligence",excerpt,unverified,12,false

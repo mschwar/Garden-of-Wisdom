@@ -52,15 +52,29 @@ Living document — update it as items are picked up or closed, don't just appen
 - [ ] Resolve the 4 rows with literal `_` placeholder glyphs (IDs 1, 16, 314, 320) — needs a
       human who knows the correct diacritic/modifier character, not a guess. **D8 (2026-09-12)
       leaves these 4 rows for the operator** — guessing stays forbidden.
-- [ ] Review and reclassify the remaining `item_type = unknown` rows (20 after G4 reclassified
+- [x] Review and reclassify the remaining `item_type = unknown` rows (20 after G4 reclassified
       donor ids 3 and 15 to `excerpt`). Frontier review noted ~10 Roman-numeral Gleanings
       citations that the digit-or-colon heuristic missed, plus paraphrase-shaped rows 31 and
       267 that were never typed `paraphrase`. **D8 (2026-09-12) adopts the cheap deterministic
       subset (~10 Roman-numeral Gleanings rows + rows 31/267), sequenced AFTER W1 (writes
       `quotes.csv`); `item_type` is not widened.**
-- [ ] Decide whether the 27-value tradition list should be formally documented as the new
+      **DONE 2026-09-16 (D8 executed):** the five Roman-numeral **Gleanings** rows still in
+      `unknown` (ids 4, 7, 14, 22, 285) retyped → `excerpt` (ids 3 and 15 were already done by
+      G4); the two paraphrase-shaped rows retyped → `paraphrase` (id 31, author "‘Abdu’l-Bahá
+      (paraphrased)"; id 267, "Various Sutras (paraphrased)"). `item_type` counts moved
+      `{unknown: 20, excerpt: 270, oral-attribution: 34}` → `{unknown: 14, excerpt: 274,
+      paraphrase: 2, oral-attribution: 34}`. The other `unknown` rows (Tablets-of-Bahá'u'lláh
+      5/19/23/25, the Sutta rows 261/262/268/270, and 164/188/213/304) are NOT part of D8's
+      cheap deterministic subset — they need real classification judgment and were left
+      untouched. `quotes.csv` changed (7 `item_type` cells only); `sources.csv` byte-identical
+      (`7aafcb67…`). `validate_quotes.py` PASS under both interpreters; the doctrine fixture's
+      `item_type_counts` re-derived in the same unit. Design trail: `GARDEN_D8_HANDOFF.md`.
+- [x] Decide whether the 27-value tradition list should be formally documented as the new
       controlled list (this retrofit's README treats it as such) or trimmed/normalized further.
       **D8 (2026-09-12) decides: document the 27-value list as the controlled list.**
+      **DONE 2026-09-16 (D8 executed):** `README.md` §"Traditions in use" now enumerates all
+      27 values as the controlled list (decision D8), replacing the prose that named only 8 +
+      "19 distinct Indigenous…".
 
 ## Open — infra
 

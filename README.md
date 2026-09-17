@@ -58,12 +58,18 @@ Full schema and known data issues: `docs/data/DATA_CONTRACT.md`.
 
 ### Traditions in use
 
-Bahá'í, Buddhism, Christianity, Hinduism, Islam, Judaism, Zoroastrianism, Sikhism, and 19
-distinct Indigenous American and African oral-tradition labels (e.g. Diné (Navajo), Hopi
-(Pueblo), Haudenosaunee (Iroquois), Yoruba (Nigeria), Nahua (Aztec) — see `sources.csv` and
-`docs/data/DATA_QUALITY_REPORT.md` for the full list and counts). This list reflects the
-actual data as of 2026-09-11; it is documentation of current scope, not a hard enum enforced
-anywhere in code.
+The **controlled list** of `tradition` values is the 27 distinct values observed in the
+corpus (decision D8, 2026-09-12 — documented, not enforced in code):
+
+`Akan (Ghana)`, `Baha'i`, `Buddhism`, `Cherokee`, `Christianity`, `Diné (Navajo)`,
+`Ethiopian`, `Haudenosaunee (Iroquois)`, `Hinduism`, `Hopi (Pueblo)`, `Igbo (Nigeria)`,
+`Islam`, `Judaism`, `K'iche' (Maya)`, `Lakota`, `Modern Mayan`, `Multitribal Proverb`,
+`Nahua (Aztec)`, `Nez Perce`, `Nguni (Bantu)`, `Oglala Lakota`, `Shawnee`, `Sikhism`,
+`Tewa (Pueblo)`, `Yoruba (Nigeria)`, `Zoroastrianism`, `Zuni (Pueblo)`.
+
+This list reflects the actual data as of 2026-09-11; it is documentation of current scope,
+not a hard enum enforced anywhere in code. See `sources.csv` and
+`docs/data/DATA_QUALITY_REPORT.md` for counts.
 
 ### Reference (`source_ref`) conventions
 
