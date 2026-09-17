@@ -426,3 +426,35 @@ RESULT: PASS (no hard-integrity failures; see WARN-level items above for curatio
 
 `quotes.csv` and `sources.csv` are byte-identical to the 2026-09-11 state
 (`5675d7e6…` / `10b4c156…`): the re-derivation is a computation over the corpus, not an edit to it.
+
+## Re-derivation 2026-09-16 (D8 — item_type hygiene)
+
+D8 (decision 2026-09-12) retyped the cheap deterministic subset of `item_type = unknown`
+rows out of `unknown`: the five Roman-numeral **Gleanings** citations (ids 4, 7, 14, 22,
+285) → `excerpt` (the "digit or `:` → excerpt" heuristic missed Roman numerals; ids 3 and
+15 were already retyped by G4), and the two paraphrase-shaped rows (id 31, author
+"‘Abdu’l-Bahá (paraphrased)"; id 267, "Various Sutras (paraphrased)") → `paraphrase`.
+`item_type` was **not** widened; the four `_`-glyph rows (ids 1, 16, 314, 320) were left
+for the operator. The 27-value `tradition` list was documented as the controlled list in
+`README.md` (decision D8).
+
+### Fresh transcript (verbatim, 2026-09-16, `python3 scripts/validate_quotes.py`)
+
+```
+209 ~ 301 (same specific citation; text similarity 0.82)
+  216 ~ 301 (same specific citation)
+pair detection re-run with the corpus rows reversed: 20 candidates
+near-duplicate reasons re-derived from the rows and matched: 20
+pairs sharing an exact source_ref (corpus-wide): 189 -- 13 specific (citation evidence), 176 generic (suppressed by the locator rule)
+unresolved source links: 0 -> ids []
+rows with unresolved glyph markers (literal '_' standing in for an untyped character): 4 -> ids ['1', '16', '314', '320']
+counts by item_type: {'unknown': 14, 'excerpt': 274, 'paraphrase': 2, 'oral-attribution': 34}
+counts by verification_status: {'unverified': 320, 'verified': 4}
+sources.csv: 32 rows, ids: ['1', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '2', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '3', '30', '31', '32', '4', '5', '6', '7.1', '8', '9']
+
+RESULT: PASS (no hard-integrity failures; see WARN-level items above for curation queue)
+```
+
+`quotes.csv` changed (7 `item_type` cells); `sources.csv` is byte-identical to the
+2026-09-11 state (`7aafcb67…`). The prior transcripts above are frozen point-in-time
+records and are left byte-identical.
