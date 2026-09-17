@@ -1373,3 +1373,34 @@ data drift undetectable.
 `quotes.csv` / `sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`). Design trail:
 `GARDEN_LIVE_PAGES_ACCEPTANCE_HANDOFF.md`.
 
+
+## 2026-09-16 — D4 executed (the legacy batch capture)
+
+Decision D4 is implemented: the 324 legacy `quotes.csv` rows get **ONE batch capture** for the
+2026-09-11 rehabilitation import, not 324 synthetic per-row captures and not zero.
+
+### What landed
+
+1. **Migration `0003_legacy_batch_capture`** adds `legacy_batch_membership(legacy_row_id PK,
+   capture_id REFERENCES captures)`. The capture body itself lives in the existing immutable
+   `captures` table as `cap-2026-09-11-legacy-batch`.
+2. **`Store.seed_legacy_batch_capture(ids)`** writes the fixed capture + every membership row in
+   one transaction. Idempotent for the exact same set; refuses a conflicting capture body or
+   membership set (never a silent overwrite). Creates **no candidates** — legacy rows are not
+   store candidates (same posture as D3).
+3. **Capture body is constants, not caller-supplied.** `LEGACY_BATCH_CAPTURED_TEXT` is the true
+   statement about the frozen archive paths and their sha256 digests; `context_notes` explicitly
+   records that encounter context is unknown; `capture_method`/`captured_by` are `legacy-import`;
+   `captured_at` is `2026-09-11T00:00:00-06:00`.
+4. **CLI** `scripts/garden_legacy_batch.py` (`seed` / `show` / `verify`) and acceptance
+   `scripts/check_garden_legacy_batch.py`. `verify` also re-hashes the live archive files when
+   present.
+5. **Export header stays `garden.export/1`.** The membership section is additive (same ruling as
+   D3). `check_garden_store.py` / `check_garden_ledger.py` exact-shape assertions were necessarily
+   updated to the three-migration schema.
+6. **Live seed:** the committed mirror `data/store/garden.export.txt` now holds the batch capture,
+   324 membership rows, and the pre-existing D3 id-30 ledger row.
+
+Rejected alternatives remain those in the 2026-09-12 D4 entry: (a) no capture at all; (b) one
+synthetic capture per row. Design trail: `docs/program/D4_LEGACY_BATCH_CAPTURE.md`,
+`GARDEN_D4_HANDOFF.md`. `quotes.csv` / `sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`).

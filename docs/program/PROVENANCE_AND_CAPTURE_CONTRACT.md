@@ -50,12 +50,18 @@ Optional but captured whenever available:
 
 ## The legacy corpus (all 324 existing rows)
 
-The existing rows in `quotes.csv` have **no capture records**. Their raw encounter is not
-reconstructable: what the original author saw, where, when, and typed-in-as-is was never
-recorded. W0 does not invent one.
+The existing rows in `quotes.csv` have **no reconstructable per-row encounter**: what the
+original author saw, where, when, and typed-in-as-is was never recorded. W0 refused to invent
+one. Decision D4 (2026-09-12) supersedes the open policy question: the corpus gets **ONE
+batch capture** for the 2026-09-11 rehabilitation import — a true, verifiable statement about
+the frozen archive + documented transform — not 324 fabricated encounters.
 
 What *is* recorded for those rows, and what future work must treat as their provenance:
 
+- the store capture `cap-2026-09-11-legacy-batch` (`capture_method`/`captured_by` =
+  `legacy-import`, `context_notes` explicitly "encounter context is unknown"), plus the
+  `legacy_batch_membership` side-car linking every `quotes.csv` `id` to that capture
+  (`D4_LEGACY_BATCH_CAPTURE.md`);
 - the frozen legacy bytes at `data/archive/2026-09-11/*.original.csv`, hashed and never
   edited (`../data/DATA_CONTRACT.md`; verified byte-identical to git blobs at `ef38aca` in
   `../audit/2026-09-11/PHASE0_FRONTIER_REVIEW.md`);
@@ -64,10 +70,10 @@ What *is* recorded for those rows, and what future work must treat as their prov
 
 Consequences, stated plainly:
 
-- A legacy row's `captured_at` is at best the archive date, and `capture_method` is
-  `legacy-import`; a future import must use those sentinels rather than implying a real
-  encounter record.
-- The "preserve the raw encounter" guarantee applies **going forward**, and applies to the
-  legacy corpus only through the frozen archive.
+- A legacy row's capture is the **batch** record above; `captured_at` is the archive date and
+  `capture_method` is `legacy-import`. Future imports must use those sentinels rather than
+  implying a real per-row encounter.
+- The "preserve the raw encounter" guarantee applies **going forward**. For the legacy corpus
+  it applies through the batch capture + frozen archive, never through invented per-row text.
 - Any later *research* on a legacy row adds evidence items to the existing record; it does
-  not retroactively fabricate a capture.
+  not retroactively fabricate a per-row capture.

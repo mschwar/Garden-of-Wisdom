@@ -98,7 +98,8 @@ must turn it red.
 
 ## The control table
 
-36 controls over 12 checkers. `scripts/run_negative_controls.py --list` prints the same table
+39 controls over 13 checkers (36 from the original table + 3 D4 `b1`–`b3` controls added with
+the legacy-batch-capture unit). `scripts/run_negative_controls.py --list` prints the same table
 with the exact anchor and replacement strings.
 
 | checker | id | mutation | asserted first `FAIL:` |

@@ -212,6 +212,43 @@ UNVERIFIABLE_FROM_STATE: dict[str, str] = {
     "T-R11": "verified",
 }
 
+#: Decision D4 (2026-09-12): ONE batch capture for the 2026-09-11 rehabilitation import of
+#: the 324 legacy `quotes.csv` rows. The capture records the import *event* (a true,
+#: verifiable statement about the frozen archive + transform), never a fabricated per-row
+#: encounter. Membership links every legacy row id to that single capture so downstream
+#: code has a uniform provenance shape. See `docs/program/D4_LEGACY_BATCH_CAPTURE.md`.
+LEGACY_BATCH_CAPTURE_ID = "cap-2026-09-11-legacy-batch"
+LEGACY_BATCH_CAPTURED_AT = "2026-09-11T00:00:00-06:00"
+LEGACY_BATCH_EXPECTED_ROW_COUNT = 324
+LEGACY_BATCH_ARCHIVE_QUOTES = "data/archive/2026-09-11/quotes.original.csv"
+LEGACY_BATCH_ARCHIVE_SOURCES = "data/archive/2026-09-11/sources.original.csv"
+LEGACY_BATCH_ARCHIVE_QUOTES_SHA256 = (
+    "cad3d9f5f333121ed5ca020cd4929b9439fc474a0c5f56d5d7f52a77d5368c52"
+)
+LEGACY_BATCH_ARCHIVE_SOURCES_SHA256 = (
+    "f86a72f69f8e04be3ece71f88ccc9c8eec4738a8994b6f32e701695390e9af6d"
+)
+LEGACY_BATCH_CAPTURED_TEXT = (
+    "2026-09-11 Garden rehabilitation import of 324 legacy quotes.csv rows. "
+    "Encounter context unknown. Provenance is the frozen archive at "
+    f"{LEGACY_BATCH_ARCHIVE_QUOTES} (sha256:{LEGACY_BATCH_ARCHIVE_QUOTES_SHA256}) and "
+    f"{LEGACY_BATCH_ARCHIVE_SOURCES} (sha256:{LEGACY_BATCH_ARCHIVE_SOURCES_SHA256}), "
+    "plus git history and the documented Mac OS Roman→UTF-8 transform. "
+    "This is ONE batch capture for the import event — not a per-row encounter record."
+)
+LEGACY_BATCH_CONTEXT_NOTES = (
+    "Encounter context is unknown. This capture records the 2026-09-11 rehabilitation "
+    "import event (decision D4), not a reconstructable per-row encounter."
+)
+LEGACY_BATCH_SOURCE_REFERENCE = "data/archive/2026-09-11/"
+LEGACY_BATCH_RAW_ARTIFACT_REF = (
+    f"{LEGACY_BATCH_ARCHIVE_QUOTES};{LEGACY_BATCH_ARCHIVE_SOURCES}"
+)
+LEGACY_BATCH_MEMBERSHIP_COLUMNS = (
+    "legacy_row_id",
+    "capture_id",
+)
+
 #: Export sections, in fixed order: (name, columns, ORDER BY). Deterministic ordering is the
 #: whole point -- the export must be a pure function of the store.
 EXPORT_SECTIONS = (
@@ -221,6 +258,7 @@ EXPORT_SECTIONS = (
     ("duplicate_hints", HINT_COLUMNS, "ORDER BY candidate_id, hint_seq"),
     ("decisions", DECISION_COLUMNS, "ORDER BY seq"),
     ("legacy_verification", LEGACY_VERIFICATION_COLUMNS, "ORDER BY legacy_row_id"),
+    ("legacy_batch_membership", LEGACY_BATCH_MEMBERSHIP_COLUMNS, "ORDER BY legacy_row_id"),
 )
 ROW_TABLES = {
     "captures": "captures",
@@ -229,6 +267,7 @@ ROW_TABLES = {
     "duplicate_hints": "duplicate_hints",
     "decisions": "decisions",
     "legacy_verification": "legacy_verification",
+    "legacy_batch_membership": "legacy_batch_membership",
 }
 
 
@@ -408,9 +447,27 @@ _DDL_0002 = (
     """,
 )
 
+_DDL_0003 = (
+    # Decision D4 (2026-09-12): membership side-car linking every legacy quotes.csv id to the
+    # ONE batch capture for the 2026-09-11 rehabilitation import. The capture itself lives in
+    # `captures` (immutable); this table only records which legacy rows that capture covers.
+    # Not a `candidates` FK — legacy rows are not store candidates (same posture as D3).
+    """
+    CREATE TABLE IF NOT EXISTS legacy_batch_membership(
+        legacy_row_id TEXT PRIMARY KEY,
+        capture_id    TEXT NOT NULL REFERENCES captures(capture_id)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_legacy_batch_membership_capture
+        ON legacy_batch_membership(capture_id, legacy_row_id)
+    """,
+)
+
 MIGRATIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("0001_create_core", _DDL_0001),
     ("0002_unverifiable_ledger", _DDL_0002),
+    ("0003_legacy_batch_capture", _DDL_0003),
 )
 
 
@@ -1091,6 +1148,141 @@ class Store:
             )
         )
 
+    def seed_legacy_batch_capture(
+        self,
+        legacy_row_ids: list[str] | tuple[str, ...],
+    ) -> dict:
+        """Record the ONE D4 batch capture and link every legacy row id to it.
+
+        The capture is the 2026-09-11 rehabilitation import event: `capture_method` /
+        `captured_by` are `legacy-import`, `captured_text` is the fixed true statement about
+        the frozen archive (never fabricated per-row quote text), and `context_notes`
+        explicitly records that encounter context is unknown. Membership is all-or-nothing:
+        either every provided id is linked to `LEGACY_BATCH_CAPTURE_ID`, or nothing is written.
+
+        Idempotent when the store already holds exactly this capture and exactly this
+        membership set (same ids, same capture_id). Any other existing state — a different
+        capture body, a partial membership, a foreign capture_id — is refused rather than
+        silently overwritten. Does not create candidates (legacy rows are not store
+        candidates; same posture as D3).
+
+        Returns `{capture_id, row_count, status}` where status is ``created`` or ``no-op``.
+        """
+        _require(len(legacy_row_ids) > 0, "legacy_row_ids must be non-empty")
+        _require(
+            len(legacy_row_ids) == LEGACY_BATCH_EXPECTED_ROW_COUNT,
+            f"legacy_row_ids has {len(legacy_row_ids)} entries; D4 expects exactly "
+            f"{LEGACY_BATCH_EXPECTED_ROW_COUNT}",
+        )
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for raw in legacy_row_ids:
+            _require(bool(raw), "every legacy_row_id must be non-empty")
+            row_id = str(raw)
+            _require(row_id not in seen, f"duplicate legacy_row_id {row_id!r} in the seed set")
+            seen.add(row_id)
+            cleaned.append(row_id)
+        # Lexicographic order matches the export's `ORDER BY legacy_row_id` (TEXT).
+        cleaned_sorted = sorted(cleaned)
+
+        existing_capture = self.conn.execute(
+            "SELECT " + ", ".join(CAPTURE_COLUMNS) + " FROM captures WHERE capture_id = ?",
+            (LEGACY_BATCH_CAPTURE_ID,),
+        ).fetchone()
+        existing_members = [
+            row["legacy_row_id"]
+            for row in self.conn.execute(
+                "SELECT legacy_row_id FROM legacy_batch_membership ORDER BY legacy_row_id"
+            )
+        ]
+
+        if existing_capture is not None or existing_members:
+            expected_capture = {
+                "capture_id": LEGACY_BATCH_CAPTURE_ID,
+                "captured_text": LEGACY_BATCH_CAPTURED_TEXT,
+                "captured_attribution": "unknown",
+                "captured_citation": "none",
+                "capture_method": "legacy-import",
+                "captured_at": LEGACY_BATCH_CAPTURED_AT,
+                "captured_by": "legacy-import",
+                "language": "und",
+                "source_reference": LEGACY_BATCH_SOURCE_REFERENCE,
+                "context_notes": LEGACY_BATCH_CONTEXT_NOTES,
+                "raw_artifact_ref": LEGACY_BATCH_RAW_ARTIFACT_REF,
+            }
+            if existing_capture is None:
+                raise StoreError(
+                    "legacy batch membership exists without the batch capture; "
+                    "refusing to repair in place — wipe the store and re-seed"
+                )
+            for key, expected in expected_capture.items():
+                if existing_capture[key] != expected:
+                    raise StoreError(
+                        f"legacy batch capture {LEGACY_BATCH_CAPTURE_ID!r} already exists "
+                        f"with a different {key}: {existing_capture[key]!r} != {expected!r}"
+                    )
+            if existing_members != cleaned_sorted:
+                raise StoreError(
+                    "legacy batch membership already exists with a different id set "
+                    f"(have {len(existing_members)}, asked {len(cleaned_sorted)}); "
+                    "refusing a silent overwrite"
+                )
+            return {
+                "capture_id": LEGACY_BATCH_CAPTURE_ID,
+                "row_count": len(cleaned_sorted),
+                "status": "no-op",
+            }
+
+        try:
+            self.conn.execute(
+                f"INSERT INTO captures ({', '.join(CAPTURE_COLUMNS)}) "
+                f"VALUES ({', '.join('?' * len(CAPTURE_COLUMNS))})",
+                (
+                    LEGACY_BATCH_CAPTURE_ID,
+                    LEGACY_BATCH_CAPTURED_TEXT,
+                    "unknown",
+                    "none",
+                    "legacy-import",
+                    LEGACY_BATCH_CAPTURED_AT,
+                    "legacy-import",
+                    "und",
+                    LEGACY_BATCH_SOURCE_REFERENCE,
+                    LEGACY_BATCH_CONTEXT_NOTES,
+                    LEGACY_BATCH_RAW_ARTIFACT_REF,
+                ),
+            )
+            self.conn.executemany(
+                "INSERT INTO legacy_batch_membership (legacy_row_id, capture_id) VALUES (?, ?)",
+                [(row_id, LEGACY_BATCH_CAPTURE_ID) for row_id in cleaned_sorted],
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self.conn.rollback()
+            raise StoreError(
+                f"legacy batch capture seed rejected: {exc}"
+            ) from None
+        return {
+            "capture_id": LEGACY_BATCH_CAPTURE_ID,
+            "row_count": len(cleaned_sorted),
+            "status": "created",
+        }
+
+    def legacy_batch_capture(self) -> sqlite3.Row | None:
+        """The D4 batch capture row, or None if it has not been seeded."""
+        return self.conn.execute(
+            "SELECT " + ", ".join(CAPTURE_COLUMNS) + " FROM captures WHERE capture_id = ?",
+            (LEGACY_BATCH_CAPTURE_ID,),
+        ).fetchone()
+
+    def legacy_batch_membership(self) -> list[sqlite3.Row]:
+        """Every legacy row linked to the D4 batch capture, ordered by legacy row id."""
+        return list(
+            self.conn.execute(
+                "SELECT " + ", ".join(LEGACY_BATCH_MEMBERSHIP_COLUMNS)
+                + " FROM legacy_batch_membership ORDER BY legacy_row_id"
+            )
+        )
+
     # -- reads -------------------------------------------------------------------------
     def counts(self) -> dict[str, int]:
         return {
@@ -1102,6 +1294,7 @@ class Store:
                 "duplicate_hints",
                 "decisions",
                 "legacy_verification",
+                "legacy_batch_membership",
             )
         }
 
@@ -1193,7 +1386,15 @@ class Store:
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?), ('created_at', ?)",
                 (str(meta["schema_version"]), meta.get("created_at", "")),
             )
-            for section in ("captures", "candidates", "candidate_captures", "duplicate_hints", "decisions", "legacy_verification"):
+            for section in (
+                "captures",
+                "candidates",
+                "candidate_captures",
+                "duplicate_hints",
+                "decisions",
+                "legacy_verification",
+                "legacy_batch_membership",
+            ):
                 for record in records[section]:
                     columns = tuple(record)
                     self.conn.execute(

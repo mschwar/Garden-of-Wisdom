@@ -597,11 +597,9 @@ Filed from `docs/program/W0_GATE_REPORT.md` §Unresolved and
       evidence only in `exports/bahai-homepage-preview/v1/` and `docs/DECISIONS.md`. Adding
       evidence fields is W2/W3 work; until then, `verified` in the CSV is a pointer to the
       export.
-- [ ] **D4 — capture provenance policy for the 324 legacy rows.** They have no capture record
-      and none is reconstructable (`docs/program/PROVENANCE_AND_CAPTURE_CONTRACT.md`). **Decided
-      2026-09-12 (decision D4):** ONE batch capture record for the 2026-09-11 rehabilitation
-      import, explicitly marked as such and noting the encounter context is unknown — see the
-      authorized section above. Not one synthetic capture per row.
+- [x] **D4 — capture provenance policy for the 324 legacy rows.** **RESOLVED 2026-09-16
+      (decision D4 executed):** ONE batch capture + membership side-car — see the
+      "Closed — 2026-09-16 D4" section. Not one synthetic capture per row.
 - [ ] **D5 — `item_type` mixes text shape with provenance shape.** `full-passage`/`excerpt`/
       `paraphrase` are shape; `oral-attribution` is not a text relation. The split is W3 work
       (`docs/program/CLASSIFICATION_AND_FACETS.md`); do not widen the enum meanwhile.
@@ -864,10 +862,22 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       rows), not by widening the donor set first. Expected to surface issue #4 (`source_url`) and
       the D5 `verification_status` / `verification_state` contract question. Garden's frozen data is
       untouched by this lane. This supersedes the earlier "do not start H2B-B" bullet.
-- [ ] **D4 — ONE batch capture record for the 324 legacy rows.** Authorized 2026-09-12: a single
-      batch capture record for the 2026-09-11 rehabilitation import, explicitly marked as such and
-      noting the encounter context is unknown — not one synthetic capture per row. (Resolves the
-      "human decision" open question in the debt section below.)
+
+## Closed — 2026-09-16 D4 (legacy batch capture)
+
+- [x] **D4 — ONE batch capture record for the 324 legacy rows. DONE 2026-09-16** (branch
+      `d4/legacy-batch-capture`). One immutable `captures` row
+      (`cap-2026-09-11-legacy-batch`, `capture_method`/`captured_by` = `legacy-import`,
+      `context_notes` explicitly "encounter context is unknown", `captured_text` the fixed true
+      statement naming the archive paths + sha256 digests) plus membership side-car
+      `legacy_batch_membership` linking all 324 `quotes.csv` ids to that capture. Migration
+      `0003_legacy_batch_capture`. CLI `scripts/garden_legacy_batch.py` (seed/show/verify);
+      acceptance `scripts/check_garden_legacy_batch.py`; design doc
+      `docs/program/D4_LEGACY_BATCH_CAPTURE.md`. No per-row captures, no store candidates.
+      `quotes.csv`/`sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`). Seeded into the
+      committed mirror `data/store/garden.export.txt` alongside the existing D3 id-30 ledger row.
+      CI: appended to the W1 acceptance step in `browser-smoke.yml`. Three new negative controls
+      (`b1`–`b3`) raise the committed table 36 → 39. Design trail: `GARDEN_D4_HANDOFF.md`.
 
 ## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
 
