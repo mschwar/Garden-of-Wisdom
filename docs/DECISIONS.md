@@ -1489,3 +1489,29 @@ Decision D6 (2026-09-12) is executed against the post-#34 working list of **20**
 Rejected alternatives: (a) merge the Zoroastrian near-copies only; (b) merge those plus the
 Deuteronomy short/long pair — both collapse legitimate variant / memorization-length forms
 that D6's own rule prefers to keep. Design trail: `GARDEN_D6_HANDOFF.md`.
+
+## 2026-09-17 — Usability-Closure programme: Gate U0 authorized, U0.1 only
+
+The operator authorized a new bounded bridge programme, **Usability Closure**, over the
+already-landed W1 substrate. It closes the distance between Garden's mature artifacts
+(canonical browser + W1 candidate workbench) and dependable real-world use: a resumable
+workbench (Gate U0) and one real passage reaching the Garden-facing browser (Gate U1).
+
+### Decision
+
+1. **Authorize Gate U0 only, beginning with U0.1** (`docs/program/usability-closure/workunits/U0.1_STORE_LIFECYCLE.md`).
+   U0.1 is the only READY unit. U0.2/U0.3 are queued behind it; **U1 remains unauthorized until
+   Gate U0 synthesis** (per `docs/program/usability-closure/SYNTHESIS_GATES.md` S0).
+2. **The programme does not authorize W2** or anything past the Gate U1 packet. It is a bounded
+   bridge programme; the corpus roadmap (W2 research, W3 enrichment, ontology cleanup, writable
+   web app) stays downstream and unauthorized.
+3. **Bootstrap does not implement U0.1.** This unit installs/adapts the programme documents,
+   patches `docs/queue.md` and `docs/DECISIONS.md`, and sets `CURRENT.md` so exactly one unit
+   (U0.1) is READY. No store lifecycle code is written here.
+4. **Authority model preserved:** agents may implement deterministic machinery and prepare
+   evidence; operator-authority state transitions remain human gates; any architecture decision
+   that changes the authoritative data relationship is an operator/frontier gate.
+
+Rejected alternative: authorizing the whole programme (U0+U1) at once — the programme's own
+stop rules require Gate U0 synthesis before U1.1, and the operator wants each gate's evidence
+reviewed before the next is authorized. Design trail: `GARDEN_USABILITY_CLOSURE_BOOTSTRAP_HANDOFF.md`.
