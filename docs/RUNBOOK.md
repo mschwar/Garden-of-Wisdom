@@ -488,8 +488,9 @@ in coverage.
 Known limits, so they are not mistaken for coverage: a control is a **single exact-string
 substitution**, so a regression that needs a file deleted, renamed or a multi-file edit is
 outside the table's vocabulary; and the table proves each *modelled* break is detected, never
-that a guard is complete. `docs/architecture/NEGATIVE_CONTROLS.md` has the design and the
-control-by-control record.
+that a guard is complete. As of 2026-09-16 it holds **44** controls over all 13 checkers,
+including the five gap mutations issue #45 closed (`n4`, `r4`, `x3`, `l4`, `g4`).
+`docs/architecture/NEGATIVE_CONTROLS.md` has the design and the control-by-control record.
 
 
 ## Re-derive the canonical CSVs from the frozen originals

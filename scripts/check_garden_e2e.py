@@ -482,7 +482,10 @@ def run_checks(scratch: Path) -> None:  # noqa: C901 -- one linear evidence scri
     ]
     check(bool(tp7_rows) and tp7_rows[0]["to_state"] == "candidate_only",
           "the T-P7 audit row itself records to_state=candidate_only (not just the live corpus_state)",
-          str(tp7_rows[0] if tp7_rows else None))
+          # Deliberately the state, never the whole row: the row carries a wall-clock
+          # `occurred_at`, so a row dump could never be a reproducible `FAIL:` line in
+          # run_negative_controls.py's exact-match control table.
+          (f"to_state={tp7_rows[0]['to_state']!r}" if tp7_rows else "no T-P7 audit row"))
 
     reopen = decide("reopen", store, "cand-W01", "new information arrived")
     check(reopen.returncode == 0, "reopen cand-W01 (exit 0)", out_text(reopen).strip()[:170])

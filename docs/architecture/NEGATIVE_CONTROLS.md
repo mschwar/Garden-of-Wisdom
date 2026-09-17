@@ -98,9 +98,11 @@ must turn it red.
 
 ## The control table
 
-39 controls over 13 checkers (36 from the original table + 3 D4 `b1`–`b3` controls added with
-the legacy-batch-capture unit). `scripts/run_negative_controls.py --list` prints the same table
-with the exact anchor and replacement strings.
+44 controls over 13 checkers: 36 from the original table, the 3 D4 `b1`–`b3` controls added
+with the legacy-batch-capture unit, and the 5 controls (`n4`, `r4`, `x3`, `l4`, `g4`)
+registered 2026-09-16, which move the five checker-coverage gaps issue #45 closed out of
+prose and into the table itself. `scripts/run_negative_controls.py --list` prints the same
+table with the exact anchor and replacement strings.
 
 | checker | id | mutation | asserted first `FAIL:` |
 |---|---|---|---|
@@ -124,6 +126,7 @@ with the exact anchor and replacement strings.
 | `check_garden_store.py` | g1 | the capture-immutability UPDATE trigger stops aborting | `captures accepted UPDATE: captures are not immutable` |
 | | g2 | the `research_state` CHECK constraint is dropped (W1.1's review finding) | `the SQL layer accepted research_state = 'maybe' (outside STATE_MODEL.md)` |
 | | g3 | a migration id is renamed | `create-from-empty applied migration ['0001_create_core_v2', …] into an empty directory` |
+| | g4 | the captures UPDATE trigger still aborts, but its `RAISE` message no longer names the invariant (#45 gap 5) | `the UPDATE trigger's own RAISE message names the invariant it enforces -- 'captures is immutable (trigger)' does not contain 'captures is immutable: UPDATE rejected'` |
 | `check_garden_envelope.py` | e1 | the serializer loses `sort_keys` determinism | `key insertion order cannot change the serialized bytes (sort_keys is load-bearing)` |
 | | e2 | rule 1 stops checking the intake schema version (W1.2's review finding) | `fixture 'wrong-intake-schema-version' reports exactly rule-1 -- reported []` |
 | | e3 | rule 2 stops refusing an empty `captured_text` | `fixture 'empty-captured-text' reports exactly rule-2 -- reported []` |
@@ -132,14 +135,18 @@ with the exact anchor and replacement strings.
 | `check_garden_normalize.py` | n1 | similarity collapses to one directional ratio | `the similarity of a pair is symmetric (the same number reaches both candidates' hints)` |
 | | n2 | a shared generic label counts as a specific citation (ruling 2) | `the legacy heuristic flags rows 319 ~ 331 on the shared label 'Oral Tradition' …` |
 | | n3 | the hint rebuild accumulates (the `DELETE` is lost) | `rebuilding every hint exports byte-identical text (derived, deterministic, not appended)` |
+| | n4 | the comparison view stops case-folding (#45 gap 1) | `two candidates whose text differs only in letter case still get an exact-text hint -- … -- []` |
 | `check_garden_review.py` | r1 | acceptance skips the required T-P1 corpus follow-on | `accept: cand-t01 recorded exactly ['T-C1', 'T-P1'] -- ['T-C1']` |
 | | r2 | `curate`'s **own** required-reason guard is disabled | `the refusal for an empty reason came from curate's OWN guard …` |
 | | r3 | a curation action writes research state (invariant 5) | `accept: cand-t01 research_state stayed not_started -- in_research` |
+| | r4 | the corpus follow-on is filed under the curation action vocabulary (#45 gap 2) | `every curation-dimension row is recorded as 'curation-decision' and every corpus-dimension follow-on row as 'corpus-follow-on'` |
 | `check_garden_e2e.py` | x1 | the withdrawal path bypasses its state write | `the reversal strands no dimension: curation=rejected, corpus=candidate_only -- … corpus=eligible` |
 | | x2 | the decision log stops being append-only | `decisions accepted UPDATE: the log is not append-only` |
+| | x3 | the T-P7 audit row records a wrong `to_state` while the live column stays right (#45 gap 3) | `the T-P7 audit row itself records to_state=candidate_only (not just the live corpus_state) -- to_state='eligible'` |
 | `check_garden_ledger.py` | l1 | the re-adjudication guard is disabled | `a duplicate mark is refused by the explicit re-adjudication guard -- … UNIQUE constraint failed …` |
 | | l2 | the ledger row is written without its research audit row (D3 §2) | `mark appends one research audit row (T-R6 from_state derived from the model) -- []` |
 | | l3 | `reopen` no longer requires the row to be in the ledger | `reopen on a missing row was accepted` |
+| | l4 | `quotes.csv`'s enum is widened by hand (#45 gap 4, D3's ruling) | `issue #45 gap 4: quotes.csv's verification_status stays exactly ['disputed', 'unverified', 'verified'] -- … -- ['1']` |
 
 The table is deliberately **not** a copy of each handoff's prose table: the mutation had to be
 re-derived from the code and re-run, and several of the historical controls are not expressible
@@ -189,6 +196,13 @@ local run; CI does not narrow.
   rendered geometry (`document scrollWidth=355 > clientWidth=320 … {'right': 448, 'tag': 'DD'}`)
   which depends on the runner's font stack. Committing it with an exact expectation would be a
   CI-only false alarm, and committing it with a loose match would weaken every other control.
+- **A control's expected line must be reproducible, so a `FAIL:` detail may not embed a
+  wall-clock value.** A mutation that fires `check_garden_e2e.py`'s T-P7 audit-row check used to
+  make the assertion dump the whole decision row, whose `occurred_at` differs on every run, so
+  that line could never have been a committed expectation. The detail now names the recorded
+  state (`to_state='eligible'`); the assertion's condition is unchanged. The same applies to a
+  rendered-geometry detail (the excluded `overflow-wrap` control above) and to a temp path
+  (`normalize_paths()` masks that one).
 - **Coverage gaps the table itself does not close** (measured while authoring it, filed rather
   than fixed here — each is a fixture/check change to an existing suite): the captures-UPDATE
   trigger's `RAISE` *message* text is unguarded; `garden_normalize._comparison_view()`'s
@@ -200,3 +214,8 @@ local run; CI does not narrow.
   `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`. This description of the gaps (and this file's list
   of them) is left as the historical record of what the authoring pass found; none of the five
   mutations above still passes silently.
+  **Registered as controls 2026-09-16** (`n4`, `r4`, `x3`, `l4`, `g4`, the five rows added to the
+  table above): the #45 unit closed each gap inside the suite that owns it, but its mutations
+  could only be recorded in that handoff's prose — which is the very arrangement this harness
+  exists to replace. A regression in any of the five now turns CI red by itself; see
+  `GARDEN_45_CONTROLS_HANDOFF.md`.

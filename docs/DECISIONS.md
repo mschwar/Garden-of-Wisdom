@@ -1437,3 +1437,32 @@ hygiene is done, and the 27-value `tradition` list is documented as the controll
 
 Rejected alternatives remain those in the 2026-09-12 D8 entry: (a) leaving all hygiene to
 post-W1 tools; (b) doing the `_` rows now by guessing. Design trail: `GARDEN_D8_HANDOFF.md`.
+
+## 2026-09-16 — the #45 checker-coverage gaps become registered controls (the table is 44)
+
+Issue #45's five gaps were closed inside the suites that own them, but the *mutations* that measure
+them were recorded only in a handoff's prose. That is exactly the arrangement issue #43 replaced
+with a committed, CI-wired table: a guard whose only evidence is a sentence in
+`GARDEN_*_HANDOFF.md` cannot be independently verified, and a later edit that silently deletes the
+assertion leaves no trace anywhere.
+
+### Decision
+
+1. **Register all five as controls** in `scripts/run_negative_controls.py` — `g4`, `n4`, `r4`, `x3`,
+   `l4` — and raise `EXPECTED_CONTROLS` **39 → 44** (13 checkers, unchanged). Each mutation models a
+   real regression of the guarded artefact (the trigger's `RAISE` message; the case-folded
+   comparison view; the corpus follow-on's action vocabulary; the T-P7 audit row's recorded
+   `to_state`; `quotes.csv`'s 3-valued `verification_status`), and each is applied only inside the
+   harness's throwaway copy, never to the working tree.
+2. **A `FAIL:` detail that embeds a wall-clock value is a defect.** The e2e assertion on the T-P7
+   audit row dumped the whole decision row, so its failure line carried `occurred_at` and could
+   never be a reproducible expectation — the assertion had to name the state instead. Recorded in
+   `docs/architecture/NEGATIVE_CONTROLS.md` as a rule for future checks, alongside the two cases
+   already known (`normalize_paths()` masking the copy root; the deliberately excluded control whose
+   detail embeds rendered geometry).
+3. `check_garden_e2e.py`'s own check count is unchanged (**96**) — the edit is a detail string, not
+   a check, so no suite's `EXPECTED_CHECKS` moves.
+
+Rejected alternative: leaving the five mutations in the handoff prose where #45's close-out left
+them — it preserves the precise defect #43 was filed for, one level down. `quotes.csv` /
+`sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`). Design trail: `GARDEN_45_CONTROLS_HANDOFF.md`.

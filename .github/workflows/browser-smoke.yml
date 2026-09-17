@@ -25,7 +25,7 @@ concurrency:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    # 30, not 15: the last step re-applies all 36 negative controls, which means re-running
+    # 30, not 15: the last step re-applies the whole negative-control table, which means re-running
     # validate_quotes.py 6x and check_garden_e2e.py 3x on purpose (~4 min warm on a developer
     # Mac; more on a 2-core runner). That cost is the point of the step -- a table checked only
     # for rot would not be evidence -- so the budget is raised rather than the coverage cut.

@@ -205,6 +205,10 @@ Living document — update it as items are picked up or closed, don't just appen
       recorded, confirmed to turn the suite red where it had previously stayed green, then
       reverted. All twelve stdlib suites and the full 36-control negative-control table re-run
       `RESULT: PASS` after the fixes (`checkers: 12 of 12 selected, 0 skipped`).
+      **Annotated 2026-09-16:** that run was against the table as it then stood — **39**
+      controls (D4 added `b1`–`b3`), with these five mutations still unregistered. They are
+      registered now (`n4`, `r4`, `x3`, `l4`, `g4`), taking the table to **44**; see
+      "Closed — 2026-09-16 the five #45 gap mutations become registered controls" below.
       `quotes.csv`/`sources.csv` untouched throughout (byte-identical `b3bb7848…` / `7aafcb67…`,
       the D7-updated pair; no working-tree diff on either file at any point). Design trail:
       `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md`. **Not done in this unit:** wiring these same
@@ -914,6 +918,34 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       [35165315985](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35165315985)
       **success**. Live acceptance on the merged `main`: `RESULT: PASS (9 checks)`, live CSVs
       byte-identical (`b3bb7848…` / `7aafcb67…`). Design trail: `GARDEN_D4_HANDOFF.md`.
+
+## Closed — 2026-09-16 the five #45 gap mutations become registered controls
+
+- [x] **The five checker-coverage gaps issue #45 closed are controls in the committed table, not
+      prose.** The coverage-gap unit fixed each gap inside the suite that owns it and recorded
+      the mutations in `GARDEN_CHECKER_COVERAGE_GAPS_HANDOFF.md` only — which is the arrangement
+      `scripts/run_negative_controls.py` exists to replace (issue #43): a guard whose only
+      evidence is a sentence in a handoff cannot be verified by anyone else, and a later edit
+      that deletes the assertion leaves no trace at all.
+      **Five controls added**, each measured in a throwaway copy first and then re-run through
+      the harness (`--checker <script>`), all five `FIRED` with the aimed first `FAIL:` line:
+      `g4` (the captures-UPDATE trigger still aborts, but its `RAISE` message stops naming the
+      invariant — the "only the abort was guarded, never the message" gap), `n4`
+      (`garden_normalize._comparison_view()` stops case-folding), `r4` (the corpus follow-on is
+      filed under the curation action vocabulary), `x3` (the T-P7 audit row records a wrong
+      `to_state` while the live column stays right), `l4` (`quotes.csv`'s `verification_status`
+      is widened by hand — D3's "side-car ledger, never the CSV enum" ruling, falsified in the
+      suite that made it). `EXPECTED_CONTROLS` **39 → 44** over the same **13** checkers.
+      **One assertion's `FAIL:` detail had to change for `x3` to be registrable at all:** the
+      e2e check on the T-P7 audit row dumped the whole decision row, whose `occurred_at` is a
+      wall-clock value, so its failure line could never have been a committed exact-match
+      expectation. The detail now names the recorded state (`to_state='eligible'`); the
+      assertion's condition is unchanged and `check_garden_e2e.py` still reports **96** checks.
+      The rule (a `FAIL:` detail may not embed a wall-clock value) is recorded in
+      `docs/architecture/NEGATIVE_CONTROLS.md`. The mutation that touches `quotes.csv` is applied
+      only inside the harness's throwaway copy: `quotes.csv`/`sources.csv` are byte-identical
+      (`9766db8c…` / `7aafcb67…`), the D8-updated pair. Design trail:
+      `GARDEN_45_CONTROLS_HANDOFF.md`.
 
 ## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
 
