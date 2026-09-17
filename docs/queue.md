@@ -69,6 +69,18 @@ Living document — update it as items are picked up or closed, don't just appen
       untouched. `quotes.csv` changed (7 `item_type` cells only); `sources.csv` byte-identical
       (`7aafcb67…`). `validate_quotes.py` PASS under both interpreters; the doctrine fixture's
       `item_type_counts` re-derived in the same unit. Design trail: `GARDEN_D8_HANDOFF.md`.
+      **Landing:** commit `387f138`, PR
+      [#51](https://github.com/mschwar/Garden-of-Wisdom/pull/51), **merged as `483102c`**
+      (2026-09-16). CI: PR smoke run
+      [35177386079](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35177386079)
+      **success** (10m12s; GitGuardian pass); on `main` after the merge, smoke run
+      [35178113617](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35178113617)
+      **success** and Pages deploy run
+      [35178113637](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35178113637)
+      **success**. Live acceptance on the merged `main` (via `check_live_pages.py`): all 9
+      checks **PASS**, live CSVs byte-identical (`quotes.csv` `9766db8c…` / `sources.csv`
+      `7aafcb67…`). Independent QA (fresh subagent, own re-runs): **PASS, no discrepancies**.
+      Design trail: `GARDEN_D8_HANDOFF.md`.
 - [x] Decide whether the 27-value tradition list should be formally documented as the new
       controlled list (this retrofit's README treats it as such) or trimmed/normalized further.
       **D8 (2026-09-12) decides: document the 27-value list as the controlled list.**
