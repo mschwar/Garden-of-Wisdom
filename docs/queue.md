@@ -877,7 +877,17 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
       `quotes.csv`/`sources.csv` byte-identical (`b3bb7848…` / `7aafcb67…`). Seeded into the
       committed mirror `data/store/garden.export.txt` alongside the existing D3 id-30 ledger row.
       CI: appended to the W1 acceptance step in `browser-smoke.yml`. Three new negative controls
-      (`b1`–`b3`) raise the committed table 36 → 39. Design trail: `GARDEN_D4_HANDOFF.md`.
+      (`b1`–`b3`) raise the committed table 36 → 39.
+      **Landing:** commits `1c03115` + `abf3810`, PR
+      [#49](https://github.com/mschwar/Garden-of-Wisdom/pull/49), **merged as `f1dc8bc`**
+      (2026-09-16). CI: PR smoke run
+      [35163809490](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35163809490)
+      **success**; on `main` after merge, smoke run
+      [35165316023](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35165316023)
+      **success** and Pages deploy run
+      [35165315985](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35165315985)
+      **success**. Live acceptance on the merged `main`: `RESULT: PASS (9 checks)`, live CSVs
+      byte-identical (`b3bb7848…` / `7aafcb67…`). Design trail: `GARDEN_D4_HANDOFF.md`.
 
 ## Closed — 2026-09-13 D3 (unverifiable side-car ledger)
 
