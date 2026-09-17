@@ -64,7 +64,7 @@ Repo patches (not wholesale replacements):
 - `python3 scripts/check_program_contracts.py` → `RESULT: PASS`.
 - `python3 scripts/validate_homepage_preview_export.py` → `RESULT: PASS`.
 - `quotes.csv` / `sources.csv` byte-identical (`9766db8c…` / `7aafcb67…`) — no data touched.
-- No code, workflow, or data file changed; the diff is 22 files, all under `docs/` plus the
+- No code, workflow, or data file changed; the diff is 23 files, all under `docs/` plus the
   root handoff.
 
 ## Out-of-scope findings
