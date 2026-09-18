@@ -1,6 +1,8 @@
 # Garden Usability Closure — CURRENT
 
-> This file is the small current-state pointer. Historical evidence stays in handoffs, decisions, queue entries, and gate packets.
+> **Execution authority.** This file is intentionally small. Standing product/system reality lives
+> in `docs/PRODUCT_REALITY.md`; historical evidence stays in handoffs, decisions, queue entries,
+> and gate packets.
 
 ## Programme
 
@@ -18,23 +20,28 @@
 
 `U0.2 — truthful front door + current-state routing`
 
-## What is usable now
+## Last reconciliation
 
-- Existing 324-row Garden browser/search/filter/copy surface.
-- Corpus-program **W1 is complete** (W1.1–W1.6 merged; Gate B accepted 2026-09-13): the
-  candidate workbench runs as `scripts/garden_*.py` over the persisted SQLite store plus the
-  committed mirror `data/store/garden.export.txt`. **W2 is not started.**
-- W1 candidate capture → normalization → duplicate hints → operator review through `eligible`.
-- CI/acceptance/negative-control machinery around these surfaces.
-- Mechanized store lifecycle (bootstrap, status, sync) and mutation invariant keeping committed mirror current.
+`R0 — product reality & system reconciliation` — COMPLETE. R0 is a one-off product/system
+reconciliation outside the numbered U-unit chain; `scripts/check_front_door.py` currently models
+“last completed unit” as a `U<gate>.<unit>` execution unit, so U0.2 remains the structural
+last-completed U-unit while this explicit field records the later reconciliation.
 
 ## Current frontier
 
-The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front door is truthful and routed through this file, and is guarded by `scripts/check_front_door.py` (27 checks, CI-wired, 10 registered controls). The frontier is the real persistent operator canary (U0.3): a real operator action must survive a restart and a rebuild of the local store from the committed mirror, and produce the Gate U0 packet.
+The repo now has:
+- a mechanized SQLite↔mirror persistence lifecycle;
+- a truthful execution front door;
+- a reconciled product boundary centered on **Passage**, with Garden separated from Initiate;
+- a standing product-reality dashboard at `docs/PRODUCT_REALITY.md`.
+
+The frontier is unchanged in substance: **U0.3 must run one real operator passage through the
+actual persistent workbench and prove it survives restart/rebuild from the committed mirror.**
 
 ## Gate U0 proof target
 
-Fresh clone → hydrate committed store → perform a real operator candidate action → persisted mirror current → delete/rebuild local SQLite from mirror → state identical.
+Fresh clone → hydrate committed store → perform a real operator passage action → persisted mirror
+current → delete/rebuild local SQLite from mirror → state identical.
 
 ## Stop rule
 
@@ -45,8 +52,9 @@ Do not begin U1 until Gate U0 is accepted by operator/frontier synthesis.
 Every merged usability-closure unit must update:
 - current gate;
 - READY unit;
-- last completed unit;
+- last completed U-unit;
 - frontier sentence;
 - proof target if it changed.
 
-Do not append history here. Replace current state.
+Product reality belongs in `docs/PRODUCT_REALITY.md`, not duplicated here. Do not append history
+here; replace current execution state.
