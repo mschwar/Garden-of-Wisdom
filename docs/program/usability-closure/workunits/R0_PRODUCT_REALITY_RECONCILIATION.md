@@ -48,7 +48,7 @@ definition we already know is too narrow.
 - no canonical-admission implementation;
 - no browser redesign;
 - no new ontology;
-- no W2 authorization.
+- no U1 or W2 authorization.
 
 ## Decisions
 
