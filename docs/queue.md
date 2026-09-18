@@ -513,6 +513,17 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       still wrong and an agent reading only that file can still believe editing the CSVs is fine. W1.4
       **reopened** it with that evidence; it still needs an operator edit or a policy exception (which is
       why W1.4's own doc-surface work stops at `RUNBOOK.md`).
+      **UPDATED 2026-09-17 (U0.2):** the artefact now carries this change. On the U0.2
+      branch `AGENTS.md` is 119 lines and `grep -c 'garden_' AGENTS.md` returns **12** (was 0);
+      it names every `scripts/garden_*.py` module, the store bootstrap/resume path, the
+      negative-control harness, `docs/program/usability-closure/CURRENT.md` as the live-status
+      authority, and the CSVs' change discipline (read-only outside a named data unit — the W1
+      wave that rule belonged to is complete). The measurements quoted above (the zero count, 63
+      lines, `31f06e0`) were the **pre-fix** state and are kept as the record of what was
+      measured. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) is satisfied by
+      U0.2 and is closed deliberately by comment, carrying this evidence, after that unit merges —
+      never by a closing keyword. `scripts/check_front_door.py` (U0.2) now fails the build if the
+      front door drifts back.
 - [ ] **A generic-citation duplicate can never attract a reference hint, so the queue must show the
       basis** — not a defect, a consequence worth writing down for W1.5: with ruling 2 in force, a
       duplicate whose citation is a bare label (or a sentinel) can only ever attract `exact-text` /
@@ -530,6 +541,10 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       is now larger. Not fixed here: `AGENTS.md` writes are refused by tool policy and it is a
       protected file with a stated size budget, so the change needs an operator edit. Filed as
       [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27).
+      **UPDATED 2026-09-17 (U0.2):** superseded — the artefact now carries this change; see the
+      U0.2 annotation on the W1.4-section entry above for the measurements. The list of what
+      `AGENTS.md` used to contain, above, is the **pre-fix** state and is kept as the record of
+      the gap as filed.
 - [ ] **A candidate can only ever have one capture.** `PROVENANCE_AND_CAPTURE_CONTRACT.md` invariant
       3 explicitly allows the same passage to be captured twice and says "the candidate records all
       of them", and `candidate_captures` has an `ordinal` column for exactly that — but no surface

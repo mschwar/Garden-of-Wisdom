@@ -37,8 +37,13 @@ reports `RESULT: PASS (23 checks)`.
 | 14 | `docs/queue.md` | "Explicitly NOT started": "**W1 is now authorized in full** (2026-09-12, decision D1) **and in progress**." | "**W1 is COMPLETE** (authorized in full 2026-09-12, decision D1; Gate B accepted 2026-09-13)", plus a new bullet: every usability-closure unit past the READY one is not started | check 23 |
 | 15 | `docs/RUNBOOK.md` | no resume entry point; the tail's "session died" path went straight to the queue | new top section "Where are we? (resume here)" routing through CURRENT → queue → DECISIONS → unit doc + handoff → `bootstrap`; the tail section now matches | review (RUNBOOK installed) |
 | 16 | `docs/program/usability-closure/CURRENT.md` | frontier sentence: "The front-door docs (README.md, AGENTS.md) still present outdated paths and need truthful current-state routing." | "The front-door docs (…) route live status here and are guarded by `scripts/check_front_door.py`. The next frontier is the real persistent operator canary (U0.3) …" | review (found by the cold-start dry run, see below) |
+| 17 | `docs/queue.md` — two live entries ("discovered during W1.4", "discovered during W1.3") | "the file is unchanged at `main` (`grep -c 'garden_' AGENTS.md` → 0, 63 lines, last touched by `31f06e0`)" and "`AGENTS.md` does not describe the corpus-program command surface" — true when filed, false the moment this unit lands | each entry carries a dated `**UPDATED 2026-09-17 (U0.2):**` annotation with the fresh measurement (`AGENTS.md` 119 lines, `grep -c 'garden_' AGENTS.md` → **12**), saying the superseded numbers are kept as the pre-fix record | **review** (found by the cold-start dry run) |
+| 18 | `docs/program/usability-closure/CURRENT.md` §"What is usable now" | did not state the corpus-program W1/Gate B position at all, so "W1/Gate B state" was answerable only by way of `docs/queue.md` | adds: "Corpus-program **W1 is complete** (W1.1–W1.6 merged; Gate B accepted 2026-09-13): the candidate workbench runs as `scripts/garden_*.py` over the persisted SQLite store plus the committed mirror … **W2 is not started.**" | **review** (found by the cold-start dry run) |
 
-Rows 4, 8, 9, 15 and 16 are **review-caught, not check-caught** — see "Limits of the guard".
+Rows 4, 8, 9, 15, 16, 17 and 18 are **review-caught, not check-caught** — see "Limits of the guard".
+Row 17 is the reason the unit's own dry run was worth running: it is the *mirror image* of the
+failure class — a status-bearing entry that quoted a **measurement of the front door** and went
+false the moment the front door was fixed.
 
 ## Evidence
 
@@ -176,21 +181,39 @@ Verdict returned:
 
 All eight questions were answered with a file path: project identity (AGENTS.md /
 PRODUCT_DOCTRINE.md); what is usable now (CURRENT.md §"What is usable now"); W1 and Gate B state
-(README.md, CURRENT.md, program/README.md); current gate (CURRENT.md §Gate); the one READY unit
-(CURRENT.md + queue.md); the bootstrap command (AGENTS.md §"How to resume work" → step 5);
+(README.md, CURRENT.md, docs/program/README.md); current gate (CURRENT.md §Gate); the one READY
+unit (CURRENT.md + queue.md); the bootstrap command (AGENTS.md §"How to resume work" → step 5);
 where discovered work goes (AGENTS.md step 7); what must not be started (AGENTS.md
 §"What requires human/provenance review" + queue's "Explicitly NOT started").
 
-Both false claims it flagged are fixed in this branch:
+It reported **three** problems, all fixed in this branch:
 
 1. `docs/program/README.md`: "Current data and validators are untouched: `quotes.csv` and
-   `sources.csv` are byte-identical to `main`" (contradiction table row 4);
-2. `CURRENT.md`'s frontier sentence naming the front-door docs as still needing repair
-   (row 16).
+   `sources.csv` are byte-identical to `main`" — a live-sounding claim in a 2026-09-12 section,
+   false since D7/D8 changed both CSVs (contradiction table row 4).
+2. `CURRENT.md`'s frontier sentence naming the front-door docs as still needing repair — the
+   pointer contradicting the tree it points at (row 16). It reconciled them by running the guard
+   rather than trusting either document, which is the behaviour the unit wants.
+3. `docs/queue.md`'s two live issue-#27 entries quoting `grep -c 'garden_' AGENTS.md` → 0 and
+   63 lines (row 17), plus the observation that `AGENTS.md` never names Gate B, so question 3 was
+   reachable only through `docs/queue.md` (row 18: CURRENT.md now states the W1/Gate B position).
+
+Its own words on the closing point: *"The weakness is at that single source: CURRENT.md is
+correctly structured and names the right gate/READY unit, but its own 'Current frontier' prose
+contains a stale status claim … so the routing is unambiguous but CURRENT's narrative sentence
+about the front door is not itself trustworthy."* That is now fixed, and it is recorded as a
+standing limit rather than claimed away: the structural fields are guarded, the narrative
+sentence is not.
 
 The dry run was executed against the PR head, i.e. *before* the closeout commit advances
 `CURRENT.md`'s READY/last-completed fields — the frontier sentence was reworded in this branch so
 that it is true both before and after the merge.
+
+**Self-correction worth recording:** the first draft of the row-17 annotation said `AGENTS.md`
+"is 128 lines". `wc -l AGENTS.md` returns **119**. The wrong number was caught by re-running the
+measurement before committing and corrected in place — the point of the unit is that quoted
+measurements must be read off the tree, and an annotation asserting a stale count would have been
+a fourth instance of the very defect.
 
 ## Issue #27 disposition
 
@@ -211,12 +234,18 @@ the repo's rule is to check the artefact and not the tracker.
 
 ## Limits of the guard (stated, not hidden)
 
-- Rows 4, 8, 9, 15 and 16 of the contradiction table are review-caught, not check-caught. A
+- Rows 4, 8, 9, 15, 16, 17 and 18 of the contradiction table are review-caught, not check-caught. A
   general "present-tense claim inside a historical section" detector was not built: pattern
   matching on `are byte-identical` fires on dozens of legitimate *historical* queue entries, and
   a guard that fires on history is worse than no guard. The check is deliberately scoped to (a)
   routing, (b) READY-unit agreement, (c) `AGENTS.md` naming modules derived from the tree, and
   (d) two named stale-claim shapes.
+- **The stale-measurement class (row 17) is not automatable with this unit's design, and this is a
+  deliberate limit.** A guard could forbid `grep -c 'garden_' AGENTS.md` from appearing next to a
+  zero count — but the repo's own doctrine requires a superseded number to be **annotated in
+  place**, i.e. the annotation must be allowed to quote the old value. A pattern that forbids the
+  quote forbids the required annotation. The mitigation is the doctrine itself: re-measure in the
+  same unit that changes the artefact (which is how the 128 → 119 error was caught before commit).
 - The READY/queue agreement check compares two independently-parsed fields, so it catches a
   disagreement but cannot know which side is *right*.
 - `check 19` derives its module list from `scripts/garden_*.py`. Adding a corpus-program module

@@ -21,6 +21,9 @@
 ## What is usable now
 
 - Existing 324-row Garden browser/search/filter/copy surface.
+- Corpus-program **W1 is complete** (W1.1–W1.6 merged; Gate B accepted 2026-09-13): the
+  candidate workbench runs as `scripts/garden_*.py` over the persisted SQLite store plus the
+  committed mirror `data/store/garden.export.txt`. **W2 is not started.**
 - W1 candidate capture → normalization → duplicate hints → operator review through `eligible`.
 - CI/acceptance/negative-control machinery around these surfaces.
 - Mechanized store lifecycle (bootstrap, status, sync) and mutation invariant keeping committed mirror current.
