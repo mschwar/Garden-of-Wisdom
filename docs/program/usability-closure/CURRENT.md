@@ -29,6 +29,7 @@ last-completed U-unit while this explicit field records the later reconciliation
 
 ## What is usable now
 
+- Existing 324-row Garden browser/search/filter/copy surface.
 - The existing Garden browser and W1 candidate workbench are usable as summarized in
   `docs/PRODUCT_REALITY.md`; this section exists only as the execution front door's compact
   capability pointer, not as a second product dashboard.
