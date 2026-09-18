@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 57
+EXPECTED_CONTROLS = 60
 EXPECTED_SELF_TESTS = 9
 
 
@@ -690,12 +690,13 @@ CHECKERS: tuple[Checker, ...] = (
                 "(unnamed: garden_review.py)",
             ),
             Mutation(
-                "fd3", "docs/queue.md marks a second unit READY (U0.2)",
+                "fd3", "docs/queue.md marks a unit READY while Gate U0 awaits synthesis (U0.2 "
+                "control, re-aimed in U0.3: the tree's state changed, so the check it aims at has "
+                "different wording now)",
                 "docs/queue.md",
                 "— UNAUTHORIZED until Gate U0 accepted",
                 "— READY",
-                "FAIL: 10. docs/queue.md marks exactly one unit READY in the usability-closure "
-                "section (found 2)",
+                "FAIL: 10. docs/queue.md authorizes no unit while U0 awaits synthesis (found 1)",
             ),
             Mutation(
                 "fd4", "README.md stops routing live status to CURRENT.md (U0.2)",
@@ -760,6 +761,33 @@ CHECKERS: tuple[Checker, ...] = (
                 "FAIL: 26. no scanned document makes the stale claim [w1-in-progress] "
                 "(docs/program/README.md -> describes W1 as in progress / underway / not yet "
                 "landed)",
+            ),
+            Mutation(
+                "fd11", "CURRENT.md quietly keeps a unit READY while declaring that synthesis is "
+                "required (U0.3 -- the state must not be declarable decoratively)",
+                "docs/program/usability-closure/CURRENT.md",
+                "`none` — while Gate U0 awaits synthesis no unit is READY",
+                "`U1.1` — while Gate U0 awaits synthesis no unit is READY",
+                "FAIL: 4. while U0 awaits synthesis CURRENT.md declares no READY unit (value "
+                "'`U1.1` — while Gate U0 awaits synthesis no unit is READY; `docs/queue.md` names "
+                "what a later gate would release, marked not authorized.')",
+            ),
+            Mutation(
+                "fd12", "CURRENT.md relabels the programme state away from synthesis while no READY "
+                "unit is named (U0.3 -- proves the state field is load-bearing, not a label)",
+                "docs/program/usability-closure/CURRENT.md",
+                "## Programme state\n\n`SYNTHESIS REQUIRED — GATE U0`",
+                "## Programme state\n\n`EXECUTING — GATE U0`",
+                "FAIL: 4. CURRENT.md names a READY unit id (value '`none` — while Gate U0 awaits "
+                "synthesis no unit is READY; `docs/queue.md` names what a later gate would "
+                "release, marked not authorized.')",
+            ),
+            Mutation(
+                "fd13", "CURRENT.md loses the Programme-state heading (U0.3 structure guard)",
+                "docs/program/usability-closure/CURRENT.md",
+                "## Programme state\n\n`SYNTHESIS REQUIRED — GATE U0`",
+                "## Programme stage\n\n`SYNTHESIS REQUIRED — GATE U0`",
+                "FAIL: 2. CURRENT.md keeps its required structure (missing '## Programme state')",
             ),
         ),
     ),

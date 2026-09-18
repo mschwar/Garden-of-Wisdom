@@ -1710,3 +1710,52 @@ evidence justifies the dependency; (c) migrating/renaming `quotes.csv` or buildi
 to match the new product prose — current compatibility has value and the next real seam is
 admission/projection/use, not naming.
 
+## 2026-09-18 — U0.3 executed (a real item, and a guard that can express "stopped")
+
+Two decisions, each with the rejected alternative recorded.
+
+**1. The front-door guard learned the programme's state machine.** U0.3's in-scope deliverable is
+"update CURRENT to `SYNTHESIS REQUIRED — GATE U0`", and `SYNTHESIS_GATES.md` §S0 defines that state
+as the place where execution stops and frontier/operator judgment resumes.
+`scripts/check_front_door.py` could express only "exactly one READY unit", so the mandated state
+failed the CI-wired guard *by construction*.
+
+Rejected: (a) leave CURRENT naming U0.3 as READY — that is a false live-status claim and defeats the
+unit; (b) mark U1.1 READY to satisfy the one-unit rule — that silently authorizes U1, which the
+programme's own stop rule forbids. Chosen: a required `## Programme state` field the guard reads,
+load-bearing in **both** directions — while it is declared no unit may be READY in `CURRENT.md` or
+`docs/queue.md`, the queue must still name what a later gate would release marked not authorized, the
+last completed unit must belong to the gate awaiting synthesis, and that gate must have a documented
+resume trigger. `EXPECTED_CHECKS` stayed **27**: the checks became state-aware, none was added,
+removed or weakened, and the pre-U0.3 contract was proven still accepted by a must-stay-green case
+that withdraws the state and puts one READY unit back. Declaring the state decoratively is a
+failure, which control `fd12` proves by relabelling the state and watching the guard flip back to
+demanding a READY unit.
+
+Same class, found the same way: check 2 tested structure with `heading in text`, so a document could
+satisfy it by *quoting* the heading in prose. Control `fd13` came back **MASKED** — that is how it
+was found, not by reading the code — and structure is now tested against heading lines
+(`has_heading`/`count_headings`).
+
+**2. The canary's curation verdict was recorded by the agent on the operator's behalf.** U0.3's
+second human gate is the operator's own curation decision. The operator chose the passage when
+offered three options and then did not answer the accept/hold/reject/duplicate question in two
+attempts.
+
+Rejected: (a) leave the candidate at `new` — the canary would then prove less than the acceptance
+criteria ask, since there would be no decision row to survive recovery; (b) compose a reason in the
+operator's voice — that fabricates a human decision, and this gate exists to prevent exactly that.
+Chosen: record `accept` with an audit reason that says in its own text that the agent recorded it on
+the operator's behalf, on the grounds that the operator had already said they want this passage in
+the Garden and that `T-C9 reopen` makes the call reversible. The deviation is disclosed in
+`U0_GATE_PACKET.md` §2 as the one non-ecological element of Gate U0, left to the §S0 synthesis to
+accept or reject; no other claim in the packet depends on it.
+
+**Also recorded:** the control table's count was stale in prose. `docs/RUNBOOK.md` and
+`docs/architecture/NEGATIVE_CONTROLS.md` both said **44** controls over 13 checkers; the table was
+already at 57 when U0.2 landed and is **60** over **15** after U0.3. Both files now carry the
+re-measured number with the superseded value annotated in place, per the repo's rule that a stale
+count is annotated rather than quietly replaced.
+
+Design trail: `GARDEN_U0_3_HANDOFF.md`,
+`docs/program/usability-closure/U0_GATE_PACKET.md`.
