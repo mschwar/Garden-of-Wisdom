@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 56
+EXPECTED_CONTROLS = 57
 EXPECTED_SELF_TESTS = 9
 
 
@@ -677,7 +677,7 @@ CHECKERS: tuple[Checker, ...] = (
                 "docs/program/README.md",
                 "and the W1 runtime all landed:",
                 "and no W1 runtime code exists:",
-                "FAIL: 27. no guarded document makes the stale claim "
+                "FAIL: 25. no scanned document makes the stale claim "
                 "[w1-runtime-or-store-absent] (docs/program/README.md -> describes the W1 "
                 "runtime/store as absent)",
             ),
@@ -686,7 +686,7 @@ CHECKERS: tuple[Checker, ...] = (
                 "AGENTS.md",
                 "scripts/garden_review.py {queue",
                 "scripts/garden_reveiw.py {queue",
-                "FAIL: 24. AGENTS.md names every corpus-program module in scripts/ "
+                "FAIL: 22. AGENTS.md names every corpus-program module in scripts/ "
                 "(unnamed: garden_review.py)",
             ),
             Mutation(
@@ -720,7 +720,7 @@ CHECKERS: tuple[Checker, ...] = (
                 "## Manage store lifecycle: bootstrap, freshness status, and sync (U0.1)",
                 "## Manage store lifecycle: bootstrap, freshness status, and sync (U0.1)\n\n"
                 "W1 is in progress.",
-                "FAIL: 28. no guarded document makes the stale claim [w1-in-progress] "
+                "FAIL: 26. no scanned document makes the stale claim [w1-in-progress] "
                 "(docs/RUNBOOK.md -> describes W1 as in progress / underway / not yet landed)",
             ),
             Mutation(
@@ -729,27 +729,37 @@ CHECKERS: tuple[Checker, ...] = (
                 "- Existing 324-row Garden browser/search/filter/copy surface.",
                 "- Nothing is usable yet. No corpus-program datastore exists and W1 is in "
                 "progress.",
-                "FAIL: 27. no guarded document makes the stale claim [w1-runtime-or-store-absent] "
+                "FAIL: 25. no scanned document makes the stale claim [w1-runtime-or-store-absent] "
                 "(docs/program/usability-closure/CURRENT.md -> describes the W1 runtime/store as "
                 "absent)",
             ),
             Mutation(
-                "fd8", "a document outside the guarded set starts pointing at CURRENT.md (U0.2)",
-                "docs/program/usability-closure/DEFERRED_NOT_NOW.md",
-                "# Explicitly Deferred — do not fix in passing",
-                "Live status: `docs/program/usability-closure/CURRENT.md`\n\n"
-                "# Explicitly Deferred — do not fix in passing",
-                "FAIL: 20. fail-closed coverage: no document outside the guarded set names "
-                "docs/program/usability-closure/CURRENT.md (add to GUARDED or to EXCLUSIONS: "
-                "docs/program/usability-closure/DEFERRED_NOT_NOW.md)",
+                "fd8", "a document that never names CURRENT.md gains a stale claim (U0.2)",
+                "docs/program/STATE_MODEL.md",
+                "## Transition invariants",
+                "## Transition invariants\n\nW1 is still in progress.",
+                "FAIL: 26. no scanned document makes the stale claim [w1-in-progress] "
+                "(docs/program/STATE_MODEL.md -> describes W1 as in progress / underway / not "
+                "yet landed)",
             ),
             Mutation(
                 "fd9", "AGENTS.md's store-lifecycle line loses its status/sync subcommands (U0.2)",
                 "AGENTS.md",
                 "`python3 scripts/garden_store.py {bootstrap,status,sync} [--dir DIR]`",
                 "`python3 scripts/garden_store.py bootstrap [--dir DIR]`",
-                "FAIL: 22. AGENTS.md's command surface carries the whole store lifecycle on one "
+                "FAIL: 20. AGENTS.md's command surface carries the whole store lifecycle on one "
                 "line (garden_store.py + bootstrap + status + sync; found 0)",
+            ),
+            Mutation(
+                "fd10", "the round-2 finding G3: an 'underway / has not landed' claim in a "
+                "front door (U0.2)",
+                "docs/program/README.md",
+                "python3 scripts/check_front_door.py          # front-door docs still describe current state",
+                "python3 scripts/check_front_door.py          # front-door docs still describe current state\n"
+                "The W1 runtime has not landed yet, and W1 remains underway.",
+                "FAIL: 26. no scanned document makes the stale claim [w1-in-progress] "
+                "(docs/program/README.md -> describes W1 as in progress / underway / not yet "
+                "landed)",
             ),
         ),
     ),

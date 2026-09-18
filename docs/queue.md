@@ -272,10 +272,10 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       Found while authoring U0.2's front-door guard: the stay-green control did exactly what it
       was told and the run went red
       (`FAIL: scripts/check_front_door.py fd6 (GREEN_OK) -- stayed green as required`), so it was
-      withdrawn; `scripts/check_front_door.py` therefore ships with **9 red-direction controls**
-      (`fd1`–`fd9`) and no must-stay-green one. The table stands at **56** controls over **15**
-      checkers (the U0.2 remediation round added `fd6`–`fd9`, one per gap a cold-start reviewer
-      found; `fd6` reuses the withdrawn control's id and is a red-direction control). The
+      withdrawn; `scripts/check_front_door.py` therefore ships with **10 red-direction controls**
+      (`fd1`–`fd10`) and no must-stay-green one. The table stands at **57** controls over **15**
+      checkers (the two U0.2 remediation rounds added `fd6`–`fd10`, one per gap a cold-start
+      reviewer found; `fd6` reuses the withdrawn control's id and is a red-direction control). The
       false-positive direction is covered by a local throwaway battery recorded in
       `GARDEN_U0_2_HANDOFF.md`, not by anything CI re-applies. Not fixed in U0.2 — the discovery
       rule: a harness change is a change to the mechanism every checker depends on.

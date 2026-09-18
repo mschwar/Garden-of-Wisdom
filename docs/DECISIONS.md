@@ -1560,27 +1560,27 @@ Design trail: `GARDEN_U0_1_HANDOFF.md`.
    explicitly: where a front door and CURRENT disagree about status, CURRENT wins and the other
    document is a bug.
 2. **The front door is guarded by a deterministic check, not by prose.**
-   `scripts/check_front_door.py` (29 checks, count-guarded, stdlib-only) asserts the routing, that
+   `scripts/check_front_door.py` (27 checks, count-guarded, stdlib-only) asserts the routing, that
    CURRENT names exactly one READY unit and that the unit's work-unit document and the
    last-completed unit's handoff both exist on disk, that `docs/queue.md`'s usability-closure
    section marks the *same* single unit READY (the two are derived by different code paths and
    compared), that `AGENTS.md` names every `scripts/garden_*.py` module in the tree (derived from
    the tree, so a new module forces a front-door decision) and carries the whole store lifecycle
-   on one line, and that no guarded document re-asserts a stale live-status claim.
-   The guard is **fail-closed**: an explicit `GUARDED` list plus a derived coverage check that
-   fails when any non-excluded markdown file in the tree names CURRENT.md and is not guarded, so a
-   new status-bearing front door cannot escape the scan; the exclusion list is itself checked for
-   rotten (matching-nothing) entries. `CURRENT.md` is inside the guarded set — the authority's own
-   body must not be able to assert the opposite of its own fields. A meta-claim guard
-   (`META_CLAIM_RE`) treats "no longer claims the W1 runtime does not exist" — the charter's own
-   Gate U0 criterion — as a statement *about* a claim rather than the claim, after the first
-   version of the guard wrongly failed it. CI-wired as its own `browser-smoke.yml` step;
-   **9 registered negative controls** (`fd1`–`fd9`), taking the committed table 47 → **56**
-   controls over **15** checkers. A "must stay green" control could not be registered at all — see
-   the harness defect below.
-3. **The stale-claim scan is scoped to documents a cold-start agent can mistake for status** —
-   `AGENTS.md`, `README.md`, `docs/program/README.md`, `docs/product/PRODUCT_DOCTRINE.md`,
-   scanned. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
+   on one line, and that no document re-asserts a stale live-status claim.
+   The **stale-claim scan is universal**: every markdown file in the tree that is not on the
+   exclusion list is scanned (33 of 104), so a new status document, a differently-linked front
+   door, or a file that never names CURRENT.md at all cannot escape by omission. Exclusions are
+   explicit, **typed** (`prefix` / `exact` / `root-prefix`), carry a reason each, and are checked
+   for rotten (matching-nothing) entries. A match is skipped only when it sits inside quotation
+   marks or its own sentence carries a history marker — allowances that are sentence-scoped after
+   the first versions (a 46-character look-behind, and a literal-pointer coverage key) were broken
+   by an independent review. CI-wired as its own `browser-smoke.yml` step; **10 registered
+   negative controls** (`fd1`–`fd10`), taking the committed table 47 → **57** controls over **15**
+   checkers. A "must stay green" control could not be registered at all — see the harness defect
+   below.
+3. **The stale-claim scan is universal over markdown, minus the exclusion list** — every markdown
+   file in the tree that is not on the exclusion list is scanned, so no document has to opt in to
+   be protected. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
    `docs/audit/*` snapshots, the root `GARDEN_*_HANDOFF.md` files, `docs/DECISIONS.md` itself as an
    append-only log, the frozen `docs/data/DATA_QUALITY_REPORT.md`, the work-unit specs) are
    deliberately **not** scanned, each with a recorded reason, and were not rewritten.
@@ -1645,5 +1645,16 @@ The remediation's own false positive was found by the **local must-stay-green ba
 red-direction control: the charter's Gate U0 criterion ("no longer claim W1 runtime does not
 exist") failed the first version of the third stale-claim pattern. That is the concrete cost of
 the harness defect recorded below, and the reason the battery exists.
+
+A **second review round** against the remediated head returned CONDITIONAL PASS again: `G1`, `G2`
+and `M4` verified CLOSED, but its own round-1 mutation `G3` still passed (the meta-claim allowance
+was a 46-character window and an unrelated word in `docs/program/README.md` exempted the claim),
+the coverage check keyed on one literal pointer string so a relative link evaded it, exclusions
+matched by substring (so `START_GARDEN_*.md` was silently exempt), and it reproduced three false
+positives. The response was to **replace the design rather than patch it again**: the guarded set,
+the pointer-keyed coverage check and the look-behind window were all deleted, and the scan became
+universal over non-excluded markdown with typed exclusions and sentence-scoped quoted/history
+allowances. That is why the check count moved 29 → 27 while the controls moved 9 → 10: the
+simplification is the remediation.
 
 Design trail: `GARDEN_U0_2_HANDOFF.md`.
