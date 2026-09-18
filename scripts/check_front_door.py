@@ -187,7 +187,18 @@ QUEUE_READY_RE = re.compile(r"^\s*-\s*\[[ x]\]\s*(U\d+\.\d+)\b[^\n]*—\s*READY\
 #: So the state is a first-class input, read from the document, and load-bearing in BOTH
 #: directions: while it is declared no unit may be READY anywhere, and while it is absent the
 #: normal one-READY-unit contract applies unchanged.
-SYNTHESIS_PENDING_RE = re.compile(r"SYNTHESIS\s+REQUIRED\s*[-\u2013\u2014]\s*GATE\s+(U\d+)", re.I)
+SYNTHESIS_PENDING_RE = re.compile(
+    # Two shapes, both honest, both accepted: "<state> ... GATE <gate>" (any short separator:
+    # em/en dash, hyphen, colon, parentheses) and the sentence form "GATE <gate> awaits
+    # synthesis". An independent U0.3 review found three legitimate rephrasings rejected by the
+    # first, single-shape version -- and worse, misdiagnosed as a *missing READY unit*, because
+    # an unparsed state silently fell through to the one-READY-unit branch. A guard that fails
+    # an honest document and then names the wrong problem is two defects, so this is widened and
+    # the fallback below reports the unreadable state as itself.
+    r"SYNTHESIS\s+REQUIRED\b[^A-Za-z0-9\n]{0,12}\bGATE\s+(U\d+)"
+    r"|\bGATE\s+(U\d+)\b[^A-Za-z0-9\n]{0,12}(?:awaits?|awaiting)\s+synthesis",
+    re.I,
+)
 
 #: A READY-unit section that declares there is none, rather than naming one.
 READY_NONE_RE = re.compile(r"\bnone\b", re.I)
@@ -352,16 +363,28 @@ def main() -> int:
     # ------------------------------ the programme's own state machine (load-bearing, both ways)
     state_value = section_value(current_text, "## Programme state") or ""
     pending_match = SYNTHESIS_PENDING_RE.search(normalize(state_value))
-    pending_gate = pending_match.group(1) if pending_match else None
+    pending_gate = (pending_match.group(1) or pending_match.group(2)) if pending_match else None
 
     ready_value = section_value(current_text, "## Current READY unit")
     ready_id = unit_id(ready_value)
+
+    # The ambiguous combination: the state field says *something* that is not a state this guard
+    # recognises, and no unit is READY either. Reporting "no READY unit" here would misdiagnose a
+    # phrasing change as a structural failure, so name the thing that is actually unreadable.
+    unreadable_state = pending_gate is None and ready_id is None and bool(state_value.strip())
 
     if pending_gate:
         check(
             ready_id is None and bool(READY_NONE_RE.search(ready_value or "")),
             f"4. while {pending_gate} awaits synthesis CURRENT.md declares no READY unit "
             f"(value {ready_value!r})",
+        )
+    elif unreadable_state:
+        check(
+            False,
+            f"4. CURRENT.md's '## Programme state' is unreadable while no unit is READY "
+            f"(value {state_value!r}; expected a state such as "
+            f"'SYNTHESIS REQUIRED \u2014 GATE U0')",
         )
     else:
         check(ready_id is not None, f"4. CURRENT.md names a READY unit id (value {ready_value!r})")

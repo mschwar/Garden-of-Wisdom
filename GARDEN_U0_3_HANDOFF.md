@@ -136,6 +136,35 @@ recorded, so the canary admitted nothing canonically.
 
 ## 4. The guard change: teaching the state machine (in scope, not a drive-by)
 
+### Reconciled with R0 (2026-09-18)
+
+This branch was **rebased** onto PR #58 (`docs: R0 product reality & system reconciliation`,
+merged as `ed523b3`) after CI review began, because R0 changed four of the files this unit edits —
+including `CURRENT.md`, `SYNTHESIS_GATES.md` and the U0.3 work-unit doc itself. The conflicts were
+resolved by hand (`CURRENT.md`, `docs/queue.md`, `docs/DECISIONS.md`) keeping **both** sides: R0's
+`## Last reconciliation` section, its `docs/PRODUCT_REALITY.md` pointers and its queue entries are
+preserved, and nothing R0 wrote was dropped. The canary artefact is byte-unchanged by the rebase
+(`data/store/garden.export.txt` is still `3b5c5407…`, re-measured after the rebase), and every guard,
+control and acceptance run below was **re-executed on the rebased tree**, not carried over.
+
+R0's queue disposition in `docs/queue.md` says: *"preserve the landed guards, but do not execute
+additional front-door/checker-for-checker assurance work ahead of U0.3/U1 unless a concrete current
+product/dependability failure demonstrates that it is the active constraint."* This unit's guard
+change is that carve-out, and the reason is mechanical rather than aspirational: **U0.3's own
+in-scope deliverable failed the guard.** The work-unit doc (as amended by R0) requires
+`CURRENT.md` to say `SYNTHESIS REQUIRED — GATE U0`, and the CI-wired guard rejected that state by
+construction. Doing no guard work would have meant either not delivering the unit's stop condition or
+delivering a red CI, so the assurance work was the active constraint. The three added controls are
+not extra coverage for its own sake: the repo's own doctrine is that a changed check must carry a
+control that only it catches, and without them the new branches would have shipped unfalsifiable.
+
+R0 also added an in-scope item — update `docs/PRODUCT_REALITY.md` with what the canary earned. That
+is done: recovery moves from deterministic/mechanism proof to real ecological proof, with the
+agent-recorded-verdict caveat named in the same breath (§1), while Gate U0 acceptance itself is left
+pending synthesis exactly as R0 required.
+
+### The change itself
+
 `scripts/check_front_door.py`, `EXPECTED_CHECKS` **unchanged at 27** — no check was added, removed or
 weakened; the existing checks became state-aware.
 
@@ -216,7 +245,70 @@ was inherited from U0.2, and U0.3 widens the surface it covers — the state-awa
 where a future false positive would live. The queue item covering #56 was extended to say so rather
 than left implying the direction is enforced.
 
+## 5b. Foreign QA and what it changed
+
+An independent reviewer was given the pushed branch, told to write its **own** mutations, and asked
+to try to falsify the ecological claim. It never read this handoff before its reproduction attacks.
+It worked on a fresh clone of `36fbf72` (the pre-R0-rebase head — stated so a reader can tell which
+bytes were attacked). Verdict: **the claim was not falsified**, with two real findings and five
+declared coverage gaps.
+
+Reproduced independently, byte-exactly: no SQLite in the clone (only the 27,091-byte mirror), 
+`bootstrap: CURRENT`, re-derived export `3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377`
+identical to the committed mirror, `quotes.csv`/`sources.csv` unchanged against `origin/main`, the
+canary located from the rebuilt store alone, and the two sub-answers — **not canonically admitted**
+(`corpus_state = eligible`) and **research not upgraded** (`not_started`) — confirmed by reading the
+database directly. It also found the DB-corruption shape fails hard (`exit 1`) and confirmed the
+mirror is `STALE` after a hand-edit and `MISSING_MIRROR` when deleted.
+
+### Finding 1 (fixed): three honest rephrasings were rejected, and misdiagnosed
+
+The reviewer's highest-value attack succeeded: `SYNTHESIS_PENDING_RE` required a dash between
+`REQUIRED` and `GATE`, so three truthful ways of declaring the same state —
+
+```
+`Synthesis required: Gate U0`
+`Gate U0 awaits synthesis; execution has stopped`
+`SYNTHESIS REQUIRED (GATE U0)`
+```
+
+— were rejected, and worse, reported as *"CURRENT.md names a READY unit id"*: an unparsed state fell
+through to the one-READY-unit branch, so the guard named a problem that did not exist. A guard that
+fails an honest document **and** misdiagnoses it is two defects.
+
+**Fixed.** The pattern now accepts both shapes (`<state> … GATE <gate>` with any short separator, and
+the sentence form `GATE <gate> awaits synthesis`), and the ambiguous combination — a state field
+that says something unreadable *while no unit is READY* — is reported as itself:
+`4. CURRENT.md's '## Programme state' is unreadable while no unit is READY (value …)`. The three
+phrasings are now permanent must-stay-green cases (battery 11 → 14), exactly as U0.2 kept its own
+reviewer's false positives, and `fd14` is a red control for the unreadable-state path.
+
+Renumbering note: `fd12` was re-aimed, because relabelling the state to `EXECUTING — GATE U0` with no
+READY unit now correctly lands on the *unreadable* branch rather than the missing-READY-unit branch.
+The control still proves the state field is load-bearing; it just names the honest failure now.
+Front-door controls: 13 → **14**; table 60 → **61**.
+
+### Finding 2 (reported, not fixed — pre-existing)
+
+`garden_store.py status` exits **0** for both `STALE` and `MISSING_MIRROR`. A pipeline that runs only
+`status` will not fail on a diverged mirror; the invariant is enforced where
+`check_garden_lifecycle.py` runs. That is U0.1's surface, not this unit's, and it is recorded here as
+the reviewer found it rather than quietly fixed inside a canary unit.
+
+### Coverage gaps the reviewer declared (accepted, recorded)
+
+Its own words: it did not run the full suites or the full control table; it did not verify the prose
+in this handoff or the gate packet; it could not verify that the operator interaction happened (the
+store cannot prove that — which is why §1 discloses it); it did not test the state token appearing in
+another section; and it did not attempt a mutation that removes the resume trigger from
+`SYNTHESIS_GATES.md` (check 5's `elif` branch). One observation is also correct and worth keeping: it
+saw `UU docs/DECISIONS.md` in the real repo mid-read — that was this session's in-flight rebase, not
+a defect, and it issued no writes there.
+
 ## 6. Verification run on the branch
+
+**Re-executed on the rebased tree** (`d50d690` on top of R0's `ed523b3`) — the pre-rebase numbers
+were not carried over, because R0 changed many of the documents the guard scans:
 
 ```
 python3 scripts/check_front_door.py                 RESULT: PASS (27 checks)      [both interpreters]
@@ -262,12 +354,31 @@ shasum -a 256 quotes.csv sources.csv                9766db8c… / 7aafcb67… (b
 - "Process restart" is evidenced structurally: every CLI invocation is a fresh process, and
   reconstruction 2/3 begin with no database at all — a stronger condition than a restart.
 
-## 9. Out-of-scope / stop
+## 9. Files changed in this branch
+
+| file | change |
+|---|---|
+| `data/store/garden.export.txt` | the canary: +1 capture, +1 candidate, +1 link, **and the 2 audit rows** (committed mirror; `3b5c5407…`, 27,091 bytes) |
+| `docs/program/usability-closure/U0_GATE_PACKET.md` | new — the Gate U0 packet |
+| `GARDEN_U0_3_HANDOFF.md` | new — this handoff |
+| `docs/program/usability-closure/CURRENT.md` | `## Programme state` = `SYNTHESIS REQUIRED — GATE U0`; READY = none; last completed = U0.3; frontier/proof-target updated (R0's `## Last reconciliation` and product-reality pointers preserved) |
+| `scripts/check_front_door.py` | state-aware in both directions; structure tested against heading lines; `EXPECTED_CHECKS` still 27 |
+| `scripts/run_negative_controls.py` | `fd3` re-aimed, `fd11`–`fd13` added, table 57 → 60 |
+| `docs/queue.md` | U0.3 closed section, the two new findings, the #56 item extended (R0's line, R0 closed section and R0 disposition preserved) |
+| `docs/DECISIONS.md` | one appended dated entry (R0's entry preserved) |
+| `docs/PRODUCT_REALITY.md` | recovery moves from mechanism proof to ecological proof (the R0-amended in-scope item) |
+| `docs/RUNBOOK.md`, `docs/architecture/NEGATIVE_CONTROLS.md` | re-measured control count with the superseded value annotated |
+
+**Untouched, deliberately:** `quotes.csv`, `sources.csv` (byte-identical to `main` —
+`9766db8c…` / `7aafcb67…`), `browser/`, `.github/workflows/**`, and every historical packet
+(`docs/program/W1_*.md`, `docs/audit/**`, the other root handoffs).
+
+## 10. Out-of-scope / stop
 
 Nothing in U1 was started. No browser change, no admission, no `quotes.csv`/`sources.csv` edit, no
 ontology cleanup, no W2. `CURRENT.md` names the state the spec requires and no unit is authorized.
 
-## 10. Landing
+## 11. Landing
 
 _To be completed after merge: PR number, merge sha, both CI run ids, and the post-merge
 re-verification on `main`._

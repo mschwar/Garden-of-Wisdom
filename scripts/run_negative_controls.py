@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 60
+EXPECTED_CONTROLS = 61
 EXPECTED_SELF_TESTS = 9
 
 
@@ -774,13 +774,25 @@ CHECKERS: tuple[Checker, ...] = (
             ),
             Mutation(
                 "fd12", "CURRENT.md relabels the programme state away from synthesis while no READY "
-                "unit is named (U0.3 -- proves the state field is load-bearing, not a label)",
+                "unit is named (U0.3 -- the state field is load-bearing, not a label; the "
+                "relabelled state is refused as unreadable rather than silently accepted)",
                 "docs/program/usability-closure/CURRENT.md",
                 "## Programme state\n\n`SYNTHESIS REQUIRED — GATE U0`",
                 "## Programme state\n\n`EXECUTING — GATE U0`",
-                "FAIL: 4. CURRENT.md names a READY unit id (value '`none` — while Gate U0 awaits "
-                "synthesis no unit is READY; `docs/queue.md` names what a later gate would "
-                "release, marked not authorized.')",
+                "FAIL: 4. CURRENT.md's '## Programme state' is unreadable while no unit is READY "
+                "(value '`EXECUTING — GATE U0` — U0.3 is merged and the Gate U0 packet is "
+                "submitted'; expected a state such as 'SYNTHESIS REQUIRED — GATE U0')",
+            ),
+            Mutation(
+                "fd14", "CURRENT.md's ## Programme state says something the guard cannot read while "
+                "no unit is READY (U0.3 -- an unparsed state must not be reported as a missing "
+                "READY unit)",
+                "docs/program/usability-closure/CURRENT.md",
+                "`SYNTHESIS REQUIRED — GATE U0` — U0.3 is merged",
+                "`IN PROGRESS` — U0.3 is merged",
+                "FAIL: 4. CURRENT.md's '## Programme state' is unreadable while no unit is READY "
+                "(value '`IN PROGRESS` — U0.3 is merged and the Gate U0 packet is submitted'; "
+                "expected a state such as 'SYNTHESIS REQUIRED — GATE U0')",
             ),
             Mutation(
                 "fd13", "CURRENT.md loses the Programme-state heading (U0.3 structure guard)",
