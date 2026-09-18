@@ -4,9 +4,15 @@ Read this before touching anything in this repo.
 
 ## What this project is
 
-A personal, curated collection of memorable passages from multiple religious/philosophical
-traditions, for memorization and reflection. See `docs/product/PRODUCT_DOCTRINE.md` for
-intent and non-goals.
+A personal, curated Garden of **passages worth keeping** across religious, philosophical,
+literary, scientific, artistic, historical, oral/cultural and other personally meaningful
+sources, for rediscovery, understanding, comparison, memorization and reflection.
+
+The durable domain object is **Passage**; “quote” is a legacy data/surface term. Read
+`docs/product/PRODUCT_DOCTRINE.md` for stable product boundaries and
+`docs/PRODUCT_REALITY.md` for standing system/usability reality.
+
+**Product reality is not in this file.** It lives in `docs/PRODUCT_REALITY.md`.
 
 **Live programme status is not in this file.** It lives in
 `docs/program/usability-closure/CURRENT.md` — the current gate, the single READY unit, the
