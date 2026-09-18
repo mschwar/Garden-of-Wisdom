@@ -1,5 +1,18 @@
 # Runbook
 
+## Where are we? (resume here)
+
+Live programme status is not in this file. Read `docs/program/usability-closure/CURRENT.md`
+for the current gate, the single READY unit and the last completed unit, then `docs/queue.md`
+and `docs/DECISIONS.md`, then the READY unit's document under
+`docs/program/usability-closure/workunits/` and the matching `GARDEN_<UNIT>_HANDOFF.md` at repo
+root (root handoffs and the W0/W1 gate packets are historical evidence, not status). If the
+local store is absent, hydrate it before anything else:
+`python3 scripts/garden_store.py bootstrap --dir data/store`, then
+`python3 scripts/garden_store.py status --dir data/store` and confirm `CURRENT`. `AGENTS.md`
+carries the same resume path plus the full command surface, and
+`python3 scripts/check_front_door.py` asserts that routing has not drifted.
+
 ## Validate the data
 
 ```
@@ -563,7 +576,10 @@ if an accepted donor’s `quote_text` has drifted from the verified snapshot in
 
 1. `git status`
 2. Read `AGENTS.md`.
-3. Read `docs/queue.md` for the active work unit.
-4. Read the most recent handoff/checkpoint file at repo root.
+3. Read `docs/program/usability-closure/CURRENT.md` for the current gate and the one READY
+   unit, then `docs/queue.md` for the active work unit.
+4. Read the READY unit's document under `docs/program/usability-closure/workunits/` and the
+   most recent handoff/checkpoint file at repo root.
 5. Resume only the named active work unit — don't restart from memory or improvise scope.
-6. Re-run `scripts/validate_quotes.py` before claiming anything is done.
+6. Re-run the acceptance suites for the surface you touched (`scripts/validate_quotes.py` for
+   data, `scripts/check_garden_*.py` for the corpus surfaces) before claiming anything is done.

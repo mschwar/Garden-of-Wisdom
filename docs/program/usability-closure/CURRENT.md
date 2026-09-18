@@ -27,7 +27,7 @@
 
 ## Current frontier
 
-The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front-door docs (README.md, AGENTS.md) still present outdated paths and need truthful current-state routing.
+The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front-door docs (AGENTS.md, README.md, docs/program/README.md, PRODUCT_DOCTRINE.md) route live status here and are guarded by `scripts/check_front_door.py`. The next frontier is the real persistent operator canary (U0.3): a real operator action must survive a restart and a rebuild of the local store from the committed mirror.
 
 ## Gate U0 proof target
 

@@ -263,9 +263,24 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
       (`b3bb7848…` / `7aafcb67…`).
 
+- [ ] **The negative-control harness cannot register a "must stay green" control** (issue
+      [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56)). `judge()` returns `GREEN_OK`
+      for `Mutation(expect_fail=None)` and `docs/architecture/NEGATIVE_CONTROLS.md` documents
+      `GREEN_OK` as a passing verdict ("a contract-preserving edit stayed green, as the control
+      requires"), but `report()` counts every non-`FIRED` outcome as "not fired", appends it to
+      the failures and exits 1 — so the committed table can only express controls that go red.
+      Found while authoring U0.2's front-door guard: the `fd6` stay-green control did exactly what
+      it was told and the run went red
+      (`FAIL: scripts/check_front_door.py fd6 (GREEN_OK) -- stayed green as required`), so it was
+      withdrawn and the table stayed at **52** controls over **15** checkers.
+      `scripts/check_front_door.py` therefore ships without a must-stay-green control; that
+      direction is covered by a local throwaway battery recorded in `GARDEN_U0_2_HANDOFF.md`, not
+      by anything CI re-applies. Not fixed in U0.2 — the discovery rule: a harness change is a
+      change to the mechanism every checker depends on.
+
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
-- [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
+- [x] **W1 — COMPLETE (W1.1–W1.6 merged; Gate B accepted 2026-09-13). Authorized in full 2026-09-12 (decision D1).** Six bounded units are
       specified in `docs/program/W1_DECOMPOSITION.md`:
       **W1.1** storage decision + minimal schema ✅ **DONE** · **W1.2** candidate-envelope contract
       + validator · **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate
@@ -1007,10 +1022,15 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 ## Explicitly NOT started (do not start without human sign-off)
 
-- **The entire corpus program past W1.** W0 (`docs/program`) is doctrine only; **W1 is now
-  authorized in full** (2026-09-12, decision D1) and in progress. Still **NOT started**: W2 and
-  everything after it, any discovery adapter, and any canonical promotion path (W3). The
-  authorization of W1 does not authorize anything past the Gate B packet.
+- **The entire corpus program past W1.** W0 (`docs/program`) is doctrine only; **W1 is
+  COMPLETE** (authorized in full 2026-09-12, decision D1; Gate B accepted 2026-09-13). Still
+  **NOT started**: W2 and
+  everything after it, any discovery adapter, and any canonical promotion path (W3). W1's
+  authorization does not extend past the Gate B packet.
+- **Every usability-closure unit past the one `CURRENT.md` marks READY**, including all of U1.
+  Gate U0 must be accepted by operator/frontier synthesis first (see
+  `docs/program/usability-closure/SYNTHESIS_GATES.md`); U1.1 additionally needs the
+  authoritative-data architecture decided, which is an operator gate, not a builder's call.
 - Any `bahai-homepage` implementation work **other than** the D9 consume lane against the v1 export
   (see the authorized section below).
 - Bulk quote verification beyond the approved donor set.

@@ -57,6 +57,13 @@ jobs:
       - name: Guard the Pages deploy contract
         run: python scripts/check_pages_contract.py
 
+      # The front door is the first thing a cold-start agent reads. This guard fails if
+      # AGENTS/README/CURRENT stop routing live status to CURRENT.md, if the queue and CURRENT
+      # disagree about which unit is READY, or if a front-door doc re-asserts a stale
+      # live-status claim (the issue #27 class). Negative controls: fd1-fd5.
+      - name: Guard the front door (current-state routing)
+        run: python scripts/check_front_door.py
+
       - name: Run the W1 corpus-program acceptance suites
         run: |
           python scripts/check_garden_store.py

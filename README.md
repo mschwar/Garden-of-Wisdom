@@ -11,7 +11,26 @@ inspiration — with its uncertainty made visible rather than hidden. See
 `docs/product/PRODUCT_DOCTRINE.md` for the full doctrine and non-negotiables, and `AGENTS.md`
 if you're an agent picking up work here.
 
-## Status (as of the 2026-09-11 retrofit)
+## Where are we now?
+
+Live programme status is **not** duplicated here — it lives in
+`docs/program/usability-closure/CURRENT.md` (current gate, the single READY unit, the last
+completed unit, the frontier). If this file and CURRENT disagree about status, CURRENT wins.
+In one paragraph, as of 2026-09-17:
+
+- The **legacy corpus** is the 324-row `quotes.csv` / `sources.csv` pair; the static browser
+  and the homepage-preview export read it.
+- The **candidate workbench is real and landed**. The corpus-program W1 wave — capture →
+  normalization → duplicate hints → operator curation — shipped in `scripts/garden_*.py` over
+  a persisted SQLite store plus the committed mirror `data/store/garden.export.txt`, with a
+  deterministic acceptance suite per surface and a committed table of negative controls. W1 is
+  **complete** and its Gate B packet was accepted 2026-09-13.
+- W2 and everything after it are **not** started. Current work is the bounded
+  **usability-closure programme** (`docs/program/usability-closure/`), which closes the loop
+  from an eligible candidate to the Garden-facing browser. Its READY unit is whichever unit
+  CURRENT.md names — read that file, not this paragraph.
+
+## Status — data (as of the 2026-09-11 retrofit)
 
 324 quotes across 27 traditions/cultures. Data is canonical UTF-8. Four homepage-preview
 donors (ids 3, 12, 15, 26) are `verified` as of G4; the other 320 rows remain `unverified`
@@ -25,12 +44,20 @@ available (see below).
 python3 scripts/validate_quotes.py                     # check data integrity
 python3 scripts/check_program_contracts.py             # check the corpus-program doctrine set
 python3 scripts/validate_homepage_preview_export.py    # check the v1 homepage export
+python3 scripts/garden_store.py bootstrap --dir data/store   # hydrate the local store from the committed mirror
+python3 scripts/garden_store.py status    --dir data/store   # CURRENT / STALE / MISSING_DB / MISSING_MIRROR
+python3 scripts/check_front_door.py                    # front-door docs still describe current state
 python3 scripts/smoke_quote_browser.py                 # drive the browser in headless Chromium
 python3 -m http.server 8000                            # then open http://localhost:8000/browser/
 ```
 
 The smoke test needs a one-time `python3 -m pip install -r requirements-dev.txt` and
 `python3 -m playwright install chromium`; it is the only command above that is not stdlib-only.
+
+The corpus workbench (`garden_submit.py` → `garden_normalize.py` → `garden_review.py`, the
+`check_garden_*.py` acceptance suites, the D3/D4 ledger and batch feeds, and the
+negative-control harness) is documented command by command in `docs/RUNBOOK.md`, and `AGENTS.md`
+lists the full command surface for an agent picking this up cold.
 
 ## Data files
 
@@ -114,16 +141,27 @@ append-only rationale on past calls. High-level phases:
 - **Phase 0 (2026-09-11, done)**: encoding rehabilitation, schema additions
   (`item_type`/`verification_status`/`source_id`/`has_unresolved_glyph`), source-manifest
   linking, static browser.
-- **Phase 1 (not started)**: human curation pass — resolve near-duplicates, fill manifest
-  gaps, reclassify `unknown` item types.
-- **Corpus program (2026-09-12, W0 done)**: doctrine and contracts for a provenance-aware,
+- **Phase 1 (curation, partly executed as named data units)**: the human-curation work has
+  been landing as named units rather than as one phase — D3 (the `unverifiable` side-car
+  ledger, live instance Garden id 30), D4 (one batch capture for the 324 legacy rows), D6 (all
+  20 near-duplicate pairs reviewed, kept), D7 (14 dangling `source_id` links closed in
+  `sources.csv`), D8 (`item_type` hygiene plus the 27-tradition controlled list). Still open
+  and operator-gated: the 4 literal `_` placeholder glyph rows (ids 1, 16, 314, 320), the
+  remaining `unknown` `item_type` rows, and any bulk verification. See `docs/queue.md`.
+- **Corpus program (2026-09-12 →)**: doctrine and contracts for a provenance-aware,
   human-governed corpus — how a messy uncited candidate moves through capture → curation →
-  research → possible canonical outcomes, which transitions need the operator, what counts as
-  evidence, and the bounded W1 decomposition. **W1 is authorized in full (2026-09-12)** — see
-  `docs/DECISIONS.md` and `docs/queue.md`. Each W1 unit still lands its own branch, PR and
-  independent QA, and the wave's stop point is the Gate B packet (W2 is not started). See
-  `docs/program/README.md` (start with `docs/program/W0_GATE_REPORT.md` for the Gate A
-  evidence). The corpus lifecycle does not change any current CSV or browser behaviour.
+  research → possible canonical outcomes, which transitions need the operator, and what counts
+  as evidence. **W0 done** (Gate A accepted; start at `docs/program/W0_GATE_REPORT.md`) and
+  **W1 complete** — the six W1 units are merged, their acceptance suites and the
+  negative-control table are CI-wired, and the Gate B packet was accepted 2026-09-13. The
+  runtime is `scripts/garden_*.py` over the store plus the committed mirror. **W2 is not
+  started.** The corpus lifecycle changes no CSV or browser behaviour. See
+  `docs/program/README.md` for the doctrine map.
+- **Usability-closure programme (2026-09-17 →)**: the bounded bridge from the landed W1
+  workbench to real use — `encounter → capture → normalize → curate → admit → Garden read
+  model → browser → rediscover later`. Gate U0 (resumable workbench) is the active gate; U1 is
+  unauthorized until Gate U0 is accepted. See
+  `docs/program/usability-closure/PROGRAM_CHARTER.md`.
 - **Later, not authorized yet**: verify a small donor set and export it for use by a separate
   project (`bahai-homepage`), without merging the two repos or coupling their schemas. See
   `docs/product/PRODUCT_DOCTRINE.md`.

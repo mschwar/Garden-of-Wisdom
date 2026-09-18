@@ -1548,3 +1548,73 @@ Unit U0.1 mechanizes the local SQLite↔committed mirror persistence lifecycle:
 7. **`quotes.csv` / `sources.csv` byte-identical:** (`9766db8c…` / `7aafcb67…`).
 
 Design trail: `GARDEN_U0_1_HANDOFF.md`.
+
+## 2026-09-17 — U0.2 executed (one live-status authority, and a guard that keeps it true)
+
+### Decision
+
+1. **Live programme status has exactly one authority:
+   `docs/program/usability-closure/CURRENT.md`.** Every front door (`AGENTS.md`, `README.md`,
+   `docs/program/README.md`, `docs/product/PRODUCT_DOCTRINE.md`, `docs/RUNBOOK.md`,
+   `docs/queue.md`) now *routes* to it instead of restating volatile status, and says so
+   explicitly: where a front door and CURRENT disagree about status, CURRENT wins and the other
+   document is a bug.
+2. **The front door is guarded by a deterministic check, not by prose.**
+   `scripts/check_front_door.py` (23 checks, count-guarded, stdlib-only) asserts the routing, that
+   CURRENT names exactly one READY unit and that the unit's work-unit document and the
+   last-completed unit's handoff both exist on disk, that `docs/queue.md`'s usability-closure
+   section marks the *same* single unit READY (the two are derived by different code paths and
+   compared), that `AGENTS.md` names every `scripts/garden_*.py` module in the tree (derived from
+   the tree, so a new module forces a front-door decision), and that no front-door document
+   re-asserts a stale live-status claim. CI-wired as its own `browser-smoke.yml` step; **5
+   registered negative controls** (`fd1`–`fd5`), taking the committed table 47 → **52** controls
+   over **15** checkers.
+3. **The stale-claim scan is scoped to documents a cold-start agent can mistake for status** —
+   `AGENTS.md`, `README.md`, `docs/program/README.md`, `docs/product/PRODUCT_DOCTRINE.md`,
+   `docs/queue.md`. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
+   `docs/audit/*` snapshots, the root `GARDEN_*_HANDOFF.md` files) are deliberately **not**
+   scanned and were not rewritten.
+4. **The W1 read-only rule is recorded as history, not as live law.** `quotes.csv` and
+   `sources.csv` were read-only for the whole W1 wave, which is complete; what is true now is that
+   they change only inside a named data unit (D3/D4/D6/D7/D8 …) and never as a side effect of
+   another unit. `AGENTS.md` says that, rather than re-asserting an expired rule.
+
+### Why
+
+The implementation outran the front door. On 2026-09-17 `main` carried at least ten live-status
+contradictions: `docs/program/README.md` still asserted "No datastore, intake surface, discovery
+adapter, or W1 runtime code exists in this repo yet" and called the wave "in progress";
+`docs/product/PRODUCT_DOCTRINE.md` called W1 "in progress"; `README.md` claimed "W1 is authorized
+in full" with the stop point still ahead; `docs/queue.md` kept an unchecked `W1 — IN PROGRESS`
+item and an "Explicitly NOT started" bullet saying W1 was in progress; and `AGENTS.md` (the first
+file every agent reads, and the documented resume path) listed a three-command surface that
+stopped at the 2026-09-11 retrofit, with no store bootstrap path, no corpus-program modules, and
+no pointer to CURRENT. Issue #27 is the canonical instance of the class: it was *closed as
+COMPLETED* while `AGENTS.md` was byte-unchanged, so even the tracker was not evidence. A
+documentation claim with no falsifier drifts exactly like this, which is why the unit ships a
+check rather than a promise.
+
+### Rejected alternatives
+
+- **Rewriting the historical packets** so they stop saying "W1 in progress". Rejected: those are
+  point-in-time evidence, and a guard that forbids a phrase inside a packet destroys the record.
+  The scan is scoped to status-bearing front doors; the packets keep their wording.
+- **Fixing the negative-control harness defect found during this unit** (issue
+  [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56): `GREEN_OK` is documented as a
+  passing verdict but `report()` counts it as a failure, so a "must stay green" control cannot be
+  registered). Rejected as in-passing scope — a harness change is a change to the mechanism every
+  checker depends on. The authored stay-green control (`fd6`) was withdrawn rather than smuggled
+  in, and the table stayed at 52; the false-positive direction is covered by a local throwaway
+  battery recorded in the handoff.
+- **A documentation framework** (per-doc status blocks, a schema for "current state"). Rejected:
+  the unit asks for the smallest set of authoritative front doors, so status lives in one file and
+  the rest route to it.
+
+### Consequence recorded, not a decision
+
+Issue #27's stated reason for not being fixed — "writes to `AGENTS.md` are refused by the agent
+tool policy in this environment" — **no longer reproduces**: on 2026-09-17 an `AGENTS.md` edit
+(from a `patch` probe through the real change) succeeded directly in this environment, and the
+issue is satisfied by this unit. That is checked against the artefact, not the tracker.
+
+Design trail: `GARDEN_U0_2_HANDOFF.md`.

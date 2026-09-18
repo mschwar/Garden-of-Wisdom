@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 47
+EXPECTED_CONTROLS = 52
 EXPECTED_SELF_TESTS = 9
 
 
@@ -666,6 +666,53 @@ CHECKERS: tuple[Checker, ...] = (
                 "    return \"STALE\"\n",
                 "    return \"CURRENT\"\n",
                 "FAIL: 5a. a store mutated behind the mirror reports STALE",
+            ),
+        ),
+    ),
+    Checker(
+        "scripts/check_front_door.py",
+        (
+            Mutation(
+                "fd1", "the program README re-asserts that the W1 runtime does not exist (U0.2)",
+                "docs/program/README.md",
+                "and the W1 runtime all landed:",
+                "and no W1 runtime code exists:",
+                "FAIL: 22. no front door document makes the stale claim "
+                "[w1-runtime-or-store-absent] (docs/program/README.md -> claims the W1 "
+                "runtime/store does not exist)",
+            ),
+            Mutation(
+                "fd2", "AGENTS.md stops naming a corpus-program module (U0.2)",
+                "AGENTS.md",
+                "scripts/garden_review.py {queue",
+                "scripts/garden_reveiw.py {queue",
+                "FAIL: 19. AGENTS.md names every corpus-program module in scripts/ "
+                "(unnamed: garden_review.py)",
+            ),
+            Mutation(
+                "fd3", "docs/queue.md marks a second unit READY (U0.2)",
+                "docs/queue.md",
+                "— UNAUTHORIZED until Gate U0 accepted",
+                "— READY",
+                "FAIL: 10. docs/queue.md marks exactly one unit READY in the usability-closure "
+                "section (found 2)",
+            ),
+            Mutation(
+                "fd4", "README.md stops routing live status to CURRENT.md (U0.2)",
+                "README.md",
+                "it lives in\n`docs/program/usability-closure/CURRENT.md` (current gate, the "
+                "single READY unit, the last\ncompleted unit, the frontier).",
+                "status is tracked in the programme's own current-state pointer.",
+                "FAIL: 13. README.md routes live programme status to "
+                "docs/program/usability-closure/CURRENT.md",
+            ),
+            Mutation(
+                "fd5", "CURRENT.md loses its last-completed heading (U0.2 structure guard)",
+                "docs/program/usability-closure/CURRENT.md",
+                "## Last completed unit",
+                "## Previously completed unit",
+                "FAIL: 2. CURRENT.md keeps its required structure (missing '## Last completed "
+                "unit')",
             ),
         ),
     ),
