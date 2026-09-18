@@ -263,9 +263,26 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
       (`b3bb7848…` / `7aafcb67…`).
 
+- [ ] **The negative-control harness cannot register a "must stay green" control** (issue
+      [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56)). `judge()` returns `GREEN_OK`
+      for `Mutation(expect_fail=None)` and `docs/architecture/NEGATIVE_CONTROLS.md` documents
+      `GREEN_OK` as a passing verdict ("a contract-preserving edit stayed green, as the control
+      requires"), but `report()` counts every non-`FIRED` outcome as "not fired", appends it to
+      the failures and exits 1 — so the committed table can only express controls that go red.
+      Found while authoring U0.2's front-door guard: the stay-green control did exactly what it
+      was told and the run went red
+      (`FAIL: scripts/check_front_door.py fd6 (GREEN_OK) -- stayed green as required`), so it was
+      withdrawn; `scripts/check_front_door.py` therefore ships with **10 red-direction controls**
+      (`fd1`–`fd10`) and no must-stay-green one. The table stands at **57** controls over **15**
+      checkers (the two U0.2 remediation rounds added `fd6`–`fd10`, one per gap a cold-start
+      reviewer found; `fd6` reuses the withdrawn control's id and is a red-direction control). The
+      false-positive direction is covered by a local throwaway battery recorded in
+      `GARDEN_U0_2_HANDOFF.md`, not by anything CI re-applies. Not fixed in U0.2 — the discovery
+      rule: a harness change is a change to the mechanism every checker depends on.
+
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 
-- [ ] **W1 — IN PROGRESS. Authorized in full 2026-09-12 (decision D1).** Six bounded units are
+- [x] **W1 — COMPLETE (W1.1–W1.6 merged; Gate B accepted 2026-09-13). Authorized in full 2026-09-12 (decision D1).** Six bounded units are
       specified in `docs/program/W1_DECOMPOSITION.md`:
       **W1.1** storage decision + minimal schema ✅ **DONE** · **W1.2** candidate-envelope contract
       + validator · **W1.3** manual capture/submission CLI · **W1.4** normalization + duplicate
@@ -498,6 +515,17 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       still wrong and an agent reading only that file can still believe editing the CSVs is fine. W1.4
       **reopened** it with that evidence; it still needs an operator edit or a policy exception (which is
       why W1.4's own doc-surface work stops at `RUNBOOK.md`).
+      **UPDATED 2026-09-17 (U0.2):** the artefact now carries this change. On the U0.2
+      branch `AGENTS.md` is 119 lines and `grep -c 'garden_' AGENTS.md` returns **12** (was 0);
+      it names every `scripts/garden_*.py` module, the store bootstrap/resume path, the
+      negative-control harness, `docs/program/usability-closure/CURRENT.md` as the live-status
+      authority, and the CSVs' change discipline (read-only outside a named data unit — the W1
+      wave that rule belonged to is complete). The measurements quoted above (the zero count, 63
+      lines, `31f06e0`) were the **pre-fix** state and are kept as the record of what was
+      measured. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) is satisfied by
+      U0.2 and is closed deliberately by comment, carrying this evidence, after that unit merges —
+      never by a closing keyword. `scripts/check_front_door.py` (U0.2) now fails the build if the
+      front door drifts back.
 - [ ] **A generic-citation duplicate can never attract a reference hint, so the queue must show the
       basis** — not a defect, a consequence worth writing down for W1.5: with ruling 2 in force, a
       duplicate whose citation is a bare label (or a sentinel) can only ever attract `exact-text` /
@@ -515,6 +543,10 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       is now larger. Not fixed here: `AGENTS.md` writes are refused by tool policy and it is a
       protected file with a stated size budget, so the change needs an operator edit. Filed as
       [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27).
+      **UPDATED 2026-09-17 (U0.2):** superseded — the artefact now carries this change; see the
+      U0.2 annotation on the W1.4-section entry above for the measurements. The list of what
+      `AGENTS.md` used to contain, above, is the **pre-fix** state and is kept as the record of
+      the gap as filed.
 - [ ] **A candidate can only ever have one capture.** `PROVENANCE_AND_CAPTURE_CONTRACT.md` invariant
       3 explicitly allows the same passage to be captured twice and says "the candidate records all
       of them", and `candidate_captures` has an `ordinal` column for exactly that — but no surface
@@ -1007,10 +1039,15 @@ Filed as GitHub issues. Do not start without a named contract and owner sign-off
 
 ## Explicitly NOT started (do not start without human sign-off)
 
-- **The entire corpus program past W1.** W0 (`docs/program`) is doctrine only; **W1 is now
-  authorized in full** (2026-09-12, decision D1) and in progress. Still **NOT started**: W2 and
-  everything after it, any discovery adapter, and any canonical promotion path (W3). The
-  authorization of W1 does not authorize anything past the Gate B packet.
+- **The entire corpus program past W1.** W0 (`docs/program`) is doctrine only; **W1 is
+  COMPLETE** (authorized in full 2026-09-12, decision D1; Gate B accepted 2026-09-13). Still
+  **NOT started**: W2 and
+  everything after it, any discovery adapter, and any canonical promotion path (W3). W1's
+  authorization does not extend past the Gate B packet.
+- **Every usability-closure unit past the one `CURRENT.md` marks READY**, including all of U1.
+  Gate U0 must be accepted by operator/frontier synthesis first (see
+  `docs/program/usability-closure/SYNTHESIS_GATES.md`); U1.1 additionally needs the
+  authoritative-data architecture decided, which is an operator gate, not a builder's call.
 - Any `bahai-homepage` implementation work **other than** the D9 consume lane against the v1 export
   (see the authorized section below).
 - Bulk quote verification beyond the approved donor set.

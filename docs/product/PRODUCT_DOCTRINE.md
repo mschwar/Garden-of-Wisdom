@@ -38,5 +38,9 @@ explicitly-scoped work units.
 The corpus program (`docs/program/`) adds provenance, curation, research, and enrichment
 contracts around the corpus. This document remains the **product** authority and is not
 restated there; the program doctrine inherits these non-negotiables by reference and may not
-weaken them. W0 (doctrine) landed 2026-09-12; **W1 is authorized in full** (2026-09-12 — see
-`docs/DECISIONS.md` and `docs/queue.md`) and is in progress.
+weaken them. W0 (doctrine) landed 2026-09-12 with its Gate A accepted; W1 — the candidate
+workbench, implemented in `scripts/garden_*.py` over the persisted store plus the committed
+mirror — is **complete** (Gate B accepted 2026-09-13). W2 is not started; the current work is
+the bounded usability-closure programme. **Live status and the single READY unit live in
+`docs/program/usability-closure/CURRENT.md`** — read that, not this document, for "where are
+we?".

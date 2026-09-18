@@ -1,11 +1,17 @@
 # Garden Corpus Program — canonical doctrine
 
-Status as of 2026-09-12 (**W0 complete, Gate A accepted** — frontier review:
-`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`): doctrine and contracts landed. **W1 is
-authorized in full** (2026-09-12 — see `../DECISIONS.md` and `../queue.md`). The wave is
-in progress; each W1 unit keeps its own branch, PR and independent QA, and the stop point is
-the Gate B packet. No datastore, intake surface, discovery adapter, or W1 runtime code exists
-in this repo yet.
+**This directory is doctrine and history; live programme status is not here.** It lives in
+`docs/program/usability-closure/CURRENT.md` (current gate, the single READY unit, the last
+completed unit, the frontier). If this file and CURRENT disagree about status, CURRENT wins.
+
+Status as of 2026-09-17: **W0 complete, Gate A accepted** (`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`);
+**W1 complete, Gate B accepted** 2026-09-13 (`../audit/2026-09-13/GATE_B_FRONTIER_REVIEW.md`).
+Doctrine, contracts and the W1 runtime all landed: the store, the candidate envelope, the
+submission CLI, normalization + duplicate hints, the curation surface and the end-to-end pack
+are implemented in `scripts/garden_store.py`, `garden_envelope.py`, `garden_submit.py`,
+`garden_normalize.py` and `garden_review.py`, each with a `scripts/check_garden_*.py`
+acceptance suite and a committed negative-control table (`scripts/run_negative_controls.py`).
+**W2 is not started** — still absent are a discovery adapter and any canonical promotion path.
 
 This directory is the canonical home for Garden *corpus-program* doctrine: doctrine, the
 entity/state model, provenance and evidence contracts, lane definitions, classification
@@ -19,6 +25,7 @@ posture, and the bounded W1 decomposition.
 | What are the CSVs, their schema, and known data issues? | `../data/DATA_CONTRACT.md` |
 | Why was a past choice made? | `../DECISIONS.md` (append-only) |
 | What work is open? | `../queue.md` |
+| **What is the live programme status, and what do I work on next?** | **`usability-closure/CURRENT.md`** |
 | How do I run/validate things? | `../RUNBOOK.md` |
 | How does a candidate become a canonical Garden record? | **this directory** |
 
@@ -37,7 +44,8 @@ weakens a product non-negotiable. See `CORPUS_PROGRAM_DOCTRINE.md` §"Reconcilia
 6. `VERIFICATION_CONTRACT.md` — what makes a factual claim `verified`
 7. `WORK_LANES.md` — permanent lane definitions
 8. `CLASSIFICATION_AND_FACETS.md` — faceted classification posture and open ontology questions
-9. `W1_DECOMPOSITION.md` — bounded W1 work units (authorized in full 2026-09-12; in progress)
+9. `W1_DECOMPOSITION.md` — the bounded W1 work units; **historical plan, all six landed**
+   (authorized in full 2026-09-12 — see `../DECISIONS.md` and `../queue.md`)
 10. `W0_GATE_REPORT.md` — Gate A evidence, decisions, unresolved questions, exact stop point
 
 The bootstrap seed that W0 reconciled lives in
@@ -54,12 +62,16 @@ W0 changed documentation, decision/queue entries, and planning fixtures **only**
 or vector search, no knowledge graph, no automatic quote approval, no bulk verification, no
 browser behavior change.
 
-Current data and validators are untouched: `quotes.csv` and `sources.csv` are byte-identical
-to `main` (see `W0_GATE_REPORT.md` §Evidence).
+Current data and validators were untouched at W0's close: `quotes.csv` and `sources.csv` were
+byte-identical to `main` *at that time* (see `W0_GATE_REPORT.md` §Evidence, which keeps the
+point-in-time transcript). That is history, not live status — the later named data units (D3,
+D4, D7, D8) did change `sources.csv` and `quotes.csv`, each with its own acceptance run and
+its own dated entry in `../DECISIONS.md`.
 
 ## Verify the doctrine set
 
 ```
 python3 scripts/check_program_contracts.py   # docs/fixture consistency + scenario invariants
 python3 scripts/validate_quotes.py           # unchanged by W0, must still PASS
+python3 scripts/check_front_door.py          # front-door docs still describe current state
 ```

@@ -1548,3 +1548,124 @@ Unit U0.1 mechanizes the local SQLite↔committed mirror persistence lifecycle:
 7. **`quotes.csv` / `sources.csv` byte-identical:** (`9766db8c…` / `7aafcb67…`).
 
 Design trail: `GARDEN_U0_1_HANDOFF.md`.
+
+## 2026-09-17 — U0.2 executed (one live-status authority, and a guard that keeps it true)
+
+### Decision
+
+1. **Live programme status has exactly one authority:
+   `docs/program/usability-closure/CURRENT.md`.** Every front door (`AGENTS.md`, `README.md`,
+   `docs/program/README.md`, `docs/product/PRODUCT_DOCTRINE.md`, `docs/RUNBOOK.md`,
+   `docs/queue.md`) now *routes* to it instead of restating volatile status, and says so
+   explicitly: where a front door and CURRENT disagree about status, CURRENT wins and the other
+   document is a bug.
+2. **The front door is guarded by a deterministic check, not by prose.**
+   `scripts/check_front_door.py` (27 checks, count-guarded, stdlib-only) asserts the routing, that
+   CURRENT names exactly one READY unit and that the unit's work-unit document and the
+   last-completed unit's handoff both exist on disk, that `docs/queue.md`'s usability-closure
+   section marks the *same* single unit READY (the two are derived by different code paths and
+   compared), that `AGENTS.md` names every `scripts/garden_*.py` module in the tree (derived from
+   the tree, so a new module forces a front-door decision) and carries the whole store lifecycle
+   on one line, and that no document re-asserts a stale live-status claim.
+   The **stale-claim scan is universal**: every markdown file in the tree that is not on the
+   exclusion list is scanned (33 of 104), so a new status document, a differently-linked front
+   door, or a file that never names CURRENT.md at all cannot escape by omission. Exclusions are
+   explicit, **typed** (`prefix` / `exact` / `root-prefix`), carry a reason each, and are checked
+   for rotten (matching-nothing) entries. A match is skipped only when it sits inside quotation
+   marks or its own sentence carries a history marker — allowances that are sentence-scoped after
+   the first versions (a 46-character look-behind, and a literal-pointer coverage key) were broken
+   by an independent review. CI-wired as its own `browser-smoke.yml` step; **10 registered
+   negative controls** (`fd1`–`fd10`), taking the committed table 47 → **57** controls over **15**
+   checkers. A "must stay green" control could not be registered at all — see the harness defect
+   below.
+3. **The stale-claim scan is universal over markdown, minus the exclusion list** — every markdown
+   file in the tree that is not on the exclusion list is scanned, so no document has to opt in to
+   be protected. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
+   `docs/audit/*` snapshots, the root `GARDEN_*_HANDOFF.md` files, `docs/DECISIONS.md` itself as an
+   append-only log, the frozen `docs/data/DATA_QUALITY_REPORT.md`, the work-unit specs) are
+   deliberately **not** scanned, each with a recorded reason, and were not rewritten.
+4. **The W1 read-only rule is recorded as history, not as live law.** `quotes.csv` and
+   `sources.csv` were read-only for the whole W1 wave, which is complete; what is true now is that
+   they change only inside a named data unit (D3/D4/D6/D7/D8 …) and never as a side effect of
+   another unit. `AGENTS.md` says that, rather than re-asserting an expired rule.
+
+### Why
+
+The implementation outran the front door. On 2026-09-17 `main` carried at least ten live-status
+contradictions: `docs/program/README.md` still asserted "No datastore, intake surface, discovery
+adapter, or W1 runtime code exists in this repo yet" and called the wave "in progress";
+`docs/product/PRODUCT_DOCTRINE.md` called W1 "in progress"; `README.md` claimed "W1 is authorized
+in full" with the stop point still ahead; `docs/queue.md` kept an unchecked `W1 — IN PROGRESS`
+item and an "Explicitly NOT started" bullet saying W1 was in progress; and `AGENTS.md` (the first
+file every agent reads, and the documented resume path) listed a three-command surface that
+stopped at the 2026-09-11 retrofit, with no store bootstrap path, no corpus-program modules, and
+no pointer to CURRENT. Issue #27 is the canonical instance of the class: it was *closed as
+COMPLETED* while `AGENTS.md` was byte-unchanged, so even the tracker was not evidence. A
+documentation claim with no falsifier drifts exactly like this, which is why the unit ships a
+check rather than a promise.
+
+### Rejected alternatives
+
+- **Rewriting the historical packets** so they stop saying "W1 in progress". Rejected: those are
+  point-in-time evidence, and a guard that forbids a phrase inside a packet destroys the record.
+  The scan is scoped to status-bearing front doors; the packets keep their wording.
+- **Fixing the negative-control harness defect found during this unit** (issue
+  [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56): `GREEN_OK` is documented as a
+  passing verdict but `report()` counts it as a failure, so a "must stay green" control cannot be
+  registered). Rejected as in-passing scope — a harness change is a change to the mechanism every
+  checker depends on. The authored stay-green control (`fd6`) was withdrawn rather than smuggled
+  in, and the table stayed at 52; the false-positive direction is covered by a local throwaway
+  battery recorded in the handoff.
+- **A documentation framework** (per-doc status blocks, a schema for "current state"). Rejected:
+  the unit asks for the smallest set of authoritative front doors, so status lives in one file and
+  the rest route to it.
+
+### Consequence recorded, not a decision
+
+Issue #27's stated reason for not being fixed — "writes to `AGENTS.md` are refused by the agent
+tool policy in this environment" — **no longer reproduces**: on 2026-09-17 an `AGENTS.md` edit
+(from a `patch` probe through the real change) succeeded directly in this environment, and the
+issue is satisfied by this unit. That is checked against the artefact, not the tracker.
+
+### QA round (independent cold-start review) and the remediation
+
+An independent reviewer — a separate agent context with its own mutation harness, given only the
+commit under review — attacked the unit from a cold start and returned **CONDITIONAL PASS**: the
+routing and the positive claims verified, but two
+**high** findings, both of which were design gaps in the guard rather than in the documents —
+`SCANNED` was a hard-coded five-file list (so `docs/RUNBOOK.md`, the command reference
+`AGENTS.md` itself names, could carry a stale claim invisibly) and the status authority's own
+body prose was unchecked. Remediation, all inside this unit: the fail-closed coverage check, the
+`RUNBOOK.md` and `CURRENT.md` additions to the guarded set, broadened stale-claim shapes, a
+tightened store-lifecycle check, and four more registered controls (`fd6`–`fd9`). The reviewer's
+medium finding that two queue entries quoted measurements of the front door is the mirror image of
+the failure class and was fixed by annotating the entries in place with fresh measurements.
+
+The remediation's own false positive was found by the **local must-stay-green battery**, not by a
+red-direction control: the charter's Gate U0 criterion ("no longer claim W1 runtime does not
+exist") failed the first version of the third stale-claim pattern. That is the concrete cost of
+the harness defect recorded below, and the reason the battery exists.
+
+A **second review round** against the remediated head returned CONDITIONAL PASS again: `G1`, `G2`
+and `M4` verified CLOSED, but its own round-1 mutation `G3` still passed (the meta-claim allowance
+was a 46-character window and an unrelated word in `docs/program/README.md` exempted the claim),
+the coverage check keyed on one literal pointer string so a relative link evaded it, exclusions
+matched by substring (so `START_GARDEN_*.md` was silently exempt), and it reproduced three false
+positives. The response was to **replace the design rather than patch it again**: the guarded set,
+the pointer-keyed coverage check and the look-behind window were all deleted, and the scan became
+universal over non-excluded markdown with typed exclusions and sentence-scoped quoted/history
+allowances. That is why the check count moved 29 → 27 while the controls moved 9 → 10: the
+simplification is the remediation.
+
+A **third review round** against the redesigned head confirmed all six round-2 expectations CLOSED
+but returned FAIL on the guard's *false-positive* behaviour: 14 legitimate edits were rejected by
+the nine-word marker list, and the quotation allowance turned out never to have worked (the
+"sentence" was truncated at a period inside the quotation, so round 2's quoted-wording case passed
+only because that sample also carried the cue word "retired"). The response was to widen the
+allowance rather than the patterns: quote spans are now computed over the whole document, and the
+marker list became a ~45-entry past-tense/reporting cue list on the stated principle that it is
+cheaper to miss a stale claim than to fail an honest document. All 15 of that round's
+false-positive cases are now green and the synonym gaps are documented in the check itself, which
+no longer claims to be a claim classifier. The check count stayed 27; the controls stayed 10.
+
+Design trail: `GARDEN_U0_2_HANDOFF.md`.
