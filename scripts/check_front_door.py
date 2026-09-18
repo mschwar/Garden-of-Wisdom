@@ -75,6 +75,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 CURRENT = ROOT / "docs" / "program" / "usability-closure" / "CURRENT.md"
 WORKUNITS = ROOT / "docs" / "program" / "usability-closure" / "workunits"
+SYNTHESIS_GATES = ROOT / "docs" / "program" / "usability-closure" / "SYNTHESIS_GATES.md"
 SCRIPTS = ROOT / "scripts"
 
 CURRENT_POINTER = "docs/program/usability-closure/CURRENT.md"
@@ -167,10 +168,47 @@ CUE_RE = re.compile(
     re.I,
 )
 
-REQUIRED_CURRENT_HEADINGS = ("## Gate", "## Current READY unit", "## Last completed unit", "## Update rule")
+REQUIRED_CURRENT_HEADINGS = (
+    "## Programme state",
+    "## Gate",
+    "## Current READY unit",
+    "## Last completed unit",
+    "## Update rule",
+)
 
 UNIT_ID_RE = re.compile(r"(U\d+\.\d+)\b")
 QUEUE_READY_RE = re.compile(r"^\s*-\s*\[[ x]\]\s*(U\d+\.\d+)\b[^\n]*—\s*READY\s*$", re.M)
+
+#: The state in which execution has deliberately STOPPED: a synthesis gate has been submitted and
+#: no unit is authorized until operator/frontier judgment resumes
+#: (`docs/program/usability-closure/SYNTHESIS_GATES.md`, S0/S1...). A guard that only knew
+#: "exactly one READY unit" could not express this state at all -- and the state is the *point* of
+#: the gate, because the failure it prevents is a unit being started while the gate is open.
+#: So the state is a first-class input, read from the document, and load-bearing in BOTH
+#: directions: while it is declared no unit may be READY anywhere, and while it is absent the
+#: normal one-READY-unit contract applies unchanged.
+SYNTHESIS_PENDING_RE = re.compile(
+    # Two shapes, both honest, both accepted: "<state> ... GATE <gate>" (any short separator:
+    # em/en dash, hyphen, colon, parentheses) and the sentence form "GATE <gate> awaits
+    # synthesis". An independent U0.3 review found three legitimate rephrasings rejected by the
+    # first, single-shape version -- and worse, misdiagnosed as a *missing READY unit*, because
+    # an unparsed state silently fell through to the one-READY-unit branch. A guard that fails
+    # an honest document and then names the wrong problem is two defects, so this is widened and
+    # the fallback below reports the unreadable state as itself.
+    r"SYNTHESIS\s+REQUIRED\b[^A-Za-z0-9\n]{0,12}\bGATE\s+(U\d+)"
+    r"|\bGATE\s+(U\d+)\b[^A-Za-z0-9\n]{0,12}(?:awaits?|awaiting)\s+synthesis",
+    re.I,
+)
+
+#: A READY-unit section that declares there is none, rather than naming one.
+READY_NONE_RE = re.compile(r"\bnone\b", re.I)
+
+#: A queue bullet for a unit that is explicitly *not* authorized (so the queue still says what
+#: comes next while nothing may start). Anchored per line, never a substring test.
+QUEUE_UNAUTHORIZED_RE = re.compile(
+    r"^\s*-\s*\[ \]\s*(U\d+\.\d+)\b[^\n]*?\b(UNAUTHORIZED|NOT AUTHORIZED|BLOCKED)\b[^\n]*$",
+    re.M,
+)
 
 WALK_SKIP = {".git", ".venv", "__pycache__", "node_modules", ".pytest_cache"}
 EXPECTED_CHECKS = 27
@@ -287,27 +325,69 @@ def markdown_files() -> list[Path]:
     return sorted(found, key=rel)
 
 
+def has_heading(text: str, heading: str) -> bool:
+    """True when `heading` is an actual heading LINE, not merely quoted in prose.
+
+    `heading in text` is a substring test, and it is a silent pass: a document can satisfy a
+    structure requirement by *mentioning* the heading -- for instance a Stop rule that quotes
+    `## Programme state` in a sentence. Structure is a property of lines, so test lines. This
+    was found in U0.3 by control `fd13` coming back MASKED (the heading could be renamed away and
+    the check still passed), not by reading the code.
+    """
+    return any(line.strip() == heading for line in text.splitlines())
+
+
+def count_headings(text: str, heading: str) -> int:
+    """How many actual heading lines equal `heading` (same reasoning as `has_heading`)."""
+    return sum(1 for line in text.splitlines() if line.strip() == heading)
+
+
 def main() -> int:
     # ---------------------------------------------------------------- 1. the status authority
     current_text = read(CURRENT)
     check(CURRENT.exists(), f"1. CURRENT.md exists ({CURRENT_POINTER})")
 
-    missing = [h for h in REQUIRED_CURRENT_HEADINGS if h not in current_text]
+    missing = [h for h in REQUIRED_CURRENT_HEADINGS if not has_heading(current_text, h)]
     check(
         not missing,
         f"2. CURRENT.md keeps its required structure "
         f"({'all present' if not missing else 'missing ' + ', '.join(repr(h) for h in missing)})",
     )
 
-    heading_count = current_text.count("## Current READY unit")
+    heading_count = count_headings(current_text, "## Current READY unit")
     check(
         heading_count == 1,
         f"3. CURRENT.md has exactly one '## Current READY unit' heading (found {heading_count})",
     )
 
+    # ------------------------------ the programme's own state machine (load-bearing, both ways)
+    state_value = section_value(current_text, "## Programme state") or ""
+    pending_match = SYNTHESIS_PENDING_RE.search(normalize(state_value))
+    pending_gate = (pending_match.group(1) or pending_match.group(2)) if pending_match else None
+
     ready_value = section_value(current_text, "## Current READY unit")
     ready_id = unit_id(ready_value)
-    check(ready_id is not None, f"4. CURRENT.md names a READY unit id (value {ready_value!r})")
+
+    # The ambiguous combination: the state field says *something* that is not a state this guard
+    # recognises, and no unit is READY either. Reporting "no READY unit" here would misdiagnose a
+    # phrasing change as a structural failure, so name the thing that is actually unreadable.
+    unreadable_state = pending_gate is None and ready_id is None and bool(state_value.strip())
+
+    if pending_gate:
+        check(
+            ready_id is None and bool(READY_NONE_RE.search(ready_value or "")),
+            f"4. while {pending_gate} awaits synthesis CURRENT.md declares no READY unit "
+            f"(value {ready_value!r})",
+        )
+    elif unreadable_state:
+        check(
+            False,
+            f"4. CURRENT.md's '## Programme state' is unreadable while no unit is READY "
+            f"(value {state_value!r}; expected a state such as "
+            f"'SYNTHESIS REQUIRED \u2014 GATE U0')",
+        )
+    else:
+        check(ready_id is not None, f"4. CURRENT.md names a READY unit id (value {ready_value!r})")
 
     if ready_id:
         ready_doc = sorted(WORKUNITS.glob(f"{ready_id}_*.md"))
@@ -316,15 +396,32 @@ def main() -> int:
             f"5. the READY unit's work-unit document exists ({ready_id} -> "
             f"{ready_doc[0].name if ready_doc else 'none found in workunits/'})",
         )
+    elif pending_gate:
+        # No unit to resolve, so assert the thing that *makes* the stop legitimate: the gate
+        # awaiting synthesis has a documented trigger to resume from. Deleting that trigger would
+        # leave execution stopped with no way back, which is a real failure, not a formality.
+        gates_doc = read(SYNTHESIS_GATES)
+        check(
+            f"gate {pending_gate}".lower() in normalize(gates_doc).lower(),
+            f"5. the gate awaiting synthesis has a documented resume trigger "
+            f"({pending_gate} -> SYNTHESIS_GATES.md)",
+        )
     else:
         check(False, "5. the READY unit's work-unit document exists (no READY unit id to look up)")
 
     completed_value = section_value(current_text, "## Last completed unit")
     completed_id = unit_id(completed_value)
-    check(
-        completed_id is not None and ready_id is not None and completed_id != ready_id,
-        "6. CURRENT.md's READY unit and last-completed unit differ (a unit cannot be both)",
-    )
+    if pending_gate:
+        check(
+            completed_id is not None and completed_id.startswith(f"{pending_gate}."),
+            f"6. while {pending_gate} awaits synthesis the last completed unit belongs to that "
+            f"gate (completed {completed_id!r}, awaiting {pending_gate!r})",
+        )
+    else:
+        check(
+            completed_id is not None and ready_id is not None and completed_id != ready_id,
+            "6. CURRENT.md's READY unit and last-completed unit differ (a unit cannot be both)",
+        )
 
     check(completed_id is not None, f"7. CURRENT.md names a last-completed unit id (value {completed_value!r})")
 
@@ -335,25 +432,50 @@ def main() -> int:
         check(False, "8. the last-completed unit's handoff exists (no last-completed unit id)")
 
     gate_value = section_value(current_text, "## Gate") or ""
-    check(
-        ready_id is not None and ready_id.split(".")[0] in gate_value,
-        f"9. the READY unit belongs to the gate CURRENT.md names "
-        f"(ready {ready_id!r}, gate {gate_value!r})",
-    )
+    if pending_gate:
+        check(
+            pending_gate in gate_value
+            and completed_id is not None
+            and completed_id.split(".")[0] in gate_value,
+            f"9. the gate awaiting synthesis is the gate CURRENT.md names "
+            f"(awaiting {pending_gate!r}, gate {gate_value!r})",
+        )
+    else:
+        check(
+            ready_id is not None and ready_id.split(".")[0] in gate_value,
+            f"9. the READY unit belongs to the gate CURRENT.md names "
+            f"(ready {ready_id!r}, gate {gate_value!r})",
+        )
 
     # ------------------------------------------------------- 2. queue.md agrees with CURRENT.md
     queue_text = read(ROOT / "docs" / "queue.md")
     queue_ready = QUEUE_READY_RE.findall(queue_text)
-    check(
-        len(queue_ready) == 1,
-        f"10. docs/queue.md marks exactly one unit READY in the usability-closure section "
-        f"(found {len(queue_ready)})",
-    )
-    check(
-        len(queue_ready) == 1 and ready_id is not None and queue_ready[0] == ready_id,
-        f"11. docs/queue.md's READY unit is CURRENT.md's READY unit "
-        f"(queue {queue_ready[0] if queue_ready else 'none'}, CURRENT {ready_id or 'none'})",
-    )
+    if pending_gate:
+        check(
+            not queue_ready,
+            f"10. docs/queue.md authorizes no unit while {pending_gate} awaits synthesis "
+            f"(found {len(queue_ready)})",
+        )
+        # The queue must not go blank either: while nothing may start, it still has to say what
+        # the next gate would release and that it is not yet authorized. Otherwise a reader
+        # cannot tell "waiting on a gate" from "no work left".
+        unauthorized = QUEUE_UNAUTHORIZED_RE.findall(queue_text)
+        check(
+            bool(unauthorized),
+            f"11. docs/queue.md still names the units a later gate would authorize, marked not "
+            f"authorized (found {len(unauthorized)}; {pending_gate} awaits synthesis)",
+        )
+    else:
+        check(
+            len(queue_ready) == 1,
+            f"10. docs/queue.md marks exactly one unit READY in the usability-closure section "
+            f"(found {len(queue_ready)})",
+        )
+        check(
+            len(queue_ready) == 1 and ready_id is not None and queue_ready[0] == ready_id,
+            f"11. docs/queue.md's READY unit is CURRENT.md's READY unit "
+            f"(queue {queue_ready[0] if queue_ready else 'none'}, CURRENT {ready_id or 'none'})",
+        )
 
     # ------------------------------------------------------------------------- 3. routing
     pointer_ws_free = ws_free(CURRENT_POINTER)

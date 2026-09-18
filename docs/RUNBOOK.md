@@ -532,8 +532,12 @@ in coverage.
 Known limits, so they are not mistaken for coverage: a control is a **single exact-string
 substitution**, so a regression that needs a file deleted, renamed or a multi-file edit is
 outside the table's vocabulary; and the table proves each *modelled* break is detected, never
-that a guard is complete. As of 2026-09-16 it holds **44** controls over all 13 checkers,
-including the five gap mutations issue #45 closed (`n4`, `r4`, `x3`, `l4`, `g4`).
+that a guard is complete. As of 2026-09-18 it holds **60** controls over all **15** checkers,
+including the five gap mutations issue #45 closed (`n4`, `r4`, `x3`, `l4`, `g4`), the ten
+front-door controls `fd1`–`fd10` (U0.2) and `fd11`–`fd13` (U0.3). **Superseded numbers:** this line
+read **44** (as of 2026-09-16) until U0.3 re-measured it — U0.2 had already moved the table
+47 → 57 without updating this file, so 44 was two units stale, not one. Re-measure from the table
+itself (`--list`) rather than trusting any count written in prose.
 `docs/architecture/NEGATIVE_CONTROLS.md` has the design and the control-by-control record.
 
 

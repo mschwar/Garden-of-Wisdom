@@ -10,16 +10,42 @@ Current pointer: `docs/program/usability-closure/CURRENT.md`
 - [x] U0.1 — store lifecycle + mirror freshness invariant — DONE
 - [x] U0.2 — truthful front door + current-state routing — DONE
 - [x] R0 — product reality & system reconciliation — DONE (one-off reconciliation; no runtime/data change)
-- [ ] U0.3 — real persistent operator canary + Gate U0 packet — READY
+- [x] U0.3 — real persistent operator canary + Gate U0 packet — DONE; Gate U0 packet submitted
 - [ ] U1.1 — canonical admission/read-model architecture decision — UNAUTHORIZED until Gate U0 accepted
 - [ ] U1.2 — minimum admission metadata + T-P2 promotion — BLOCKED on U1.1 operator decision
 - [ ] U1.3 — deterministic unified Garden read model — BLOCKED on U1.2
 - [ ] U1.4 — browser consumes unified read model — BLOCKED on U1.3
 - [ ] U1.5 — persistent full-loop proof + Gate U1 packet — BLOCKED on U1.4
 
+**Nothing here is READY.** `docs/program/usability-closure/CURRENT.md` declares
+`SYNTHESIS REQUIRED — GATE U0`, so no unit may start until the S0 synthesis in
+`docs/program/usability-closure/SYNTHESIS_GATES.md` resumes execution. The U1 lines above are kept
+deliberately: while nothing is authorized, this section still has to say what a later gate would
+release and that it is not yet authorized. `scripts/check_front_door.py` now enforces both halves
+(no READY unit here, and at least one explicitly-not-authorized line naming what comes next).
+
 Do not append execution transcripts to this section. On closeout, change the checkbox/status and put evidence in the unit handoff/gate packet.
 
 Existing issues/debt remain in their current queue sections. If U0.2 closes issue #27, update that issue/queue entry explicitly rather than leaving duplicate open truth.
+
+## Closed — 2026-09-18 U0.3 (real persistent operator canary + Gate U0 packet)
+
+- [x] **U0.3 — DONE; Gate U0 submitted.** The workbench was used for real, not in a fixture: the
+      operator's own capture `cap-2026-09-18-0001` (method `web-page`, *The Hidden Words*, Arabic 22,
+      verbatim encounter record) and candidate `cand-2026-09-18-0001` went through
+      submit → normalize → hints → show → curation (`T-C1 new → accepted`, then `T-P1
+      candidate_only → eligible`; `research_state` untouched; the corpus state is capped at
+      `eligible`, so nothing was canonically admitted). The committed mirror
+      `data/store/garden.export.txt` is
+      `3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377` (27,091 bytes) and
+      **byte-identical** after all four recoveries: mirror sync, deletion of the local SQLite file on
+      the real store, bootstrap from the committed mirror, and a fresh clone of the pushed branch.
+      `scripts/check_front_door.py` was extended to express the state this unit's stop condition
+      requires (`SYNTHESIS REQUIRED — GATE U0`: no READY unit anywhere, plus at least one queue line
+      naming what a later gate would release, marked not authorized) — U0.2's guard could only
+      express "exactly one READY unit", so the required state was unreachable. Evidence, transcripts,
+      negative controls and limits: `GARDEN_U0_3_HANDOFF.md` and
+      `docs/program/usability-closure/U0_GATE_PACKET.md`.
 
 ## Closed — 2026-09-17 R0 (product reality & system reconciliation)
 
@@ -159,9 +185,21 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
 
 **R0 disposition (2026-09-17):** preserve the landed guards, but do not execute additional
 front-door/checker-for-checker assurance work ahead of U0.3/U1 unless a concrete current
-product/dependability failure demonstrates that it is the active constraint. The two U0.2
-meta-assurance follow-ups below remain recorded inventory, not READY work.
-
+- [ ] **`garden_normalize.py` canonicalizes quote marks inside `captured_attribution`** (U0.3
+      finding, 2026-09-18). On the real canary `cand-2026-09-18-0001` the proposal's author became
+      `Bahá'u'lláh` (straight apostrophes) while all 45 corpus rows for that author in `quotes.csv`
+      use `Bahá’u’lláh` (curly), so the normalized proposal does not match the corpus's own author
+      convention; `normalization_notes` records only "quote-marks: 2 character(s) canonicalized".
+      Not repaired in U0.3 — it is normalization semantics, and changing the canonicalization would
+      move every existing candidate, so it needs its own unit with the corpus-convention decision
+      made explicitly. Evidence: `GARDEN_U0_3_HANDOFF.md` §1, `U0_GATE_PACKET.md` §6.
+- [ ] **The legacy corpus is not a duplicate-comparison set** (U0.3 finding, 2026-09-18).
+      `scripts/garden_normalize.py` says so in its own words ("The legacy corpus is not read as a
+      comparison set") and `hints` compares candidates only against each other, so a capture that
+      duplicates one of the 324 `quotes.csv` rows produces **no** duplicate hint and the operator
+      sees no warning. This is why U0.3's canary passage was deliberately chosen from outside the
+      corpus. It becomes load-bearing at admission (U1.1/U1.2), where the same item must not be
+      admitted twice, so it is queued rather than fixed inside a persistence unit.
 - [ ] **DEFERRED BY R0 — The front-door guard's must-stay-green battery is local-only evidence; make it durable**
       (U0.2 follow-up, discovered at closeout). `scripts/check_front_door.py` ships with 10
       red-direction controls and **no CI-reapplied false-positive check**, because the committed
@@ -177,6 +215,14 @@ meta-assurance follow-ups below remain recorded inventory, not READY work.
       it to the `browser-smoke.yml` guard step, so the direction is CI-enforced. Not done in U0.2
       because a new CI-run checker needs its own review round, which is not the closeout of a
       documentation unit; it is queued here with the rationale rather than slipped in after merge.
+      **Extended 2026-09-18 (U0.3):** the false-positive surface grew. `scripts/check_front_door.py`
+      now reads the programme state (`SYNTHESIS REQUIRED — GATE U0`) and has state-aware branches —
+      no READY unit may be declared while synthesis is pending, and the queue must still name what a
+      later gate would release, marked not authorized. Those branches are covered by 11 throwaway
+      must-stay-green cases (`/tmp/u03_staygreen.py`), one of which proves the pre-U0.3 contract is
+      still accepted; **CI re-applies none of them**. Whatever lands for issue #56 should cover the
+      synthesis-state cases, not only the stale-claim ones — that is where a future false positive
+      will live.
 
 - [x] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
       corpus-program acceptance suites" step runs the six W1 suites but not the new
