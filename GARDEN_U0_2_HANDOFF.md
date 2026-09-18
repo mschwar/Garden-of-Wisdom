@@ -8,9 +8,10 @@
 An information-architecture repair, not a prose expansion. The front door now says what is
 true, and one authority — `docs/program/usability-closure/CURRENT.md` — owns live programme
 status while every other front door *routes* to it. The failure class is now falsifiable:
-`scripts/check_front_door.py` (23 checks, CI-wired, 5 registered negative controls) fails the
-build if a front-door document re-asserts a stale live-status claim, if the queue and CURRENT
-disagree about which unit is READY, or if a front door stops naming its own command surface.
+`scripts/check_front_door.py` (29 checks, CI-wired, 9 registered negative controls) fails the
+build if a front-door document re-asserts a stale live-status claim, if a document outside the
+guarded set starts carrying status-bearing prose, if the queue and CURRENT disagree about which
+unit is READY, or if a front door stops naming its own command surface.
 
 ## Before/after contradiction table
 
@@ -117,16 +118,22 @@ in the harness's throwaway copy and fires with the **exact** aimed first `FAIL:`
 | `fd3` | `docs/queue.md` flips U1.1's status to `READY` (two READY units) | `FAIL: 10. docs/queue.md marks exactly one unit READY in the usability-closure section (found 2)` |
 | `fd4` | `README.md` stops routing live status to CURRENT.md | `FAIL: 13. README.md routes live programme status to docs/program/usability-closure/CURRENT.md` |
 | `fd5` | `CURRENT.md` loses its `## Last completed unit` heading | `FAIL: 2. CURRENT.md keeps its required structure (missing '## Last completed unit')` |
+| `fd6` | `docs/RUNBOOK.md` — the command reference AGENTS.md points at — gains a `W1 is in progress` line | `FAIL: 28. no guarded document makes the stale claim [w1-in-progress] (docs/RUNBOOK.md -> describes W1 as in progress / underway / not yet landed)` |
+| `fd7` | `CURRENT.md`'s **own** "What is usable now" body asserts the opposite of its fields | `FAIL: 27. no guarded document makes the stale claim [w1-runtime-or-store-absent] (docs/program/usability-closure/CURRENT.md -> describes the W1 runtime/store as absent)` |
+| `fd8` | a document *outside* the guarded set starts naming CURRENT.md | `FAIL: 20. fail-closed coverage: no document outside the guarded set names docs/program/usability-closure/CURRENT.md (add to GUARDED or to EXCLUSIONS: docs/program/usability-closure/DEFERRED_NOT_NOW.md)` |
+| `fd9` | `AGENTS.md`'s store-lifecycle line loses its `status`/`sync` subcommands | `FAIL: 22. AGENTS.md's command surface carries the whole store lifecycle on one line (garden_store.py + bootstrap + status + sync; found 0)` |
+
+`fd6`–`fd9` were added in the QA-remediation round, one per gap a cold-start reviewer found;
+each was measured before registration. `fd3` deliberately anchors on the **U1.1** line rather
+than on the unit that is currently READY: a control anchored on today's READY line would rot the
+moment the unit closes out.
 
 ```
 $ python3 scripts/run_negative_controls.py --checker scripts/check_front_door.py
 checkers: 1 of 15 selected, 0 skipped
-controls: 5 fired, 0 not fired of 5 selected (52 registered in the table)
-RESULT: PASS (5 controls fired, 9 harness self-tests) [negative controls]
+controls: 9 fired, 0 not fired of 9 selected (56 registered in the table)
+RESULT: PASS (9 controls fired, 9 harness self-tests) [negative controls]
 ```
-
-`fd3` deliberately anchors on the **U1.1** line rather than on the unit that is currently READY:
-a control anchored on today's READY line would rot the moment the unit closes out.
 
 ### 4. The must-stay-green half: withdrawn, and why (a real defect, filed not fixed)
 
@@ -150,19 +157,35 @@ harness change is a change to the mechanism every checker depends on.
 
 So the false-positive direction is covered here by a **local throwaway battery**
 (`/tmp/u02_staygreen.py`, in a `copytree` of the repo — nothing in the repo tree is touched),
-which applies six legitimate edits and requires the checker to stay green:
+which applies legitimate edits and requires the checker to stay green. *(Id note: this withdrawn
+stay-green control was first drafted as `fd6`. That id was reused in the remediation round for a
+red-direction control, so the withdrawn one is referred to by description here; the committed
+table contains `fd1`–`fd9`, all red-direction.)*
 
 ```
-PASS: reflow a README paragraph (whitespace only) -- stayed green (RESULT: PASS (23 checks))
-PASS: reword W0's historical scope sentence -- stayed green (RESULT: PASS (23 checks))
-PASS: reflow AGENTS.md's CSV-discipline paragraph -- stayed green (RESULT: PASS (23 checks))
-PASS: extend CURRENT.md's frontier sentence -- stayed green (RESULT: PASS (23 checks))
-PASS: retitle README's current-state heading -- stayed green (RESULT: PASS (23 checks))
-PASS: swap two command bullets in AGENTS.md -- stayed green (RESULT: PASS (23 checks))
-PASS: all 6 legitimate edits together -- stayed green (RESULT: PASS (23 checks))
+PASS: reflow a README paragraph (whitespace only) -- stayed green (RESULT: PASS (29 checks))
+PASS: reword W0's historical scope sentence -- stayed green (RESULT: PASS (29 checks))
+PASS: reflow AGENTS.md's CSV-discipline paragraph -- stayed green (RESULT: PASS (29 checks))
+PASS: extend CURRENT.md's frontier sentence -- stayed green (RESULT: PASS (29 checks))
+PASS: retitle README's current-state heading -- stayed green (RESULT: PASS (29 checks))
+PASS: swap two command bullets in AGENTS.md -- stayed green (RESULT: PASS (29 checks))
+PASS: a meta-claim about the old claim (PROGRAM_CHARTER's own Gate U0 wording) -- stayed green (RESULT: PASS (29 checks))
+PASS: a new unrelated bullet in CURRENT.md's usable-now list -- stayed green (RESULT: PASS (29 checks))
+PASS: all 8 legitimate edits together -- stayed green (RESULT: PASS (29 checks))
 
-RESULT: PASS (7 legitimate edits accepted)
+RESULT: PASS (9 legitimate edits accepted)
 ```
+
+**This battery earned its keep twice, and the second time is a finding.** Its two added cases
+(round 2) were the meta-claim wording — `PROGRAM_CHARTER.md`'s own Gate U0 criterion, "no longer
+claim W1 runtime does not exist" — and an unrelated new bullet. The first **failed**: the guard's
+then-fixed-width lookbehind `(?<!claims )` does not block `claims **the** W1 runtime …`, so the
+charter's own acceptance criterion was a false positive, and so was the same sentence with an
+article. The fix replaces the lookbehinds with an explicit meta-claim guard (`META_CLAIM_RE` over
+the 46 characters preceding a match), which is the only mechanism that can express "a statement
+about the claim is not the claim" at variable distance. Without a must-stay-green direction this
+would have shipped as a check that fails on a *correct* document — exactly the defect class this
+repo's Pages-contract review found three of.
 
 This is evidence, but it is *not* evidence CI re-applies — that is exactly what issue #56 costs.
 
@@ -277,26 +300,98 @@ the repo's rule is to check the artefact and not the tracker.
    point of failure for live status. That is by design (one authority is the point), and the
    structural fields are now guarded; the narrative `frontier` sentence is not.
 
+## Foreign QA (round 1) and the remediation it produced
+
+An independent cold-start reviewer (own harness, own mutations, no access to this session) was
+given the commit under review and told to try to break the claims. Verdict: **CONDITIONAL PASS**,
+with 22 mutations of its own (`M1`–`M11`, `T1`, `L1`–`L4`, `G1`–`G6`) and ten findings.
+
+It confirmed every positive claim independently: `AGENTS.md`'s "324 rows / four verified donors /
+320 unverified" matches `quotes.csv`; all 7 `scripts/garden_*.py` modules are named; the 9
+`check_garden_*` surfaces match the 9 scripts on disk; `garden_store.py` really has
+`bootstrap`/`status`/`sync`; both Gate packet paths exist; and its own 4 legitimate edits stayed
+green. Its verdict on the routing: *"the routing is unambiguous."*
+
+The findings that mattered, and what changed:
+
+| # | severity | finding | disposition in this branch |
+|---|---|---|---|
+| 1 | **high** | `SCANNED` was a hard-coded five-file list, so `docs/RUNBOOK.md` — which `AGENTS.md` itself calls the command reference — could carry "W1 is in progress" and the guard exited 0 (its mutation `G1`) | **fixed.** The guarded set is still explicit, but a **derived coverage check** now fails if any non-excluded markdown file in the tree names CURRENT.md and is not guarded, and `RUNBOOK.md` is now routing-checked *and* scanned. Exclusion entries are themselves checked for rot. Regression control: `fd6`, `fd8` |
+| 2 | **high** | the status authority's own body was unchecked: replacing `CURRENT.md`'s "What is usable now" with "Nothing is usable yet; no corpus-program datastore exists and W1 is in progress" still passed (its mutation `G2`) | **fixed.** `CURRENT.md` is now in the guarded set, and a check asserts the section still lists at least one item. Regression control: `fd7` |
+| 3 | medium | `STALE_CLAIMS` were phrasing-bound: "the W1 runtime has not landed yet … remains underway" passed (its mutation `G3`) | **fixed.** The in-progress pattern now covers `underway` / `not yet landed` / `has not landed`, and a third shape covers "<subject> does not exist". |
+| 4 | medium | `RESUME.md` and `START_GARDEN_CORPUS_PROGRAM.md` are front doors by name and use but were outside the guarded set (its `G5`, `G6`) | **partly fixed.** The coverage check now catches any such document the moment it names CURRENT (`RESUME.md`, `OPERATOR_RUNBOOK.md`, `EXECUTION_MAP.md`, `QUEUE_PATCH.md` and the charter are now guarded); `START_GARDEN_CORPUS_PROGRAM.md` remains a pointer to the seed packet and is judged historical, not a status surface — recorded, not silently dropped. |
+| 5 | medium | `check_front_door.py` ships with no must-stay-green control (harness defect, issue #56) | **accepted as a limit, filed.** See "Limits" and issue #56; the local battery covers the direction, CI does not. |
+| 6 | medium | two live queue entries quoted measurements of the front door itself (row 17) | **fixed** before the review landed — the reviewer confirmed it was self-disclosed, not hidden. |
+| 7 | low | check 17 was satisfied by any `bootstrap` token near `garden_store.py`, so the command-surface line could be deleted wholesale (its mutation `M4`) | **fixed.** The check now requires the whole store lifecycle — `bootstrap` **and** `status` **and** `sync` — on one line. Regression control: `fd9` |
+| 8 | low | `docs/program/README.md`'s W0 scope note reads as live state to a skimmer | **fixed earlier in this branch** (contradiction-table row 4). |
+| 9 | low | the tree was being edited concurrently during the review | **expected**; the reviewer labelled which commit it attacked (`c6e7099`) and the round-2 head is this one, so a re-review is the remaining step. |
+| 10 | low | the green-while-broken search stopped at five confirmed gaps rather than exhausting the space | **accepted**; the four it could reach are closed above with a control each. |
+
+The review's own scope note is worth keeping: it did **not** re-run its battery against the
+remediated head. Round 2 therefore also caught a false positive the review could not see — see
+the must-stay-green battery below, which is why that direction matters.
+
 ## Verification run on the branch
 
 ```
-python3 scripts/check_front_door.py                              RESULT: PASS (23 checks)
-python3 scripts/check_pages_contract.py                          RESULT: PASS (16 checks)
-python3 scripts/validate_quotes.py                               RESULT: PASS
-python3 scripts/check_program_contracts.py                       RESULT: PASS
-python3 scripts/validate_homepage_preview_export.py              RESULT: PASS
+python3 scripts/check_front_door.py                              RESULT: PASS (29 checks)   [both interpreters]
+python3 scripts/check_pages_contract.py                          RESULT: PASS (16 checks)   [both interpreters]
+python3 scripts/validate_quotes.py                               RESULT: PASS                [both interpreters]
+python3 scripts/check_program_contracts.py                       RESULT: PASS                [both interpreters]
+python3 scripts/validate_homepage_preview_export.py              RESULT: PASS                [both interpreters]
 python3 scripts/check_garden_{store,envelope,submit,normalize,review,e2e,ledger,legacy_batch,lifecycle}.py
                                                                  RESULT: PASS (all ten, both interpreters)
-python3 scripts/run_negative_controls.py --check                 RESULT: PASS (52 anchors checked)
+python3 scripts/run_negative_controls.py                         RESULT: PASS (56 controls fired, 9 harness self-tests)
+                                                                 checkers: 15 of 15 selected, 0 skipped
+python3 scripts/run_negative_controls.py --check                 RESULT: PASS (56 anchors checked)
 python3 scripts/run_negative_controls.py --checker scripts/check_front_door.py
-                                                                 RESULT: PASS (5 controls fired)
+                                                                 RESULT: PASS (9 controls fired)
+python3 /tmp/u02_staygreen.py                                    RESULT: PASS (9 legitimate edits accepted)
+shasum -a 256 quotes.csv sources.csv       9766db8c… / 7aafcb67…  (byte-identical)
 ```
+
+## Limits of the guard (stated, not hidden)
+
+- **The guarded set is closed, not total.** The coverage check makes the set *fail-closed* for
+  any document that names CURRENT.md, so a new status-bearing front door cannot escape the scan.
+  A document that carries a stale claim and never names CURRENT.md (e.g. an architecture note) is
+  still invisible — that is the residual class, and it is why the check's failure message says
+  "add to GUARDED or to EXCLUSIONS" rather than pretending to be exhaustive.
+- **The stale-claim scan is pattern-based, over three named shapes.** A sufficiently novel
+  rewording of the same falsehood passes. This is deliberate: the alternative — a semantic check —
+  would be non-deterministic, and a guard that fires on legitimate historical prose (the queue's
+  closed entries, the append-only log, the frozen transcripts) is worse than no guard. The three
+  shapes are the ones this repo has actually produced.
+- **A meta-claim is not the claim.** "no longer claims the W1 runtime does not exist" is the
+  charter's own Gate U0 criterion, so a claim/assert/report verb in the 46 characters before a
+  match suppresses it (`META_CLAIM_RE`). The cost is symmetric: a *real* claim phrased as "the
+  README claims W1 is in progress" is also suppressed. That trade is recorded rather than hidden,
+  and it is covered by the local must-stay-green battery.
+- **Rows 4, 8, 9, 15, 16, 17 and 18 of the contradiction table are review-caught, not
+  check-caught.** A general "present-tense claim inside a historical section" detector was not
+  built: pattern matching on `are byte-identical` fires on dozens of legitimate *historical* queue
+  entries.
+- **The stale-measurement class (row 17) is deliberately not automated.** A guard could forbid
+  `grep -c 'garden_' AGENTS.md` next to a zero count — but the repo's doctrine requires a
+  superseded number to be **annotated in place**, i.e. the annotation must be allowed to quote the
+  old value. A pattern forbidding the quote forbids the required annotation. The mitigation is the
+  doctrine: re-measure in the unit that changes the artefact (which is how the 128 → 119 error was
+  caught before commit).
+- **No CI-reapplied must-stay-green control** (issue #56). The false-positive direction is
+  evidenced by a throwaway battery only; a future check could gain a false positive that CI would
+  not catch. Filed, not hidden.
+- The READY/queue agreement check compares two independently-parsed fields, so it catches a
+  disagreement but cannot know which side is *right*.
+- Check 24 derives its module list from `scripts/garden_*.py`. Adding a corpus-program module
+  before naming it in `AGENTS.md` will fail CI — intended (a new surface must reach the front
+  door), and the failure names the unnamed module.
+- The checker reads only the repository. It cannot tell whether a *true* statement is the right
+  thing to say; it falsifies the specific drift classes issue #27 belongs to.
 
 ## Out-of-scope / stop
 
 No persistence mechanics, admission mechanics, browser changes, ontology cleanup or W2 were
-touched. The unit stops here for foreign QA; U0.3 (the real persistent operator canary) is not
-started.
+touched. The unit stops here; U0.3 (the real persistent operator canary) is not started.
 
 ## Foreign QA prompt
 
@@ -306,6 +401,13 @@ without archaeology. Search for contradictory live-status claims, especially "no
 "W1 in progress", stale command lists, and ambiguous source-of-truth statements; confirm the
 historical packets were not rewritten misleadingly (`git diff --stat` against the base); check the
 `AGENTS.md` module-coverage claim against `scripts/garden_*.py` yourself; and try to break
-`scripts/check_front_door.py` with your own mutations (a green mutation is a coverage gap). PASS
+`scripts/check_front_door.py` with your own mutations (a green mutation is a coverage gap).
+
+Round 2 additionally asks the reviewer to attack the **remediation**: (a) find a document that
+carries a stale claim and must be caught, but is neither guarded nor excluded — the coverage check
+should name it; (b) find a *legitimate* front-door edit that the guard rejects (a false positive —
+especially any meta-claim wording, since that is where the last false positive lived); (c) confirm
+each of the round-1 findings above is actually closed by re-running the reviewer's own `G1`, `G2`,
+`G3`, `M4`, `G5` and `G6` mutations against this head, and say plainly which are still open. PASS
 only if a new agent is routed to CURRENT/queue/decisions and exactly one READY unit without tacit
-context.
+context, and no round-1 finding reopens.

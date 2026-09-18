@@ -15,26 +15,37 @@ long after W1 shipped. Issue #27 was even *closed as COMPLETED* with the file un
 falsify drifts exactly like this, and a cold-start agent reading only the front door then
 cannot answer "where are we?" without archaeology.
 
-This is the smallest check that prevents that recurrence. It asserts three things about the
-front door, and it deliberately does NOT try to be a documentation framework:
+What it asserts (29 checks)
 
   1. **One live status authority.** `docs/program/usability-closure/CURRENT.md` is the single
-     place live programme status lives; every front door routes to it, it names exactly one
-     READY unit, and that unit's work-unit document and the last-completed unit's handoff
-     both exist on disk (so status cannot point at a document that was never written).
+     place live programme status lives: its structural fields are present, it names exactly one
+     READY unit, that unit's work-unit document and the last-completed unit's handoff both
+     exist on disk, the READY unit belongs to the gate CURRENT names, and its own
+     "What is usable now" section is not empty.
   2. **Agreement.** `docs/queue.md`'s usability-closure section marks the *same* single unit
-     READY. The two are derived by different code paths here (a heading value vs. a checkbox
-     line), so the check compares them rather than trusting either.
-  3. **No stale live-status claim.** The front door must not (a) name the W1 runtime/store as
-     non-existent or (b) call W1 "in progress", and `AGENTS.md` must actually name its command
-     surface: the store lifecycle entry point, every `scripts/garden_*.py` module in the tree
-     (derived from the tree, never hard-coded, so a new module forces a front-door decision),
-     the CSV change discipline, and the negative-control harness.
+     READY. The two are parsed by different code paths and compared, so neither is trusted.
+  3. **Routing.** Every core front door names CURRENT.md, so a cold-start agent is sent to one
+     place instead of restating status.
+  4. **A fail-closed guarded set.** `GUARDED` is an explicit list, and a **derived coverage
+     check** fails if any non-excluded markdown file in the tree names CURRENT.md but is not in
+     it -- so a new front-door document cannot silently acquire status-bearing prose outside the
+     scan. The exclusion list is itself checked for rotten (matching-nothing) entries.
+  5. **No stale live-status claim** in any guarded document, over three named shapes: the
+     W1 runtime/store described as absent, W1 described as in progress / underway / not yet
+     landed, and the W1 runtime/store described as not existing.
+  6. **`AGENTS.md` names its command surface** -- derived from the tree, never hard-coded: the
+     store-lifecycle line must name the bootstrap *and* status *and* sync subcommands, every
+     `scripts/garden_*.py` module present must be named (so a new module forces a front-door
+     decision), the negative-control harness must be named, the CSV change discipline stated,
+     and the resume path must resolve to the work-unit directory.
 
-Historical documents are NOT scanned: `docs/program/W1_*.md`, the W0/Gate packets, the dated
-`docs/audit/*` snapshots and the root `GARDEN_*_HANDOFF.md` files stay exactly as written.
-A check that rewrote or forbade "W1 in progress" inside a *historical* packet would destroy
-evidence, so the scan is scoped to the documents a cold-start agent can mistake for status.
+Historical documents are NOT scanned, and every exclusion carries its reason: the dated
+`docs/audit/*` snapshots and gate reviews, the W0/W1 packets, `docs/DECISIONS.md` (an
+append-only log that must be free to quote a superseded claim), the frozen
+`docs/data/DATA_QUALITY_REPORT.md` transcript, the root `GARDEN_*_HANDOFF.md` evidence files,
+the work-unit specs (which quote the false claims as acceptance criteria), and the
+seed/export trees. A check that forbade "W1 in progress" inside a historical packet would
+destroy evidence.
 
 Exits 0 with `RESULT: PASS`, non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
 check -- never a traceback.
@@ -47,44 +58,105 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-AGENTS = ROOT / "AGENTS.md"
-README = ROOT / "README.md"
-PROGRAM_README = ROOT / "docs" / "program" / "README.md"
-PRODUCT_DOCTRINE = ROOT / "docs" / "product" / "PRODUCT_DOCTRINE.md"
-QUEUE = ROOT / "docs" / "queue.md"
 CURRENT = ROOT / "docs" / "program" / "usability-closure" / "CURRENT.md"
 WORKUNITS = ROOT / "docs" / "program" / "usability-closure" / "workunits"
 SCRIPTS = ROOT / "scripts"
 
 CURRENT_POINTER = "docs/program/usability-closure/CURRENT.md"
 
-# Every one of these must route live status to CURRENT.md.
-ROUTED = (AGENTS, README, PROGRAM_README, PRODUCT_DOCTRINE, QUEUE)
+# The documents a cold-start agent must be routed *by*: every one names CURRENT.md.
+CORE_FRONT_DOORS = (
+    ROOT / "AGENTS.md",
+    ROOT / "README.md",
+    ROOT / "docs" / "RUNBOOK.md",
+    ROOT / "docs" / "product" / "PRODUCT_DOCTRINE.md",
+    ROOT / "docs" / "program" / "README.md",
+    ROOT / "docs" / "queue.md",
+)
 
-# The documents a cold-start agent may read and mistake for live status. Historical packets
-# are deliberately absent: they are evidence and must stay as written.
-SCANNED = (AGENTS, README, PROGRAM_README, PRODUCT_DOCTRINE, QUEUE)
+# The documents whose status prose is guarded (the stale-claim scan). CURRENT.md is in here on
+# purpose: the authority's own body must not be able to assert the opposite of its own fields.
+GUARDED = CORE_FRONT_DOORS + (
+    CURRENT,
+    ROOT / "docs" / "program" / "usability-closure" / "PROGRAM_CHARTER.md",
+    ROOT / "docs" / "program" / "usability-closure" / "EXECUTION_MAP.md",
+    ROOT / "docs" / "program" / "usability-closure" / "OPERATOR_RUNBOOK.md",
+    ROOT / "docs" / "program" / "usability-closure" / "RESUME.md",
+    ROOT / "docs" / "program" / "usability-closure" / "SYNTHESIS_GATES.md",
+    ROOT / "docs" / "program" / "usability-closure" / "QUEUE_PATCH.md",
+)
+
+# Markdown that is deliberately outside the guard, with the reason. Each entry must match at
+# least one file in the tree, or the coverage check reports it as a rotten exclusion (an
+# exclusion that matches nothing hides nothing and defeats the coverage check's purpose).
+EXCLUSIONS: tuple[tuple[str, str], ...] = (
+    ("docs/audit/", "dated evidence snapshots and gate reviews -- point-in-time, never a claim"),
+    ("docs/DECISIONS.md", "append-only log; must be free to quote a superseded claim"),
+    ("docs/data/DATA_QUALITY_REPORT.md", "frozen data-quality transcript, verbatim by contract"),
+    ("docs/program/W1_", "W1 wave doctrine and the Gate B packet -- historical evidence"),
+    ("docs/program/W0_GATE_REPORT.md", "the Gate A packet -- historical evidence"),
+    ("docs/program/usability-closure/workunits/",
+     "work-unit specs quote the false claims as acceptance criteria"),
+    ("bootstrap/", "seed packets -- planning input, not authority"),
+    ("exports/", "generated export artifacts"),
+    ("GARDEN_", "root unit handoffs -- evidence, and they quote the claims they fixed"),
+)
 
 # (id, compiled pattern over whitespace-normalized text, why it is a stale live-status claim)
 STALE_CLAIMS = (
     (
         "w1-runtime-or-store-absent",
-        re.compile(r"\bno\b[^.]{0,90}\b(w1 runtime|w1 store|corpus[- ]program (runtime|store|datastore))\b[^.]{0,60}\bexists?\b", re.I),
-        "claims the W1 runtime/store does not exist",
+        re.compile(
+            # `no longer claim X does not exist` is a *meta*-claim (the charter's own Gate U0
+            # acceptance criterion), not the claim, so a "no longer" negation is allowed through.
+            r"\bno(?! longer)\b[^.]{0,90}\b(w1 runtime|w1 store|corpus[- ]program (runtime|store|datastore))\b"
+            r"[^.]{0,60}\bexists?\b",
+            re.I,
+        ),
+        "describes the W1 runtime/store as absent",
     ),
     (
         "w1-in-progress",
-        re.compile(r"\bw1\b[^.]{0,90}\bin progress\b", re.I),
-        "claims W1 is still in progress",
+        re.compile(
+            r"\bw1\b[^.]{0,90}\b(in progress|underway|not yet landed|has not landed|"
+            r"hasn't landed|not landed)\b",
+            re.I,
+        ),
+        "describes W1 as in progress / underway / not yet landed",
+    ),
+    (
+        "w1-runtime-or-store-not-landed",
+        re.compile(
+            r"\b(w1 runtime|w1 store|corpus[- ]program (runtime|store|datastore))\b[^.]{0,40}"
+            r"\b(does not|doesn't|has not|hasn't|did not|never)\b[^.]{0,25}\b(exist|land|ship)",
+            re.I,
+        ),
+        "describes the W1 runtime/store as never having existed",
     ),
 )
+
+# A statement *about* a claim is not the claim: "no longer claims the W1 runtime does not
+# exist" is the programme charter's own Gate U0 acceptance criterion, and "the README says no
+# W1 store exists" is a report about the README. Any match whose immediately preceding text
+# ends in a claim/assert/report verb (optionally with an article) is treated as a meta-claim
+# and not counted. Fixed-width lookbehinds cannot express this ("claims the " is 11 characters,
+# "claim " is 6), so the guard is applied over the match's preceding window instead.
+META_CLAIM_RE = re.compile(
+    r"\b(claim|claims|claimed|claiming|assert|asserts|asserted|asserting|"
+    r"say|says|said|saying|state|states|stated|stating|"
+    r"describe|describes|described|describing|report|reports|reported|reporting)\b"
+    r"(\s+the|\s+that|\s+any|\s+a)?[^.]{0,12}$",
+    re.I,
+)
+META_CLAIM_WINDOW = 46
 
 REQUIRED_CURRENT_HEADINGS = ("## Gate", "## Current READY unit", "## Last completed unit", "## Update rule")
 
 UNIT_ID_RE = re.compile(r"(U\d+\.\d+)\b")
 QUEUE_READY_RE = re.compile(r"^\s*-\s*\[[ x]\]\s*(U\d+\.\d+)\b[^\n]*—\s*READY\s*$", re.M)
 
-EXPECTED_CHECKS = 23
+WALK_SKIP = {".git", ".venv", "__pycache__", "node_modules", ".pytest_cache"}
+EXPECTED_CHECKS = 29
 
 failures: list[str] = []
 passed: list[str] = []
@@ -115,23 +187,42 @@ def read(path: Path) -> str:
         return ""
 
 
+def rel(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
+
+
 def normalize(text: str) -> str:
     """Collapse all whitespace runs to single spaces, so a pattern matches across line wraps."""
     return re.sub(r"\s+", " ", text)
 
 
-def section_value(text: str, heading: str) -> str | None:
-    """The first non-empty, non-quote body line of a `## heading` section."""
+def excluded(relative: str) -> bool:
+    """True when a path is deliberately outside the guard (single source: EXCLUSIONS)."""
+    return any(
+        pattern in relative or relative.startswith(pattern.rstrip("/"))
+        for pattern, _reason in EXCLUSIONS
+    )
+
+
+def section_lines(text: str, heading: str) -> list[str]:
+    """The body lines of a `## heading` section, up to the next heading."""
     lines = text.splitlines()
     for index, line in enumerate(lines):
         if line.strip() == heading:
-            for body in lines[index + 1:]:
-                if not body.strip():
-                    continue
-                if body.lstrip().startswith("#"):
-                    return None
-                return body.strip()
-            return None
+            body: list[str] = []
+            for candidate in lines[index + 1:]:
+                if candidate.lstrip().startswith("#"):
+                    break
+                body.append(candidate)
+            return body
+    return []
+
+
+def section_value(text: str, heading: str) -> str | None:
+    """The first non-empty body line of a `## heading` section."""
+    for body in section_lines(text, heading):
+        if body.strip():
+            return body.strip()
     return None
 
 
@@ -144,6 +235,21 @@ def unit_id(value: str | None) -> str | None:
 
 def handoff_path(unit: str) -> Path:
     return ROOT / f"GARDEN_{unit.replace('.', '_')}_HANDOFF.md"
+
+
+def is_meta_claim(normalized_text: str, start: int) -> bool:
+    """True when a stale-claim match is preceded by a claim/assert/report verb (a meta-claim)."""
+    window = normalized_text[max(0, start - META_CLAIM_WINDOW):start]
+    return bool(META_CLAIM_RE.search(window))
+
+
+def markdown_files() -> list[Path]:
+    found: list[Path] = []
+    for path in ROOT.rglob("*.md"):
+        if any(part in WALK_SKIP for part in path.parts):
+            continue
+        found.append(path)
+    return sorted(found, key=rel)
 
 
 def main() -> int:
@@ -201,7 +307,7 @@ def main() -> int:
     )
 
     # ------------------------------------------------------- 2. queue.md agrees with CURRENT.md
-    queue_text = read(QUEUE)
+    queue_text = read(ROOT / "docs" / "queue.md")
     queue_ready = QUEUE_READY_RE.findall(queue_text)
     check(
         len(queue_ready) == 1,
@@ -215,55 +321,104 @@ def main() -> int:
     )
 
     # ------------------------------------------------------------------------- 3. routing
-    for index, path in enumerate(ROUTED, start=12):
-        rel = path.relative_to(ROOT).as_posix()
+    for index, path in enumerate(CORE_FRONT_DOORS, start=12):
         check(
             CURRENT_POINTER in read(path),
-            f"{index}. {rel} routes live programme status to {CURRENT_POINTER}",
+            f"{index}. {rel(path)} routes live programme status to {CURRENT_POINTER}",
         )
 
-    # --------------------------------------------------- 4. AGENTS.md names the real surface
-    agents = read(AGENTS)
-    agents_norm = normalize(agents)
-
+    # ------------------------------------- 4. the authority's own body is not vacuously empty
+    usable = [
+        line for line in section_lines(current_text, "## What is usable now")
+        if line.strip().startswith("-")
+    ]
     check(
-        "garden_store.py" in agents and re.search(r"garden_store\.py[^`]*\bbootstrap\b|\bbootstrap\b[^`]{0,40}garden_store\.py", agents_norm) is not None,
-        "17. AGENTS.md names the store bootstrap/resume path (garden_store.py bootstrap)",
+        bool(usable),
+        f"18. CURRENT.md's 'What is usable now' section lists at least one item "
+        f"(found {len(usable)})",
+    )
+
+    # ------------------------------------------------ 5. the guarded set is closed and honest
+    guarded_rels = [rel(path) for path in GUARDED]
+    absent = [name for path, name in zip(GUARDED, guarded_rels) if not path.exists()]
+    check(
+        not absent,
+        f"19. every guarded document exists "
+        f"({'all ' + str(len(GUARDED)) + ' present' if not absent else 'missing: ' + ', '.join(absent)})",
+    )
+
+    tree = markdown_files()
+    unguarded = [
+        rel(path) for path in tree
+        if not excluded(rel(path))
+        and rel(path) not in guarded_rels
+        and CURRENT_POINTER in read(path)
+    ]
+    check(
+        not unguarded,
+        "20. fail-closed coverage: no document outside the guarded set names "
+        f"{CURRENT_POINTER} "
+        f"({'closed' if not unguarded else 'add to GUARDED or to EXCLUSIONS: ' + ', '.join(unguarded)})",
+    )
+
+    rotten = [
+        pattern for pattern, _reason in EXCLUSIONS
+        if not any(pattern in rel(path) for path in tree)
+    ]
+    check(
+        not rotten,
+        f"21. every exclusion still matches at least one document "
+        f"({'all ' + str(len(EXCLUSIONS)) + ' live' if not rotten else 'matches nothing: ' + ', '.join(rotten)})",
+    )
+
+    # --------------------------------------------------- 6. AGENTS.md names the real surface
+    agents = read(ROOT / "AGENTS.md")
+
+    lifecycle = [
+        line for line in agents.splitlines()
+        if "garden_store.py" in line
+        and all(token in line for token in ("bootstrap", "status", "sync"))
+    ]
+    check(
+        bool(lifecycle),
+        "22. AGENTS.md's command surface carries the whole store lifecycle on one line "
+        f"(garden_store.py + bootstrap + status + sync; found {len(lifecycle)})",
     )
 
     check(
         "read-only" in agents.lower() and "quotes.csv" in agents and "sources.csv" in agents,
-        "18. AGENTS.md states the canonical CSVs' change discipline (read-only outside a named data unit)",
+        "23. AGENTS.md states the canonical CSVs' change discipline (read-only outside a named data unit)",
     )
 
     modules = sorted(p.name for p in SCRIPTS.glob("garden_*.py"))
     unnamed = [name for name in modules if name not in agents]
     check(
         not unnamed,
-        "19. AGENTS.md names every corpus-program module in scripts/ "
+        "24. AGENTS.md names every corpus-program module in scripts/ "
         f"({'all ' + str(len(modules)) + ' named' if not unnamed else 'unnamed: ' + ', '.join(unnamed)})",
     )
 
     check(
         "run_negative_controls.py" in agents,
-        "20. AGENTS.md names the negative-control harness (run_negative_controls.py)",
+        "25. AGENTS.md names the negative-control harness (run_negative_controls.py)",
     )
 
     check(
         "usability-closure/workunits/" in agents,
-        "21. AGENTS.md's resume path resolves the READY work-unit document "
+        "26. AGENTS.md's resume path resolves the READY work-unit document "
         "(docs/program/usability-closure/workunits/)",
     )
 
-    # --------------------------------------------------------- 5. no stale live-status claim
-    for index, (claim_id, pattern, why) in enumerate(STALE_CLAIMS, start=22):
+    # --------------------------------------------------------- 7. no stale live-status claim
+    for index, (claim_id, pattern, why) in enumerate(STALE_CLAIMS, start=27):
         offenders = []
-        for path in SCANNED:
-            if pattern.search(normalize(read(path))):
-                offenders.append(path.relative_to(ROOT).as_posix())
+        for path in GUARDED:
+            text = normalize(read(path))
+            if any(not is_meta_claim(text, match.start()) for match in pattern.finditer(text)):
+                offenders.append(rel(path))
         check(
             not offenders,
-            f"{index}. no front door document makes the stale claim [{claim_id}] "
+            f"{index}. no guarded document makes the stale claim [{claim_id}] "
             f"({'clean' if not offenders else ', '.join(sorted(offenders)) + ' -> ' + why})",
         )
 

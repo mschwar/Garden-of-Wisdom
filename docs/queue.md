@@ -269,14 +269,16 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       `GREEN_OK` as a passing verdict ("a contract-preserving edit stayed green, as the control
       requires"), but `report()` counts every non-`FIRED` outcome as "not fired", appends it to
       the failures and exits 1 — so the committed table can only express controls that go red.
-      Found while authoring U0.2's front-door guard: the `fd6` stay-green control did exactly what
-      it was told and the run went red
+      Found while authoring U0.2's front-door guard: the stay-green control did exactly what it
+      was told and the run went red
       (`FAIL: scripts/check_front_door.py fd6 (GREEN_OK) -- stayed green as required`), so it was
-      withdrawn and the table stayed at **52** controls over **15** checkers.
-      `scripts/check_front_door.py` therefore ships without a must-stay-green control; that
-      direction is covered by a local throwaway battery recorded in `GARDEN_U0_2_HANDOFF.md`, not
-      by anything CI re-applies. Not fixed in U0.2 — the discovery rule: a harness change is a
-      change to the mechanism every checker depends on.
+      withdrawn; `scripts/check_front_door.py` therefore ships with **9 red-direction controls**
+      (`fd1`–`fd9`) and no must-stay-green one. The table stands at **56** controls over **15**
+      checkers (the U0.2 remediation round added `fd6`–`fd9`, one per gap a cold-start reviewer
+      found; `fd6` reuses the withdrawn control's id and is a red-direction control). The
+      false-positive direction is covered by a local throwaway battery recorded in
+      `GARDEN_U0_2_HANDOFF.md`, not by anything CI re-applies. Not fixed in U0.2 — the discovery
+      rule: a harness change is a change to the mechanism every checker depends on.
 
 ## Open — corpus program (W0 landed 2026-09-12; Gate A accepted 2026-09-12; W1 AUTHORIZED IN FULL 2026-09-12 — COMPLETE; Gate B accepted 2026-09-13)
 

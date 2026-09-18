@@ -1560,20 +1560,30 @@ Design trail: `GARDEN_U0_1_HANDOFF.md`.
    explicitly: where a front door and CURRENT disagree about status, CURRENT wins and the other
    document is a bug.
 2. **The front door is guarded by a deterministic check, not by prose.**
-   `scripts/check_front_door.py` (23 checks, count-guarded, stdlib-only) asserts the routing, that
+   `scripts/check_front_door.py` (29 checks, count-guarded, stdlib-only) asserts the routing, that
    CURRENT names exactly one READY unit and that the unit's work-unit document and the
    last-completed unit's handoff both exist on disk, that `docs/queue.md`'s usability-closure
    section marks the *same* single unit READY (the two are derived by different code paths and
    compared), that `AGENTS.md` names every `scripts/garden_*.py` module in the tree (derived from
-   the tree, so a new module forces a front-door decision), and that no front-door document
-   re-asserts a stale live-status claim. CI-wired as its own `browser-smoke.yml` step; **5
-   registered negative controls** (`fd1`–`fd5`), taking the committed table 47 → **52** controls
-   over **15** checkers.
+   the tree, so a new module forces a front-door decision) and carries the whole store lifecycle
+   on one line, and that no guarded document re-asserts a stale live-status claim.
+   The guard is **fail-closed**: an explicit `GUARDED` list plus a derived coverage check that
+   fails when any non-excluded markdown file in the tree names CURRENT.md and is not guarded, so a
+   new status-bearing front door cannot escape the scan; the exclusion list is itself checked for
+   rotten (matching-nothing) entries. `CURRENT.md` is inside the guarded set — the authority's own
+   body must not be able to assert the opposite of its own fields. A meta-claim guard
+   (`META_CLAIM_RE`) treats "no longer claims the W1 runtime does not exist" — the charter's own
+   Gate U0 criterion — as a statement *about* a claim rather than the claim, after the first
+   version of the guard wrongly failed it. CI-wired as its own `browser-smoke.yml` step;
+   **9 registered negative controls** (`fd1`–`fd9`), taking the committed table 47 → **56**
+   controls over **15** checkers. A "must stay green" control could not be registered at all — see
+   the harness defect below.
 3. **The stale-claim scan is scoped to documents a cold-start agent can mistake for status** —
    `AGENTS.md`, `README.md`, `docs/program/README.md`, `docs/product/PRODUCT_DOCTRINE.md`,
-   `docs/queue.md`. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
-   `docs/audit/*` snapshots, the root `GARDEN_*_HANDOFF.md` files) are deliberately **not**
-   scanned and were not rewritten.
+   scanned. The historical packets (`docs/program/W1_*.md`, `W0_GATE_REPORT.md`, the dated
+   `docs/audit/*` snapshots, the root `GARDEN_*_HANDOFF.md` files, `docs/DECISIONS.md` itself as an
+   append-only log, the frozen `docs/data/DATA_QUALITY_REPORT.md`, the work-unit specs) are
+   deliberately **not** scanned, each with a recorded reason, and were not rewritten.
 4. **The W1 read-only rule is recorded as history, not as live law.** `quotes.csv` and
    `sources.csv` were read-only for the whole W1 wave, which is complete; what is true now is that
    they change only inside a named data unit (D3/D4/D6/D7/D8 …) and never as a side effect of
@@ -1616,5 +1626,24 @@ Issue #27's stated reason for not being fixed — "writes to `AGENTS.md` are ref
 tool policy in this environment" — **no longer reproduces**: on 2026-09-17 an `AGENTS.md` edit
 (from a `patch` probe through the real change) succeeded directly in this environment, and the
 issue is satisfied by this unit. That is checked against the artefact, not the tracker.
+
+### QA round (independent cold-start review) and the remediation
+
+An independent reviewer — a separate agent context with its own mutation harness, given only the
+commit under review — attacked the unit from a cold start and returned **CONDITIONAL PASS**: the
+routing and the positive claims verified, but two
+**high** findings, both of which were design gaps in the guard rather than in the documents —
+`SCANNED` was a hard-coded five-file list (so `docs/RUNBOOK.md`, the command reference
+`AGENTS.md` itself names, could carry a stale claim invisibly) and the status authority's own
+body prose was unchecked. Remediation, all inside this unit: the fail-closed coverage check, the
+`RUNBOOK.md` and `CURRENT.md` additions to the guarded set, broadened stale-claim shapes, a
+tightened store-lifecycle check, and four more registered controls (`fd6`–`fd9`). The reviewer's
+medium finding that two queue entries quoted measurements of the front door is the mirror image of
+the failure class and was fixed by annotating the entries in place with fresh measurements.
+
+The remediation's own false positive was found by the **local must-stay-green battery**, not by a
+red-direction control: the charter's Gate U0 criterion ("no longer claim W1 runtime does not
+exist") failed the first version of the third stale-claim pattern. That is the concrete cost of
+the harness defect recorded below, and the reason the battery exists.
 
 Design trail: `GARDEN_U0_2_HANDOFF.md`.
