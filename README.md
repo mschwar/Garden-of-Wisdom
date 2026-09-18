@@ -1,19 +1,24 @@
 # A Garden of Wisdom
 
-A personal collection of impactful quotes from world religions, philosophies, and oral
-traditions, curated for memorization and reflection.
+A personal, curated Garden of **passages worth keeping** — religious, philosophical, literary,
+scientific, artistic, historical, oral/cultural, or otherwise personally meaningful — for
+rediscovery, understanding, comparison, memorization, and reflection.
 
-The idea is inspired by the Bahá'í quote: "A kindly tongue is the lodestone of the heart of
-men."
+The idea is inspired by the Bahá'í passage "A kindly tongue is the lodestone of the heart of
+men," but the current religious/philosophical corpus is the **seed inventory**, not the permanent
+product boundary.
 
-The goal is not to be exhaustive, but to be a clean, simple, impactful source of personal
-inspiration — with its uncertainty made visible rather than hidden. See
-`docs/product/PRODUCT_DOCTRINE.md` for the full doctrine and non-negotiables, and `AGENTS.md`
-if you're an agent picking up work here.
+The durable product object is **Passage**; “quote” remains a legacy CSV/browser term. Uncertainty
+and provenance stay visible rather than being polished away.
+
+See `docs/product/PRODUCT_DOCTRINE.md` for stable product boundaries,
+`docs/PRODUCT_REALITY.md` for the standing answer to what actually works and where use breaks,
+and `AGENTS.md` if you're an agent picking up work here.
 
 ## Where are we now?
 
-Live programme status is **not** duplicated here — it lives in
+Standing product/system reality lives in `docs/PRODUCT_REALITY.md`. Live programme execution
+status is **not** duplicated here — it lives in
 `docs/program/usability-closure/CURRENT.md` (current gate, the single READY unit, the last
 completed unit, the frontier). If this file and CURRENT disagree about status, CURRENT wins.
 In one paragraph, as of 2026-09-17:
@@ -159,9 +164,10 @@ append-only rationale on past calls. High-level phases:
   `docs/program/README.md` for the doctrine map.
 - **Usability-closure programme (2026-09-17 →)**: the bounded bridge from the landed W1
   workbench to real use — `encounter → capture → normalize → curate → admit → Garden read
-  model → browser → rediscover later`. Gate U0 (resumable workbench) is the active gate; U1 is
-  unauthorized until Gate U0 is accepted. See
-  `docs/program/usability-closure/PROGRAM_CHARTER.md`.
+  model → browser → rediscover later`. U0.1/U0.2 landed; R0 then reconciled the product around
+  the Passage domain object and the Garden/Initiate boundary before a real canary was persisted.
+  Gate U0 remains the active gate; U1 is unauthorized until Gate U0 is accepted. See
+  `docs/PRODUCT_REALITY.md` and `docs/program/usability-closure/PROGRAM_CHARTER.md`.
 - **Later, not authorized yet**: verify a small donor set and export it for use by a separate
   project (`bahai-homepage`), without merging the two repos or coupling their schemas. See
   `docs/product/PRODUCT_DOCTRINE.md`.

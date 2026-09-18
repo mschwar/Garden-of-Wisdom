@@ -26,7 +26,9 @@ Then answer:
 3. Is any state authoritative only on one machine?
 4. Are there any stale/front-door contradictions?
 5. Which findings block U1?
-6. If the gate evidence is sufficient, draft the exact repo-native authorization text for U1.1. Do not authorize beyond U1.1.
+6. If the gate evidence is sufficient, identify the exact `docs/PRODUCT_REALITY.md` changes
+   required so the standing dashboard reflects the accepted capability.
+7. Draft the exact repo-native authorization text for U1.1. Do not authorize beyond U1.1.
 
 ## S1 — U1.1 architecture/admission synthesis
 
@@ -85,7 +87,9 @@ Check that:
 Then give a frontier synthesis:
 - what is genuinely usable now;
 - remaining dependability gaps;
-- whether the highest-leverage next move is W2 research, operator ergonomics, release hardening, or something else;
+- the exact `docs/PRODUCT_REALITY.md` changes required by the accepted evidence;
+- whether the highest-leverage next move is research, operator ergonomics, exploration/memorization,
+  release hardening, or something else;
 - what should remain deferred.
 
-Do not authorize W2 automatically.
+Do not authorize W2 or any successor capability automatically.

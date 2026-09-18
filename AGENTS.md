@@ -4,9 +4,15 @@ Read this before touching anything in this repo.
 
 ## What this project is
 
-A personal, curated collection of memorable passages from multiple religious/philosophical
-traditions, for memorization and reflection. See `docs/product/PRODUCT_DOCTRINE.md` for
-intent and non-goals.
+A personal, curated Garden of **passages worth keeping** across religious, philosophical,
+literary, scientific, artistic, historical, oral/cultural and other personally meaningful
+sources, for rediscovery, understanding, comparison, memorization and reflection.
+
+The durable domain object is **Passage**; “quote” is a legacy data/surface term. Read
+`docs/product/PRODUCT_DOCTRINE.md` for stable product boundaries and
+`docs/PRODUCT_REALITY.md` for standing system/usability reality.
+
+**Product reality is not in this file.** It lives in `docs/PRODUCT_REALITY.md`.
 
 **Live programme status is not in this file.** It lives in
 `docs/program/usability-closure/CURRENT.md` — the current gate, the single READY unit, the
@@ -80,8 +86,9 @@ reference.
 - Documentation under `docs/`.
 - The browser (`browser/`) — pure static HTML/CSS/JS, no backend, no framework.
 - `scripts/validate_quotes.py` — improving checks is always welcome.
-- Adding new `unverified` quotes with correct schema, as long as `scripts/validate_quotes.py`
-  still passes.
+- Small documentation/test improvements that preserve product/state authority. **Do not add new
+  Garden passages by directly appending `quotes.csv` rows.** New material enters through the
+  candidate workbench; canonical Garden admission is operator-controlled.
 
 ## What requires human/provenance review before proceeding
 

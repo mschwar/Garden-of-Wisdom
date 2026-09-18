@@ -3,8 +3,9 @@
 | Unit | Newly possible after merge | Primary seam | Stop |
 |---|---|---|---|
 | U0.1 | Persisted store can be safely bootstrapped/status-checked/synced | SQLite ↔ committed mirror | Stop before docs/front-door |
-| U0.2 | Repo front door accurately tells operator/agent what exists and what is next | implementation ↔ project intelligence | Stop before real canary |
-| U0.3 | Real operator state survives restart/reclone | tested machinery ↔ ecological use | **GATE U0 — SYNTHESIS** |
+| U0.2 | Repo front door accurately tells operator/agent what exists and what is next | implementation ↔ project intelligence | Stop before product reconciliation |
+| R0 | Repo expresses the actual Passage product, Garden/Initiate boundary, authority, skeleton and constraint | accidental seed scope ↔ intended product | **COMPLETE; no runtime/data change** |
+| U0.3 | Real operator state survives restart/reclone under the reconciled product boundary | tested machinery ↔ ecological use | **GATE U0 — SYNTHESIS** |
 | U1.1 | Authoritative admission/read-model architecture is ruled, not guessed | eligible candidate ↔ Garden corpus contract | **ARCHITECTURE SYNTHESIS** |
 | U1.2 | Accepted/eligible candidate can be explicitly admitted with minimum Garden metadata | state model ↔ canonical admission | Stop before projection |
 | U1.3 | Legacy Garden + new canonical store items produce one deterministic read model | two authorities ↔ one derived view | Stop before browser switch |
@@ -19,11 +20,12 @@ An agent must not infer the next unit from this file alone. It must read:
 
 1. `AGENTS.md`
 2. `docs/product/PRODUCT_DOCTRINE.md`
-3. `docs/program/usability-closure/CURRENT.md`
-4. `docs/queue.md`
-5. `docs/DECISIONS.md`
-6. the READY work-unit document
-7. the most recent relevant handoff
+3. `docs/PRODUCT_REALITY.md`
+4. `docs/program/usability-closure/CURRENT.md`
+5. `docs/queue.md`
+6. `docs/DECISIONS.md`
+7. the READY work-unit document
+8. the most recent relevant handoff
 
 ## Discovery rule
 

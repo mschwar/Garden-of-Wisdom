@@ -8,7 +8,7 @@ You can run this programme entirely by copy/paste.
 
 Tell the agent:
 
-> Open Garden-of-Wisdom. Read AGENTS.md, Product Doctrine, docs/program/usability-closure/CURRENT.md, docs/queue.md, docs/DECISIONS.md, and the READY work unit. Verify current main. Tell me only: current gate, READY unit, any blocker, and the exact builder prompt I should run. Do not start implementation yet.
+> Open Garden-of-Wisdom. Read AGENTS.md, Product Doctrine, docs/PRODUCT_REALITY.md, docs/program/usability-closure/CURRENT.md, docs/queue.md, docs/DECISIONS.md, and the READY work unit. Verify current main. Tell me only: current gate, READY unit, any blocker, and the exact builder prompt I should run. Do not start implementation yet.
 
 If the answer disagrees with `CURRENT.md`, use the resume/synthesis prompt instead of guessing.
 

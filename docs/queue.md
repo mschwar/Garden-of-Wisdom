@@ -9,6 +9,7 @@ Current pointer: `docs/program/usability-closure/CURRENT.md`
 
 - [x] U0.1 — store lifecycle + mirror freshness invariant — DONE
 - [x] U0.2 — truthful front door + current-state routing — DONE
+- [x] R0 — product reality & system reconciliation — DONE (one-off reconciliation; no runtime/data change)
 - [ ] U0.3 — real persistent operator canary + Gate U0 packet — READY
 - [ ] U1.1 — canonical admission/read-model architecture decision — UNAUTHORIZED until Gate U0 accepted
 - [ ] U1.2 — minimum admission metadata + T-P2 promotion — BLOCKED on U1.1 operator decision
@@ -19,6 +20,19 @@ Current pointer: `docs/program/usability-closure/CURRENT.md`
 Do not append execution transcripts to this section. On closeout, change the checkbox/status and put evidence in the unit handoff/gate packet.
 
 Existing issues/debt remain in their current queue sections. If U0.2 closes issue #27, update that issue/queue entry explicitly rather than leaving duplicate open truth.
+
+## Closed — 2026-09-17 R0 (product reality & system reconciliation)
+
+- [x] **R0 — DONE.** Recovered the domain product before the first real persistent canary:
+      **Passage** is the durable Garden object; the 324-row religious/philosophical/oral corpus is
+      seed/current inventory rather than permanent scope; Garden owns the specialized passage
+      corpus/product while `mschwar/initiate` owns the broader lifecycle of arbitrary things worth
+      remembering. Added `docs/PRODUCT_REALITY.md` as the standing product/system dashboard,
+      kept `CURRENT.md` as execution authority, reconciled `SYSTEM_MODEL.md` to the landed
+      SQLite+deterministic-mirror architecture and canonical≠verified semantics, demoted the old
+      W2→W6 ordering to planning history, and reframed trajectory around operator capabilities.
+      No runtime, schema, CSV, store, browser, CI or cross-repo integration changed. U0.3 remains
+      the single READY unit. Design trail: `GARDEN_R0_PRODUCT_REALITY_HANDOFF.md`.
 
 ## Closed — 2026-09-17 U0.2 (truthful front door + current-state routing)
 
@@ -143,7 +157,12 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
 
 ## Open — infra
 
-- [ ] **The front-door guard's must-stay-green battery is local-only evidence; make it durable**
+**R0 disposition (2026-09-17):** preserve the landed guards, but do not execute additional
+front-door/checker-for-checker assurance work ahead of U0.3/U1 unless a concrete current
+product/dependability failure demonstrates that it is the active constraint. The two U0.2
+meta-assurance follow-ups below remain recorded inventory, not READY work.
+
+- [ ] **DEFERRED BY R0 — The front-door guard's must-stay-green battery is local-only evidence; make it durable**
       (U0.2 follow-up, discovered at closeout). `scripts/check_front_door.py` ships with 10
       red-direction controls and **no CI-reapplied false-positive check**, because the committed
       harness cannot register a `GREEN_OK` control (issue
@@ -306,7 +325,7 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to the repo
       (`b3bb7848…` / `7aafcb67…`).
 
-- [ ] **The negative-control harness cannot register a "must stay green" control** (issue
+- [ ] **DEFERRED BY R0 — The negative-control harness cannot register a "must stay green" control** (issue
       [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56)). `judge()` returns `GREEN_OK`
       for `Mutation(expect_fail=None)` and `docs/architecture/NEGATIVE_CONTROLS.md` documents
       `GREEN_OK` as a passing verdict ("a contract-preserving edit stayed green, as the control

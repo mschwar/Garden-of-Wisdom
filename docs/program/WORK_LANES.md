@@ -74,9 +74,14 @@ Each work unit names its primary lane and any secondary lanes. Cross-lane behavi
 delivered as a vertical slice only when a wave gate requires it; otherwise contracts stay
 bounded. A unit that needs to write another lane's state has the wrong design.
 
-## Wave ↔ lane map (planning aid, not authorization)
+## Historical wave ↔ lane map
 
-| Wave | Primary lanes exercised |
+The W1–W6 map below remains useful as **planning history / capability decomposition**. It is no
+longer the forward execution order and conveys **no authorization**. Usability-closure work
+demonstrated that canonical admission must precede a full research workbench because
+`canonical` and `verified` are orthogonal.
+
+| Historical wave | Primary lanes exercised |
 |---|---|
 | W1 intake + curation | Ingestion/normalization, Human curation, Platform/governance (Acquisition only manually) |
 | W2 research workbench | Research/verification, Platform/governance |
@@ -84,3 +89,18 @@ bounded. A unit that needs to write another lane's state has the wrong design.
 | W4 discovery | Acquisition/expansion, Ingestion/normalization |
 | W5 agentic research | Research/verification, Platform/governance |
 | W6 exploration | Enrichment/classification, Platform/governance |
+
+## Capability trajectory
+
+Forward planning is expressed as **what the operator can newly do**, not as inherited wave numbers:
+
+1. **U0 — Resumable workbench:** trust a real passage to survive interruption/reclone.
+2. **U1 — Grow the Garden:** admit a real passage and find it again in the Garden.
+3. **R1 — Investigate a passage:** research one passage with durable claims/evidence/adjudication.
+4. **E1 — Explore connections:** navigate facets, variants and relationships without changing
+   evidence status.
+5. **M1 — Internalize:** resurface/memorize selected passages.
+6. **A1 — Cheap upstream feed:** source adapters, potentially including Initiate, emit candidates
+   without bypassing Garden curation.
+
+This trajectory is strategic context only. `CURRENT.md` is execution authority.

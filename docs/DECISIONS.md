@@ -1669,3 +1669,44 @@ false-positive cases are now green and the synonym gaps are documented in the ch
 no longer claims to be a claim classifier. The check count stayed 27; the controls stayed 10.
 
 Design trail: `GARDEN_U0_2_HANDOFF.md`.
+
+## 2026-09-17 — R0 product reality reconciliation: Passage is the Garden object; Initiate owns generic remembering
+
+U0.1/U0.2 closed the persistence and repo-legibility seams strongly enough to expose a more
+important mismatch before U0.3: the product prose still defined Garden by its current
+religious/philosophical “quote” inventory even though the domain model had already evolved toward
+`Passage`, and `mschwar/initiate` had matured into the broader lifecycle for arbitrary things
+worth remembering.
+
+**Decision:**
+
+1. **Passage is Garden's durable domain object.** “Quote” remains a legacy CSV/browser term.
+   Exact quotations, excerpts, sayings/proverbs, oral attributions, translations/versions and
+   visibly identified paraphrases may all be Garden passages.
+2. The existing 324-row religious/philosophical/oral corpus is the **seed/current inventory**, not
+   a permanent product-scope restriction. Garden may admit literary, scientific, artistic,
+   historical and other passages the operator decides belong.
+3. **Garden and Initiate are complementary, not competing authorities.** Initiate owns the broad
+   “things worth remembering” lifecycle; Garden owns Garden-specific passage curation, admission,
+   research state, relationships/facets and read/use surfaces. Garden keeps native capture.
+4. No Initiate integration is authorized. A future adapter may terminate at Garden's
+   source-agnostic candidate envelope, but may not bypass Garden curation/admission or create shared
+   mutable authority.
+5. **Canonical means admitted, not verified.** Research state remains orthogonal and visible.
+6. W1.1's landed **SQLite + deterministic committed mirror** architecture is now stated as current
+   reality, not a W0 hypothesis. New canonical projection architecture remains an U1.1 decision.
+7. `docs/PRODUCT_REALITY.md` is the standing product/system dashboard.
+   `docs/program/usability-closure/CURRENT.md` remains execution authority.
+8. The old W2→W6 wave map is retained as planning history/capability decomposition, not forward
+   execution order. Future gates are stated by operator-visible capabilities.
+9. Further U0.2 meta-assurance expansion (must-stay-green battery / GREEN_OK harness follow-ups) is
+   **deferred** unless a concrete current product/dependability failure proves it is the active
+   constraint. Existing guards remain.
+10. **U0.3 remains READY.** R0 changes no runtime/schema/data and does not authorize U1 or W2.
+
+Rejected: (a) broadening Garden into the generic repository for all memorable artifacts — Initiate
+already occupies that role more coherently; (b) forcing Garden to consume Initiate now — no real-use
+evidence justifies the dependency; (c) migrating/renaming `quotes.csv` or building ontology merely
+to match the new product prose — current compatibility has value and the next real seam is
+admission/projection/use, not naming.
+

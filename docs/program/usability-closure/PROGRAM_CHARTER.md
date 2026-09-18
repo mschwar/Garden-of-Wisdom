@@ -4,20 +4,28 @@
 
 Close the distance between Garden's mature artifacts and dependable real-world use.
 
+The product being served is a personally curated Garden of **passages worth keeping**. The
+current religious/philosophical/oral corpus is the seed inventory, not the permanent product
+boundary. Stable product doctrine lives in `docs/product/PRODUCT_DOCTRINE.md`; standing product
+reality lives in `docs/PRODUCT_REALITY.md`.
+
 The product loop being closed is:
 
-`encounter → capture → normalize → curate → admit → Garden-facing read model → browser → rediscover later`
+`encounter passage → capture → normalize → curate → admit → Garden-facing read model → browser → rediscover/use later`
 
 The programme does **not** replace the corpus roadmap. It is a bounded bridge programme over the already-landed W1 substrate.
 
 ## Why this exists
 
-Current Garden has two strong but disconnected systems:
+Garden has two strong but still disconnected product systems:
 
 1. a dependable read-only Garden browser over the legacy canonical corpus; and
 2. a provenance-aware W1 candidate workbench that reaches `accepted → eligible`.
 
-The workbench does not yet reliably bootstrap from persisted state, and an eligible candidate cannot yet reach the Garden-facing browser.
+U0.1 mechanized bootstrap/recovery/mirror freshness; U0.2 made execution state discoverable; R0
+reconciled the product boundary before a real persistent canary. U0.3 now proves those capabilities
+ecologically with one real passage. The remaining product seam is unchanged: an eligible candidate
+still cannot reach the Garden-facing browser.
 
 ## Gates
 
@@ -49,7 +57,11 @@ No research state may be silently upgraded. `canonical` must not imply `verified
 
 Strict:
 
-`U0.1 → U0.2 → U0.3 → [Gate U0 synthesis] → U1.1 → [architecture/operator synthesis] → U1.2 → U1.3 → U1.4 → U1.5 → [Gate U1 synthesis]`
+`U0.1 → U0.2 → R0 product-reality reconciliation → U0.3 → [Gate U0 synthesis] → U1.1 → [architecture/operator synthesis] → U1.2 → U1.3 → U1.4 → U1.5 → [Gate U1 synthesis]`
+
+R0 is a one-off reconciliation inserted after U0.2 and completed before the first real
+persistent canary. It changes doctrine/current-state legibility only; it is not a new programme
+and does not alter Gate U0's proof target.
 
 No later unit is implied by completion of the prior unit.
 
@@ -59,6 +71,7 @@ One isolated branch/worktree → implement only the unit → run its own accepta
 
 ## Authority
 
+- `docs/PRODUCT_REALITY.md` owns standing product/system reality; `CURRENT.md` owns execution authority.
 - Agents may implement deterministic machinery and prepare evidence.
 - Operator-authority state transitions remain human gates.
 - Any architecture decision that changes the authoritative data relationship is an operator/frontier gate.

@@ -47,9 +47,11 @@ and outcome. A case can end honestly in `verified`, `disputed`, `unverifiable`, 
 `needs_more_evidence`.
 
 ### Canonical record
-The Garden-facing representation of a passage after required curation and research gates.
-Canonical records still expose dispute or uncertainty; canonical means "gated and honestly
-represented", not "infallible".
+The Garden-facing representation of a passage after explicit operator admission.
+**Research verification is not an admission prerequisite.** A canonical record may be
+`not_started`, `in_research`, `verified`, `disputed`, `unverifiable`, or
+`needs_more_evidence` according to the research model; every Garden-facing view must preserve
+that uncertainty. Canonical means **admitted**, never “proven.”
 
 ### Facet
 A classification dimension: domain, tradition, genre, medium, period, culture, theme,
@@ -76,6 +78,17 @@ Carries *work state*, which never describes passage truth.
 These boundaries exist so that a broad, noisy upstream cannot leak certainty downstream.
 Any design that lets one lane write another lane's state is wrong by construction.
 
+
+## Product boundary: Garden and Initiate
+
+This model governs **Garden passages**, not every memorable object.
+
+`mschwar/initiate` owns the broader lifecycle of arbitrary things worth remembering. Garden
+owns the specialized curation/admission/research/read experience for passages the operator wants
+in the Garden. Garden's native capture path remains valid. A future Initiate adapter may terminate
+at the source-agnostic candidate envelope; it may not bypass Garden curation/admission or become a
+second authority.
+
 ## Candidate envelope
 
 The minimum source-agnostic intake contract is specified in `CANDIDATE_ENVELOPE.md`.
@@ -83,10 +96,17 @@ Adapters emit envelopes and stop there.
 
 ## Storage posture
 
-**No storage technology is selected in W0.** The minimum requirements W1 actually has are
-enumerated in `W1_DECOMPOSITION.md` §W1.1. SQLite is the default *hypothesis* — the system is
-personal, local-first, relational, and workflow-heavy — but it is not a decision, and the
-existing CSV + static-browser stack stays authoritative until W1.1 rules otherwise.
+W1.1 selected **SQLite** as the machine-local mutable store for new capture/candidate/workflow
+state, paired with the deterministic committed text mirror
+`data/store/garden.export.txt` for portable/versioned recovery and review. U0.1 subsequently
+mechanized bootstrap, freshness status, divergence protection and mirror synchronization across
+operator mutation surfaces.
+
+The SQLite file is rebuildable machine-local runtime state; the committed mirror is the durable
+cross-clone recovery representation. Neither replaces the legacy `quotes.csv` / `sources.csv`
+authority for the existing 324-row Garden. U1.1 must rule the authoritative relationship before
+new canonical store items are projected into the Garden-facing read model. Generated projections
+must remain derived and rebuildable.
 
 ## Non-entities (explicitly out of the model)
 
