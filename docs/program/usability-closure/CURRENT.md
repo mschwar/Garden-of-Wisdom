@@ -56,5 +56,6 @@ Every merged usability-closure unit must update:
 - frontier sentence;
 - proof target if it changed.
 
-Product reality belongs in `docs/PRODUCT_REALITY.md`, not duplicated here. Do not append history
-here; replace current execution state.
+Product reality belongs in `docs/PRODUCT_REALITY.md`, not duplicated here. Update that dashboard
+when a merged gate materially changes what is usable, repeatable or dependable; do not turn it into
+a per-commit log. Do not append history here; replace current execution state.
