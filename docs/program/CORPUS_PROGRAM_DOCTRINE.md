@@ -2,14 +2,16 @@
 
 ## Purpose
 
-Garden of Wisdom is a personal, curated corpus of memorable passages worth preserving,
-revisiting, memorizing, and reflecting on. This program adds durable *acquisition*,
-*curation*, *provenance*, *research*, and *enrichment* workflows around that corpus without
-weakening the repo's existing uncertainty and provenance rules.
+Garden of Wisdom is a personal, curated corpus/product of **passages worth keeping** — across
+religious, philosophical, literary, scientific, artistic, historical, oral/cultural and other
+personally meaningful sources — for rediscovery, understanding, comparison, memorization and
+reflection. This program adds durable *acquisition*, *curation*, *provenance*, *research*, and
+*enrichment* workflows around that product without weakening the repo's uncertainty/provenance
+rules.
 
-The objective is **not** to accumulate more quotations. It is to separate discovery,
-intake, human curation, research, verification, and canonical representation so that
-automation may be broad upstream while canonical claims stay evidence-driven downstream.
+The objective is **not** to accumulate more quotation rows. It is to let capture be cheap while
+separating human taste, evidence, canonical admission and presentation so automation may be broad
+upstream while Garden-facing claims remain honest downstream.
 
 ## Governing principles
 
@@ -62,6 +64,18 @@ below is authoritative for the program, and each material ruling is also appende
 | R6 | Faceted classification; no premature single category enum | `tradition` is single-valued free text with 27 values; `tags` is multi-valued | Facets adopted. `tradition` stays single-valued and unrenamed for now (it is *a* facet with one value), and the 27-value list is documentation of observed scope, not a hardened enum. Overlap/multi-value questions stay open. |
 | R7 | Do not choose a datastore in W0 | Repo is CSV + static browser; no DB | Not chosen. SQLite is recorded as the W1 *hypothesis only*, to be decided in W1.1 against explicit storage/access requirements. |
 | R8 | W0 must not implement anything | — | Honored. W0 ships docs, decision/queue entries, a planning fixture, and a docs-consistency checker. The checker reads `docs/program/**` plus (read-only) `quotes.csv`/`sources.csv` to re-derive the doctrine's own corpus counts; it writes nothing and is a documentation test, not runtime. |
+
+
+## Boundary with Initiate
+
+Garden is not the generic lifecycle for every interesting or memorable object. That broader role
+belongs to `mschwar/initiate`.
+
+Garden's corpus program governs the passage-specific path from Garden candidate through curation,
+research/adjudication, canonical admission, enrichment and Garden-facing representation. Native
+Garden capture remains supported. A future Initiate → Garden adapter may emit a candidate envelope
+and stop there; it must not write canonical state, share mutable authority, or make Garden depend
+on Initiate for ordinary use.
 
 ## Human gates
 
