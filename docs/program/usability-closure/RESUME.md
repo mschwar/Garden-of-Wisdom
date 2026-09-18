@@ -12,6 +12,7 @@ Do not infer state from this prompt and do not trust an old handoff as current.
 2. Read, in this order:
    - `AGENTS.md`
    - `docs/product/PRODUCT_DOCTRINE.md`
+   - `docs/PRODUCT_REALITY.md`
    - `docs/program/usability-closure/CURRENT.md`
    - `docs/program/usability-closure/PROGRAM_CHARTER.md`
    - `docs/queue.md`
