@@ -17,12 +17,15 @@ The programme does **not** replace the corpus roadmap. It is a bounded bridge pr
 
 ## Why this exists
 
-Current Garden has two strong but disconnected systems:
+Garden has two strong but still disconnected product systems:
 
 1. a dependable read-only Garden browser over the legacy canonical corpus; and
 2. a provenance-aware W1 candidate workbench that reaches `accepted → eligible`.
 
-The workbench does not yet reliably bootstrap from persisted state, and an eligible candidate cannot yet reach the Garden-facing browser.
+U0.1 mechanized bootstrap/recovery/mirror freshness; U0.2 made execution state discoverable; R0
+reconciled the product boundary before a real persistent canary. U0.3 now proves those capabilities
+ecologically with one real passage. The remaining product seam is unchanged: an eligible candidate
+still cannot reach the Garden-facing browser.
 
 ## Gates
 
