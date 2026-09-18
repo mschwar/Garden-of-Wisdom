@@ -7,8 +7,8 @@ Living document — update it as items are picked up or closed, don't just appen
 Authority: `docs/program/usability-closure/PROGRAM_CHARTER.md`  
 Current pointer: `docs/program/usability-closure/CURRENT.md`
 
-- [ ] U0.1 — store lifecycle + mirror freshness invariant — READY
-- [ ] U0.2 — truthful front door + current-state routing — BLOCKED on U0.1
+- [x] U0.1 — store lifecycle + mirror freshness invariant — DONE
+- [ ] U0.2 — truthful front door + current-state routing — READY
 - [ ] U0.3 — real persistent operator canary + Gate U0 packet — BLOCKED on U0.2
 - [ ] U1.1 — canonical admission/read-model architecture decision — UNAUTHORIZED until Gate U0 accepted
 - [ ] U1.2 — minimum admission metadata + T-P2 promotion — BLOCKED on U1.1 operator decision

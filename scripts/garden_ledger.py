@@ -85,6 +85,7 @@ def cmd_mark(args: argparse.Namespace) -> int:
                 f"legacy row {result['legacy_row_id']} marked {result['research_state']} "
                 f"({result['transition_id']}); audit seq {result['seq']}"
             )
+        store.sync_mirror()  # U0.1: a successful mutation must leave the committed mirror current
     print("RESULT: PASS")
     return 0
 
@@ -104,6 +105,7 @@ def cmd_reopen(args: argparse.Namespace) -> int:
                 f"{result['from_state']} -> {result['to_state']} "
                 f"({result['transition_id']}); audit seq {result['seq']}"
             )
+        store.sync_mirror()  # U0.1: a successful mutation must leave the committed mirror current
     print("RESULT: PASS")
     return 0
 

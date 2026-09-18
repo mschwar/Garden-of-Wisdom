@@ -524,6 +524,7 @@ def cmd_normalize(args: argparse.Namespace) -> int:
             proposal, changed = normalize_candidate(store, candidate_id)
             results.append({"candidate_id": candidate_id, "changed": changed, **proposal.__dict__})
         counts = store.counts()
+        store.sync_mirror()  # U0.1: a successful normalization must leave the committed mirror current
 
     if args.json:
         print(
@@ -584,6 +585,7 @@ def cmd_hints(args: argparse.Namespace) -> int:
                 }
             )
         counts = store.counts()
+        store.sync_mirror()  # U0.1: a successful hint rebuild must leave the committed mirror current
 
     if args.json:
         print(json_line({"hints": logged, "counts": counts}))

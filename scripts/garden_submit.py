@@ -322,6 +322,7 @@ def submit(args: argparse.Namespace) -> int:
         read_back = read_envelope(store, candidate_id)
         _refuse(read_back, validate(read_back, capture_texts(store)))
         counts = store.counts()
+        store.sync_mirror()  # U0.1: a successful mutation must leave the committed mirror current
 
     if args.emit_envelope:
         target = Path(args.emit_envelope)

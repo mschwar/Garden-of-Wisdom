@@ -529,6 +529,68 @@ def create_store(store_dir: Path | str, *, created_at: str | None = None) -> tup
     return db_path, applied
 
 
+def store_status(store_dir: Path | str) -> str:
+    """The store-vs-mirror freshness state without requiring an open Store.
+
+    One of CURRENT / STALE / MISSING_DB / MISSING_MIRROR. `MISSING_DB` is reported here because
+    no Store can be opened when the SQLite file is absent; the other three are also what an open
+    Store's `status()` reports.
+    """
+    store_dir = Path(store_dir)
+    db_path = store_dir / STORE_FILENAME
+    mirror = store_dir / DEFAULT_EXPORT_NAME
+    if not db_path.exists():
+        return "MISSING_DB"
+    if not mirror.exists():
+        return "MISSING_MIRROR"
+    with Store(store_dir) as store:
+        if store.export_bytes() == mirror.read_bytes():
+            return "CURRENT"
+    return "STALE"
+
+
+def bootstrap_store(store_dir: Path | str) -> str:
+    """Hydrate the local store from the committed mirror, or report the existing state.
+
+    The U0.1 bootstrap rule: the mirror is the committed source of truth for reconstructing a
+    machine-local store, but a store that already exists is never silently overwritten.
+
+      * DB absent, mirror present -> create the store and import the mirror; returns CURRENT.
+      * DB absent, mirror absent  -> refused (nothing to bootstrap from); raises StoreError.
+      * DB present, mirror equal  -> no-op; returns CURRENT.
+      * DB present, mirror differs -> refused (a divergent store is never clobbered by the
+        mirror, and a divergent mirror is never clobbered by the store); raises StoreError.
+
+    Returns the post-bootstrap `store_status`.
+    """
+    store_dir = Path(store_dir)
+    db_path = store_dir / STORE_FILENAME
+    mirror = store_dir / DEFAULT_EXPORT_NAME
+    if db_path.exists():
+        if not mirror.exists():
+            raise StoreError(
+                f"store exists at {db_path} but the mirror {mirror} is absent; "
+                "refusing to guess (run 'sync' to write the mirror, or remove the store)"
+            )
+        with Store(store_dir) as store:
+            if store.export_bytes() == mirror.read_bytes():
+                return "CURRENT"
+        raise StoreError(
+            f"store at {db_path} and mirror {mirror} diverge; bootstrap never overwrites a "
+            "divergent store or mirror (reconcile by hand, or wipe the store and re-bootstrap)"
+        )
+    if not mirror.exists():
+        raise StoreError(
+            f"neither the store ({db_path}) nor the mirror ({mirror}) exists; "
+            "there is nothing to bootstrap from (create the store, or commit a mirror first)"
+        )
+    create_store(store_dir)
+    with Store(store_dir) as store:
+        store.import_bytes(mirror.read_bytes())
+    return store_status(store_dir)
+
+
+
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise StoreError(message)
@@ -1357,6 +1419,35 @@ class Store:
         target.write_bytes(self.export_bytes())
         return target
 
+    # -- lifecycle (U0.1) -------------------------------------------------------------
+    def mirror_path(self) -> Path:
+        """The committed, diffable text mirror for this store (default DIR/garden.export.txt)."""
+        return self.dir / DEFAULT_EXPORT_NAME
+
+    def status(self) -> str:
+        """The store-vs-mirror freshness state: CURRENT / STALE / MISSING_MIRROR.
+
+        The DB is known to exist (this is an open Store). `MISSING_DB` is reported by the
+        module-level `store_status` when no Store can be opened.
+        """
+        mirror = self.mirror_path()
+        if not mirror.exists():
+            return "MISSING_MIRROR"
+        if self.export_bytes() == mirror.read_bytes():
+            return "CURRENT"
+        return "STALE"
+
+    def sync_mirror(self) -> str:
+        """Atomically refresh the committed mirror from this store. Returns the post-sync status.
+
+        The write is atomic in the practical sense: the export bytes are computed first and the
+        file is replaced in one `write_bytes` call, so a reader never sees a half-written mirror.
+        After a successful sync the status is `CURRENT`; a failure to write raises, so a caller
+        that must not claim success while the mirror is stale can let the exception propagate.
+        """
+        self.write_export(self.mirror_path())
+        return self.status()
+
     def is_empty(self) -> bool:
         return all(value == 0 for value in self.counts().values())
 
@@ -1517,6 +1608,32 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    state = store_status(args.dir)
+    print(f"store: {args.dir}")
+    print(f"status: {state}")
+    print("RESULT: PASS")
+    return 0
+
+
+def cmd_bootstrap(args: argparse.Namespace) -> int:
+    state = bootstrap_store(args.dir)
+    print(f"store: {args.dir}")
+    print(f"bootstrap: {state}")
+    print("RESULT: PASS")
+    return 0
+
+
+def cmd_sync(args: argparse.Namespace) -> int:
+    with Store(args.dir) as store:
+        state = store.sync_mirror()
+    print(f"store: {args.dir}")
+    print(f"sync: {state}")
+    print("RESULT: PASS")
+    return 0
+
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1541,6 +1658,26 @@ def main(argv: list[str] | None = None) -> int:
     verify = sub.add_parser("verify", help="export -> re-import -> compare bytes")
     verify.add_argument("--dir", required=True)
     verify.set_defaults(func=cmd_verify)
+
+    status = sub.add_parser(
+        "status", help="report the store-vs-mirror freshness state (CURRENT/STALE/MISSING_DB/MISSING_MIRROR)"
+    )
+    status.add_argument("--dir", required=True)
+    status.set_defaults(func=cmd_status)
+
+    bootstrap = sub.add_parser(
+        "bootstrap",
+        help="hydrate the local store from the committed mirror (never overwrites a divergent store)",
+    )
+    bootstrap.add_argument("--dir", required=True)
+    bootstrap.set_defaults(func=cmd_bootstrap)
+
+    sync = sub.add_parser(
+        "sync", help="atomically refresh the committed mirror from the local store"
+    )
+    sync.add_argument("--dir", required=True)
+    sync.set_defaults(func=cmd_sync)
+
 
     args = parser.parse_args(argv)
     getattr(sys.stdout, "reconfigure", lambda **_: None)(line_buffering=True)

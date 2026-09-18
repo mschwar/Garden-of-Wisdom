@@ -95,6 +95,7 @@ def cmd_seed(args: argparse.Namespace) -> int:
                 f"legacy batch capture {result['capture_id']} "
                 f"{result['status']} ({result['row_count']} membership rows)"
             )
+        store.sync_mirror()  # U0.1: a successful seed must leave the committed mirror current
     print("RESULT: PASS")
     return 0
 

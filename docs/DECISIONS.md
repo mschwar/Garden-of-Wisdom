@@ -1515,3 +1515,36 @@ workbench (Gate U0) and one real passage reaching the Garden-facing browser (Gat
 Rejected alternative: authorizing the whole programme (U0+U1) at once — the programme's own
 stop rules require Gate U0 synthesis before U1.1, and the operator wants each gate's evidence
 reviewed before the next is authorized. Design trail: `GARDEN_USABILITY_CLOSURE_BOOTSTRAP_HANDOFF.md`.
+
+## 2026-09-17 — U0.1 executed (store lifecycle + mirror freshness invariant)
+
+Unit U0.1 mechanizes the local SQLite↔committed mirror persistence lifecycle:
+
+### What landed
+
+1. **Deterministic lifecycle primitives (`scripts/garden_store.py`):**
+   - `bootstrap`: hydrates local SQLite (`garden.sqlite3`) from the committed mirror
+     (`garden.export.txt`) if the DB is absent; no-op returning `CURRENT` if both exist and
+     match; strictly refuses if both are absent or if DB and mirror diverge (never guesses
+     or clobbers).
+   - `status`: checks freshness without side-effects, reporting `CURRENT`, `STALE`,
+     `MISSING_DB`, or `MISSING_MIRROR`.
+   - `sync`: atomically refreshes the committed mirror (`garden.export.txt`) from SQLite.
+2. **Mutation invariant:** Every operator-facing mutating surface (`garden_submit.py`,
+   `garden_normalize.py`, `garden_review.py`, `garden_ledger.py`, `garden_legacy_batch.py`)
+   automatically invokes `store.sync_mirror()`. A mutating command cannot exit 0 while the
+   committed mirror is stale.
+3. **Divergence safety and recovery:** If SQLite and mirror diverge, `bootstrap` refuses.
+   The operator can reconcile by running `sync` to refresh the mirror, or deleting
+   `garden.sqlite3` and running `bootstrap` to revert from the committed mirror.
+4. **Deterministic acceptance suite:** `scripts/check_garden_lifecycle.py` (**42 checks**)
+   asserts mirror-only bootstrap, absent refusal, equal status, all mutation surfaces keeping
+   status CURRENT, stale detection, missing mirror detection, divergence refusal, local DB
+   deletion + re-bootstrap round-trip, D3/D4 state preservation, and stray file prevention.
+   Count-guarded (`EXPECTED_CHECKS = 42`).
+5. **Negative controls harness:** Registered 3 new controls (`u1`, `u2`, `u3`) in
+   `scripts/run_negative_controls.py` (table moves 44 → 47, 14 checkers).
+6. **CI wiring:** Appended `scripts/check_garden_lifecycle.py` to `.github/workflows/browser-smoke.yml`.
+7. **`quotes.csv` / `sources.csv` byte-identical:** (`9766db8c…` / `7aafcb67…`).
+
+Design trail: `GARDEN_U0_1_HANDOFF.md`.

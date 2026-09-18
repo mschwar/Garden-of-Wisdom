@@ -217,6 +217,7 @@ def _run_action(args: argparse.Namespace) -> int:
             args.candidate_id, action=args.action, actor=actor, reason=args.reason
         )
         counts = store.counts()
+        store.sync_mirror()  # U0.1: a successful curation decision must leave the committed mirror current
     if args.json:
         print(json_line({"decision": result, "counts": counts}))
         return 0
