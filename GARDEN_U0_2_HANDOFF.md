@@ -179,15 +179,22 @@ PASS: historical narration in RUNBOOK (the flag must stay green) -- stayed green
 PASS: a front door quoting the retired wording it removed (must stay green) -- stayed green (RESULT: PASS (27 checks))
 PASS: a marker-carrying historical statement using the third pattern (must stay green) -- stayed green (RESULT: PASS (27 checks))
 PASS: a reflow that wraps the CURRENT.md path across a line break (must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: dated history with a past cue (round-3 F3, must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: provenance annotation reporting another document (round-3 F4, must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: a changelog bullet recording the old claim (round-3 F5/F13, must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: a '## History' section stating the old claim as history (round-3 F8, must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: the charter's criterion reworded without the literal token (round-3 F9, must stay green) -- stayed green (RESULT: PASS (27 checks))
+PASS: quoted retired wording with the period inside the quotes (must stay green) -- stayed green (RESULT: PASS (27 checks))
 
-RESULT: PASS (12 legitimate edits accepted)
+RESULT: PASS (18 legitimate edits accepted)
 ```
 
-Cases 9–12 are the round-2 reviewer's three false positives (historical narration, quoting the
-retired wording, a reflow that wraps the CURRENT.md path) plus a marker-carrying historical
-statement. Each case now runs against its **own fresh copy** of the tree: the first version of
-this battery applied the edits cumulatively, and case 12 failed on a stale anchor rather than on
-the checker — a harness that couples its cases reports false findings of its own.
+Cases 9–12 came from round 2's false positives; cases 13–18 are round 3's. Each case runs against
+its **own fresh copy** of the tree: the first version applied edits cumulatively, and case 12 then
+failed on a stale anchor rather than on the checker — a harness that couples its cases reports
+false findings of its own. A separate replay probe (`/tmp/u02_fp_probe.py`) renders all 15 of the
+round-3 reviewer's false-positive cases plus its 3 synonym gaps in one table, which is what the
+round-3 dispositions below are based on.
 
 **This battery earned its keep twice, and the second time is a finding.** Its two added cases
 (round 2) were the meta-claim wording — `PROGRAM_CHARTER.md`'s own Gate U0 criterion, "no longer
@@ -367,6 +374,28 @@ The redesign is simpler as well as stronger: the guard lost `GUARDED`, the point
 check and the look-behind window, and gained typed exclusions plus two explicit allowances. Check
 count went 29 → 27 and the registered controls 9 → 10.
 
+## Foreign QA round 3 (final verification review) and what it changed
+
+A third independent round re-ran all six expectations from round 2 plus 27 further mutations.
+Verdict: **FAIL** — not because the fixes were wrong (all six expectations were confirmed CLOSED:
+the G3 sentence fires, a relative-link front door fires, an orphan file fires, historical
+narration and the path reflow stay green) but because the *new* guard failed on honest
+documentation: **14 legitimate edits were rejected**, and its quotation allowance turned out to be
+broken for the very shape it exists for.
+
+| # | severity | finding | disposition |
+|---|---|---|---|
+| 1 | **high** | The quotation allowance never worked. `allowance()` derived "the sentence" with `find(".", end)`, which stops at a period **inside** the quotation, so `QUOTED_RE` rarely saw a closed quote pair — and it had no straight-single-quote branch. Round 2's "quoting retired wording" case passed only because that sample *also* contained the cue word "retired", which masked the defect. | **fixed.** Quote spans are now computed once per document over the **whole** normalized text (straight double, curly double, curly single), so a period inside the quotes cannot hide a pair. Straight single quotes are deliberately still unsupported: treating `don't`/`W1's` as quotes would open spans that swallow genuine claims, so that is a documented refusal, not a gap. Battery case 18 covers the period-inside-quotes shape. |
+| 2 | **high** | 14 false positives from the nine-word marker list: dated history ("in 2026-09", "at that stage", "before U0.2", "at a time when", "prior to the fix"), provenance annotation ("previously claimed", "earlier revisions"), changelog/table records of the old claim, a new "## History" section, and the charter criterion reworded without the literal token "no longer". | **fixed.** The marker list became `PAST_OR_REPORT_CUES`, a documented ~45-entry past-tense/reporting list, on the principle that **it is cheaper to miss a stale claim than to fail an honest document**. All 15 of the reviewer's cases are now green (`/tmp/u02_fp_probe.py`, printed in the evidence section) and 6 of them are permanent battery cases. |
+| 3 | medium | The charter's criterion passed only because it literally contains "no longer" — the guard was pinning a phrase, not enforcing the criterion. | **fixed** by finding 2: the reworded bullet ("does not assert that the W1 runtime does not exist") passes on `assert`. Battery case 17. |
+| 4 | medium | Coverage gaps: synonyms are not caught — "W1 has yet to land", "the W1 store remains unimplemented", "W1 is not present", "W1-in-progress". The docstring's claim that the scan is fail-closed overstated what the patterns cover. | **accepted and now stated in the check itself.** The docstring says plainly what the check cannot do: it is a pattern matcher, not a claim classifier; a synonym evades it, and the scan's value is regression protection for the *documented* drift shapes plus the decidable structural checks. The three gap cases are recorded in the probe. |
+| 5 | low/info | Exclusions have no rotten entry (all 9 live, 33 of 104 scanned); typed matching holds (`GARDEN_` off-root files ARE scanned, `docs/audit/` is excluded by design); historical packets remain freely writable; the head passes on its own. | **no change needed** — recorded as the positive half of the review. |
+
+Round 3's own summary is worth keeping verbatim as the honest framing: *"the redesigned scope
+design genuinely closes all three round-3 blockers … but the guard fails-closed on honest
+documentation rather than on stale claims."* That is what this round fixed, and the fix was in the
+allowance direction (fewer false positives), not in the pattern direction.
+
 ## Verification run on the branch
 
 ```
@@ -383,7 +412,11 @@ python3 scripts/run_negative_controls.py                         RESULT: PASS (5
 python3 scripts/run_negative_controls.py --check                 RESULT: PASS (57 anchors checked)
 python3 scripts/run_negative_controls.py --checker scripts/check_front_door.py
                                                                  RESULT: PASS (10 controls fired)
-python3 /tmp/u02_staygreen.py                                    RESULT: PASS (12 legitimate edits accepted)
+python3 /tmp/u02_staygreen.py                                    RESULT: PASS (18 legitimate edits accepted)
+python3 /tmp/u02_fp_probe.py                                     RESULT: PASS (15 of 15 round-3
+                                                                 false-positive cases stay green, the
+                                                                 true positive still fires, 3 synonym
+                                                                 gaps printed as the documented residual)
 shasum -a 256 quotes.csv sources.csv       9766db8c… / 7aafcb67…  (byte-identical)
 ```
 
@@ -398,13 +431,21 @@ shasum -a 256 quotes.csv sources.csv       9766db8c… / 7aafcb67…  (byte-iden
   would be non-deterministic, and a guard that fires on legitimate historical prose (the queue's
   closed entries, the append-only log, the frozen transcripts) is worse than no guard. The three
   shapes are the ones this repo has actually produced.
-- **Two explicit allowances, both sentence-scoped.** A match is skipped when it sits inside
-  quotation marks, or when its own sentence carries a history marker (`retired`, `superseded`,
-  `pre-fix`, `historically`, `at the time`, `no longer`, `used to`, `formerly`, `at gate b time`).
-  The trade is symmetric and recorded: a *live* claim phrased with one of those words is also
-  skipped. The previous version of this allowance was a 46-character look-behind window, which the
-  round-2 review broke with an unrelated word in the same file; the sentence scope is what makes
-  the round-1 wording pass while the round-1 *claim* fails.
+- **Two explicit allowances.** A match is skipped when it sits inside quotation marks (span-checked
+  over the whole document, so a period inside the quotes cannot hide a pair) or when its own
+  sentence carries a past-tense or reporting cue from the ~45-entry `PAST_OR_REPORT_CUES` list
+  ("was", "previously", "earlier", "before", "no longer", "said", "claimed", "asserted",
+  "corrected", "removed", "retired", …). The cue list is deliberately generous — **it is cheaper
+  to miss a stale claim than to fail an honest document** — and the trade is recorded: a live claim
+  wearing one of those cues is skipped too. Three earlier versions of this allowance (a
+  46-character look-behind window, a nine-word marker list, and quote matching inside a
+  period-truncated sentence) were each broken by an independent review; the current version is
+  covered by 18 battery cases, six of which are that review's own false positives.
+- **A synonym evades the scan, and the check now says so itself.** It is a pattern matcher, not a
+  claim classifier: "W1 has yet to land", "the W1 store remains unimplemented", "W1 is not present"
+  and "W1-in-progress" all pass. The docstring states this plainly rather than calling the scan
+  fail-closed. What the scan does guarantee is regression protection for the *documented* drift
+  shapes (all ten are pinned as controls) plus the decidable structural facts.
 - **Rows 4, 8, 9, 15, 16, 17 and 18 of the contradiction table are review-caught, not
   check-caught.** A general "present-tense claim inside a historical section" detector was not
   built: pattern matching on `are byte-identical` fires on dozens of legitimate *historical* queue

@@ -39,20 +39,28 @@ What it asserts (27 checks)
      and the resume path must resolve to the work-unit directory.
 
 Two explicit allowances, because a statement *about* a claim is not the claim: a match is not
-counted when it sits inside quotation marks, or when its own sentence carries a history marker
-("retired", "superseded", "pre-fix", "historically", "at the time", "no longer", "used to",
-"formerly", "at gate b time"). That is how the charter's own Gate U0 criterion ("no longer claim
-W1 runtime does not exist") and a front door's note about the wording it removed are permitted,
-while a live assertion of the same words is not. The allowances are deliberately narrow and
-sentence-scoped: an earlier version used a 46-character look-behind window and an unrelated word
-("current state") could exempt a genuine claim later in the same file.
+counted when it sits inside quotation marks (straight or curly double quotes, curly single
+quotes -- see the note on apostrophes below), or when its own sentence carries a past-tense or
+reporting cue from `PAST_OR_REPORT_CUES`. The cue list is deliberately **generous**: it is
+cheaper to miss a stale claim than to fail an honest document, and every cue in it is a word a
+*live assertion of current state* does not normally contain ("was", "previously", "earlier",
+"before", "no longer", "said", "claimed", "asserted", "corrected", "removed", "retired", ...).
+That is how the charter's Gate U0 criterion, a "## History" section, a provenance annotation, a
+changelog bullet and a dated historical statement are all permitted, while a bare assertion of
+the same words is not.
 
-What is excluded, and why (a check that forbade "W1 in progress" inside a historical packet
-would destroy evidence): the dated `docs/audit/*` snapshots and gate reviews, the W0/W1 packets,
-`docs/DECISIONS.md` (an append-only log that must be free to quote a superseded claim), the
-frozen `docs/data/DATA_QUALITY_REPORT.md` transcript, the root `GARDEN_*_HANDOFF.md` evidence
-files, the work-unit specs (which quote the false claims as acceptance criteria), and the
-seed/export trees.
+**What this check cannot do, stated plainly:** it is a pattern matcher, not a claim classifier.
+A stale status claim phrased with a synonym the three shapes do not enumerate ("W1 has yet to
+land", "the W1 store remains unimplemented", "W1-in-progress") is NOT caught; renaming or
+hyphenating the subject is enough to evade a shape. The scan's value is regression protection
+for the drift shapes this repo has actually produced (they are in U0.2's contradiction table and
+pinned as controls `fd1`-`fd10`) plus the structural facts -- one READY unit, routing, the
+queue agreement, `AGENTS.md`'s command surface -- which ARE decidable. Do not read "23 of 27
+checks pass" as "no document can misstate status".
+
+Apostrophes are deliberately NOT treated as quotation marks: `don't` and `W1's` would open a
+span that could swallow a genuine claim, so supporting straight single quotes would cost more
+than it buys.
 
 Exits 0 with `RESULT: PASS`, non-zero with `RESULT: FAIL` and one `FAIL:` line per broken
 check -- never a traceback.
@@ -129,12 +137,34 @@ STALE_CLAIMS = (
     ),
 )
 
-# Allowance 1: the match is a quotation. Allowance 2: its sentence marks it as history. Both
-# are sentence-scoped, so an unrelated word elsewhere in the file cannot exempt a claim.
-QUOTED_RE = re.compile(r'"[^"]*"|\u201c[^\u201d]*\u201d|\u2018[^\u2019]*\u2019')
-HISTORY_MARKERS = (
-    "retired", "superseded", "pre-fix", "historically", "at the time", "no longer",
-    "used to", "formerly", "at gate b time",
+# Allowance 1: the match is a quotation -- span-checked over the WHOLE text, because a sentence
+# boundary can fall inside a quotation and a sentence-scoped scan would then never see a closed
+# quote pair (that bug made the allowance pass only by accident on the sample that had a cue).
+# Allowance 2: its sentence marks it as past/reported. Both are documented, and deliberately
+# generous in the direction that avoids rejecting legitimate documentation.
+QUOTE_SPANS_RE = re.compile(
+    r'"[^"\n]*"'                    # straight double
+    r"|\u201c[^\u201d\n]*\u201d"    # curly double
+    r"|\u2018[^\u2019\n]*\u2019"    # curly single (rare as an apostrophe, unlike ' )
+)
+
+# Past-tense / reporting cues: a live assertion of *current* status does not normally carry one.
+# Single words are matched on word boundaries so "was" cannot match inside "waste".
+PAST_OR_REPORT_CUES = (
+    "was", "were", "had", "did", "didn't", "been", "would",
+    "previously", "earlier", "before", "prior", "until", "formerly", "historically",
+    "no longer", "used to", "at the time", "at that stage", "at that point", "at a time",
+    "said", "says", "wrote", "written", "claimed", "claim", "asserted", "asserts", "assert",
+    "reported", "recorded", "noted", "described", "corrected", "removed", "replaced",
+    "retired", "superseded", "obsolete", "deprecated", "old", "previous",
+)
+
+_WORD_CUES = tuple(cue for cue in PAST_OR_REPORT_CUES if " " not in cue)
+_PHRASE_CUES = tuple(cue for cue in PAST_OR_REPORT_CUES if " " in cue)
+CUE_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(cue) for cue in _WORD_CUES) + r")\b"
+    r"|" + "|".join(re.escape(cue) for cue in _PHRASE_CUES),
+    re.I,
 )
 
 REQUIRED_CURRENT_HEADINGS = ("## Gate", "## Current READY unit", "## Last completed unit", "## Update rule")
@@ -236,20 +266,16 @@ def handoff_path(unit: str) -> Path:
     return ROOT / f"GARDEN_{unit.replace('.', '_')}_HANDOFF.md"
 
 
-def allowance(text: str, start: int, end: int) -> str | None:
-    """'quoted' / 'marked: <marker>' when a stale-claim match is being discussed, not asserted."""
+def allowance(text: str, start: int, end: int, spans: list[tuple[int, int]]) -> str | None:
+    """'quoted' / 'cue <word>' when a stale-claim match is being discussed, not asserted."""
+    for span_start, span_end in spans:
+        if span_start < end and span_end > start:
+            return "quoted"
     left = text.rfind(".", 0, start) + 1
     right = text.find(".", end)
     sentence = text[left:right if right != -1 else len(text)]
-    rel_start, rel_end = start - left, end - left
-    for span in QUOTED_RE.finditer(sentence):
-        if span.start() < rel_end and span.end() > rel_start:
-            return "quoted"
-    low = sentence.lower()
-    for marker in HISTORY_MARKERS:
-        if marker in low:
-            return f"marked {marker!r}"
-    return None
+    cue = CUE_RE.search(sentence)
+    return f"cue {cue.group(0)!r}" if cue else None
 
 
 def markdown_files() -> list[Path]:
@@ -405,8 +431,9 @@ def main() -> int:
         offenders = []
         for path in scanned:
             text = normalize(read(path))
+            spans = [(match.start(), match.end()) for match in QUOTE_SPANS_RE.finditer(text)]
             if any(
-                allowance(text, match.start(), match.end()) is None
+                allowance(text, match.start(), match.end(), spans) is None
                 for match in pattern.finditer(text)
             ):
                 offenders.append(rel(path))

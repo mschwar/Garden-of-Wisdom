@@ -1657,4 +1657,15 @@ universal over non-excluded markdown with typed exclusions and sentence-scoped q
 allowances. That is why the check count moved 29 → 27 while the controls moved 9 → 10: the
 simplification is the remediation.
 
+A **third review round** against the redesigned head confirmed all six round-2 expectations CLOSED
+but returned FAIL on the guard's *false-positive* behaviour: 14 legitimate edits were rejected by
+the nine-word marker list, and the quotation allowance turned out never to have worked (the
+"sentence" was truncated at a period inside the quotation, so round 2's quoted-wording case passed
+only because that sample also carried the cue word "retired"). The response was to widen the
+allowance rather than the patterns: quote spans are now computed over the whole document, and the
+marker list became a ~45-entry past-tense/reporting cue list on the stated principle that it is
+cheaper to miss a stale claim than to fail an honest document. All 15 of that round's
+false-positive cases are now green and the synonym gaps are documented in the check itself, which
+no longer claims to be a claim classifier. The check count stayed 27; the controls stayed 10.
+
 Design trail: `GARDEN_U0_2_HANDOFF.md`.
