@@ -52,8 +52,12 @@ Foreign QA should try to falsify:
 ## Closeout
 
 After merge, `CURRENT.md` should say:
-- last completed: R0;
+- last numbered completed U-unit: U0.2;
+- last reconciliation: R0;
 - single READY unit: U0.3;
 - frontier: real persistent operator canary.
+
+This preserves the existing front-door guard's U-unit structural contract without letting that
+implementation detail erase the later R0 reconciliation.
 
 R0 is a reconciliation unit, not a new long-running programme.
