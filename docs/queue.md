@@ -8,8 +8,8 @@ Authority: `docs/program/usability-closure/PROGRAM_CHARTER.md`
 Current pointer: `docs/program/usability-closure/CURRENT.md`
 
 - [x] U0.1 — store lifecycle + mirror freshness invariant — DONE
-- [ ] U0.2 — truthful front door + current-state routing — READY
-- [ ] U0.3 — real persistent operator canary + Gate U0 packet — BLOCKED on U0.2
+- [x] U0.2 — truthful front door + current-state routing — DONE
+- [ ] U0.3 — real persistent operator canary + Gate U0 packet — READY
 - [ ] U1.1 — canonical admission/read-model architecture decision — UNAUTHORIZED until Gate U0 accepted
 - [ ] U1.2 — minimum admission metadata + T-P2 promotion — BLOCKED on U1.1 operator decision
 - [ ] U1.3 — deterministic unified Garden read model — BLOCKED on U1.2
@@ -19,6 +19,33 @@ Current pointer: `docs/program/usability-closure/CURRENT.md`
 Do not append execution transcripts to this section. On closeout, change the checkbox/status and put evidence in the unit handoff/gate packet.
 
 Existing issues/debt remain in their current queue sections. If U0.2 closes issue #27, update that issue/queue entry explicitly rather than leaving duplicate open truth.
+
+## Closed — 2026-09-17 U0.2 (truthful front door + current-state routing)
+
+- [x] **U0.2 — DONE.** The front door is truthful and routes through one live-status authority
+      (`docs/program/usability-closure/CURRENT.md`); new CI-wired guard
+      `scripts/check_front_door.py` (27 checks, count-guarded, 10 registered negative controls
+      `fd1`–`fd10`; the committed control table moves 47 → **57** over **15** checkers). The
+      contradiction table (18 rows), all four review rounds with their dispositions, the negative
+      controls, the 18-case must-stay-green battery and the limits are in
+      `GARDEN_U0_2_HANDOFF.md`. `quotes.csv` / `sources.csv` byte-identical (`9766db8c…` /
+      `7aafcb67…`); historical packets (`docs/program/W1_*.md`, `docs/audit/**`, the other root
+      handoffs) byte-unchanged.
+      **Landing:** commits `c6e7099` + `08995b2` + `e38253e` + `32c4d3a` + `8b300cf`, PR
+      [#57](https://github.com/mschwar/Garden-of-Wisdom/pull/57), **merged as `5acc990`**
+      (2026-09-17). CI: PR smoke run
+      [35293953927](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35293953927)
+      **success** — the job log's own lines show the new step executing and the controls genuinely
+      firing (`RESULT: PASS (27 checks)` for the guard, `RESULT: PASS (57 controls fired, 9 harness
+      self-tests)` for the harness), not merely the step exiting 0; GitGuardian **pass**; on `main`
+      after the merge, Pages deploy run
+      [35294761885](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35294761885)
+      **success**. Live acceptance on the merged `main` via `scripts/check_live_pages.py`: all 9
+      checks **PASS**, both live CSVs byte-identical. Issue
+      [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) is satisfied by this unit and is
+      closed deliberately by comment carrying the artefact evidence (`AGENTS.md` is 119 lines,
+      `grep -c 'garden_' AGENTS.md` returns 12, and the command surface is named) — never by a
+      closing keyword. Design trail: `GARDEN_U0_2_HANDOFF.md`.
 
 ## Open — data curation
 
@@ -508,7 +535,7 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       carry one" (that 43 was the per-`tradition` count; corpus-wide it is 189, of which the same **13**
       carry a locator). Deciding this moved the D6 curation counts, as predicted — see the D6 item and
       "Closed — 2026-09-13 near-duplicate sweep scope + citation rule (issue #34)" below.
-- [ ] **`AGENTS.md` still does not describe the corpus-program command surface** — and still omits the
+- [x] **`AGENTS.md` still does not describe the corpus-program command surface** — and still omits the
       W1 read-only rule. Issue [#27](https://github.com/mschwar/Garden-of-Wisdom/issues/27) had been
       *closed as COMPLETED*, but the file is unchanged at `main` (`grep -c 'garden_' AGENTS.md` → 0, 63
       lines, last touched by `31f06e0`), so the documented resume path — "read `AGENTS.md` first" — is
@@ -535,7 +562,7 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
 
 ### Open — discovered during W1.3 (filed, NOT fixed in passing)
 
-- [ ] **`AGENTS.md` does not describe the corpus-program command surface.** The first file every
+- [x] **`AGENTS.md` does not describe the corpus-program command surface.** The first file every
       agent reads lists `validate_quotes.py`, the homepage-preview export and `python3 -m http.server`
       — and nothing about `check_program_contracts.py`, `smoke_quote_browser.py`, the W1 store/
       envelope/submit commands, or the **W1 cross-unit rule that `quotes.csv` and `sources.csv` are

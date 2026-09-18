@@ -12,11 +12,11 @@
 
 ## Current READY unit
 
-`U0.2 — truthful front door + current-state routing`
+`U0.3 — real persistent operator canary + Gate U0 packet`
 
 ## Last completed unit
 
-`U0.1 — store lifecycle + mirror freshness invariant`
+`U0.2 — truthful front door + current-state routing`
 
 ## What is usable now
 
@@ -30,7 +30,7 @@
 
 ## Current frontier
 
-The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front-door docs (AGENTS.md, README.md, docs/program/README.md, PRODUCT_DOCTRINE.md) route live status here and are guarded by `scripts/check_front_door.py`. The next frontier is the real persistent operator canary (U0.3): a real operator action must survive a restart and a rebuild of the local store from the committed mirror.
+The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front door is truthful and routed through this file, and is guarded by `scripts/check_front_door.py` (27 checks, CI-wired, 10 registered controls). The frontier is the real persistent operator canary (U0.3): a real operator action must survive a restart and a rebuild of the local store from the committed mirror, and produce the Gate U0 packet.
 
 ## Gate U0 proof target
 

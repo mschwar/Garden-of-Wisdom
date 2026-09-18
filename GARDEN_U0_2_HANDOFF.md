@@ -472,6 +472,30 @@ shasum -a 256 quotes.csv sources.csv       9766db8c… / 7aafcb67…  (byte-iden
 No persistence mechanics, admission mechanics, browser changes, ontology cleanup or W2 were
 touched. The unit stops here; U0.3 (the real persistent operator canary) is not started.
 
+## Landing
+
+- **Merged:** PR [#57](https://github.com/mschwar/Garden-of-Wisdom/pull/57) — commits `c6e7099`,
+  `08995b2`, `e38253e`, `32c4d3a`, `8b300cf`, **merged as `5acc990`** (2026-09-17).
+- **CI (PR head `8b300cf`):** smoke run
+  [35293953927](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35293953927)
+  **success**. The job log's own lines — not just the step exit code — show the new guard executing
+  and the controls genuinely firing: `RESULT: PASS (27 checks)`,
+  `RESULT: PASS (57 controls fired, 9 harness self-tests)`, `checkers: 15 of 15 selected,
+  0 skipped`, plus the individual `first FAIL:` lines each control aimed at. GitGuardian **pass**.
+- **On `main` after the merge:** Pages deploy run
+  [35294761885](https://github.com/mschwar/Garden-of-Wisdom/actions/runs/35294761885) **success**.
+- **Live acceptance on the merged `main`**, executed with `scripts/check_live_pages.py`:
+  `/`, `/browser/index.html`, `/quotes.csv`, `/sources.csv` all **200**; `/.gitignore`,
+  `/.git/config`, `/.github/workflows/pages.yml` all **404**; both live CSVs `sha256`-identical to
+  the repo (`9766db8c…` / `7aafcb67…`) → `RESULT: PASS (9 checks)`.
+- **Post-merge `main` re-verification:** `check_front_door.py` `RESULT: PASS (27 checks)`,
+  `validate_quotes.py` `RESULT: PASS`, `check_pages_contract.py` `RESULT: PASS (16 checks)`,
+  harness anchor check `RESULT: PASS (57 anchors)`.
+- **Closeout:** `CURRENT.md` names U0.2 as the last completed unit and U0.3 as the single READY
+  unit; `docs/queue.md` carries the "Closed — 2026-09-17 U0.2" section and marks the two
+  issue-#27 entries satisfied. Issue #27 was closed deliberately by comment carrying the artefact
+  evidence, not by a keyword.
+
 ## Foreign QA prompt
 
 Review U0.2 as a cold-start agent. Ignore this handoff's explanation at first: starting from
