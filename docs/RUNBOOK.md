@@ -65,7 +65,10 @@ standard-library `sqlite3`, no server, no network) plus a deterministic text exp
 (`garden.export.txt`) that is the committed, diffable mirror. `create` is idempotent — a second
 run applies nothing and says so. `import --dir DIR --from FILE` loads an export (a no-op if the
 store already holds that exact text) and `verify --dir DIR` re-runs the
-export → re-import → byte-identical comparison. `scripts/check_garden_store.py` runs the full
+export → re-import → byte-identical comparison. Store lifecycle management (`bootstrap`
+to hydrate SQLite from the mirror, `status` to check freshness, and `sync` to refresh the mirror)
+is detailed under §"Manage store lifecycle: bootstrap, freshness status, and sync (U0.1)".
+`scripts/check_garden_store.py` runs the full
 acceptance in a throwaway temp directory — create-from-empty, write, read back, export, wipe,
 re-import, byte-identical, plus idempotency, append-only/immutability enforcement, the four
 state vocabularies, and requirement 6's queries at ~2,000 rows — and exits non-zero with
@@ -259,6 +262,34 @@ python3 scripts/check_garden_legacy_batch.py                     # the D4 accept
 
 `seed` is idempotent for the same id set and refuses a conflicting capture or membership.
 `quotes.csv` / `sources.csv` are never written. See `docs/program/D4_LEGACY_BATCH_CAPTURE.md`.
+
+## Manage store lifecycle: bootstrap, freshness status, and sync (U0.1)
+
+The machine-local SQLite database (`garden.sqlite3`) and the committed text mirror
+(`garden.export.txt`) are managed via deterministic lifecycle commands:
+
+```bash
+python3 scripts/garden_store.py bootstrap --dir data/store   # hydrate local SQLite from committed mirror
+python3 scripts/garden_store.py status    --dir data/store   # report freshness (CURRENT/STALE/MISSING_DB/MISSING_MIRROR)
+python3 scripts/garden_store.py sync      --dir data/store   # atomically refresh committed mirror from store
+python3 scripts/check_garden_lifecycle.py                    # acceptance suite (42 checks)
+```
+
+Lifecycle semantics and invariants:
+
+1. **Bootstrap / hydrate**: On a fresh clone or whenever local SQLite is absent, `bootstrap`
+   reconstructs the local SQLite database from `garden.export.txt`. If SQLite and mirror both
+   exist and match, it is a no-op returning `CURRENT`. If they diverge, `bootstrap` refuses
+   to guess or clobber either side.
+2. **Freshness status**: Reports `CURRENT` (store matches mirror), `STALE` (store and mirror
+   differ), `MISSING_DB` (SQLite file absent), or `MISSING_MIRROR` (export file absent).
+3. **Mutation invariant**: All operator-facing mutating commands (`garden_submit.py`,
+   `garden_normalize.py`, `garden_review.py`, `garden_ledger.py`, `garden_legacy_batch.py`)
+   automatically call `sync_mirror()` on success. A successful command never leaves a silently
+   stale mirror. If an un-synced mutation occurs, `status` detects `STALE`.
+4. **Divergence safety and recovery**: If `status` reports `STALE`, the operator can run
+   `garden_store.py sync --dir DIR` to refresh the mirror from the local store, or delete
+   `garden.sqlite3` and run `bootstrap` to revert local state from the committed mirror.
 
 ## Run the browser locally
 

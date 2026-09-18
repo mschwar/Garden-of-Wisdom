@@ -96,7 +96,7 @@ CHECK_TIMEOUT_SECONDS = 300
 # run, exactly as deleting a check fails check_pages_contract.py. It is a floor, not a proof:
 # a control whose mutation is edited to a no-op is caught by the COVERAGE GAP verdict above,
 # which is the real guard.
-EXPECTED_CONTROLS = 44
+EXPECTED_CONTROLS = 47
 EXPECTED_SELF_TESTS = 9
 
 
@@ -630,6 +630,42 @@ CHECKERS: tuple[Checker, ...] = (
                 "['disputed', 'unverified', 'verified'] -- D3 chose the side-car ledger 'instead "
                 "of widening the 3-valued quotes.csv enum', and this suite (not just "
                 "validate_quotes.py) falsifies that ruling directly -- ['1']",
+            ),
+        ),
+    ),
+    Checker(
+        "scripts/check_garden_lifecycle.py",
+        (
+            Mutation(
+                "u1", "the mutation invariant is dropped from submit: mirror stays stale",
+                "scripts/garden_submit.py",
+                "        counts = store.counts()\n"
+                "        store.sync_mirror()  # U0.1: a successful mutation must leave the committed mirror current\n",
+                "        counts = store.counts()\n",
+                "FAIL: 4a. after a successful submit the mirror is current (mutation invariant) -- STALE",
+            ),
+            Mutation(
+                "u2", "the divergence check in bootstrap is disabled",
+                "scripts/garden_store.py",
+                "        with Store(store_dir) as store:\n"
+                "            if store.export_bytes() == mirror.read_bytes():\n"
+                "                return \"CURRENT\"\n"
+                "        raise StoreError(\n",
+                "        with Store(store_dir) as store:\n"
+                "            if True:\n"
+                "                return \"CURRENT\"\n"
+                "        raise StoreError(\n",
+                "FAIL: 6a. bootstrap did not refuse a divergent store + mirror",
+            ),
+            Mutation(
+                "u3", "store_status fails to detect a stale mirror",
+                "scripts/garden_store.py",
+                "    with Store(store_dir) as store:\n"
+                "        if store.export_bytes() == mirror.read_bytes():\n"
+                "            return \"CURRENT\"\n"
+                "    return \"STALE\"\n",
+                "    return \"CURRENT\"\n",
+                "FAIL: 5a. a store mutated behind the mirror reports STALE",
             ),
         ),
     ),

@@ -12,21 +12,22 @@
 
 ## Current READY unit
 
-`U0.1 — store lifecycle + mirror freshness invariant`
+`U0.2 — truthful front door + current-state routing`
 
 ## Last completed unit
 
-`programme bootstrap`
+`U0.1 — store lifecycle + mirror freshness invariant`
 
 ## What is usable now
 
 - Existing 324-row Garden browser/search/filter/copy surface.
 - W1 candidate capture → normalization → duplicate hints → operator review through `eligible`.
 - CI/acceptance/negative-control machinery around these surfaces.
+- Mechanized store lifecycle (bootstrap, status, sync) and mutation invariant keeping committed mirror current.
 
 ## Current frontier
 
-The W1 SQLite store is machine-local while the deterministic export is committed separately. Ordinary mutation can therefore leave the committed mirror stale unless the operator remembers the export ritual. Fresh-clone hydration is also a separate/manual path.
+The SQLite↔mirror persistence lifecycle is mechanized with automatic mirror sync across all operator mutation surfaces, freshness status detection, divergence protection, and fresh-clone bootstrap. The front-door docs (README.md, AGENTS.md) still present outdated paths and need truthful current-state routing.
 
 ## Gate U0 proof target
 
