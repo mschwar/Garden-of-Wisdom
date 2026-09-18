@@ -80,5 +80,7 @@ Run the existing front-door/program-contract checks. Runtime/data are deliberate
 
 ## Stop condition
 
-R0 merges, `CURRENT.md` names R0 as last completed, and **U0.3 remains the single READY unit**.
+R0 merges, `CURRENT.md` records R0 under **Last reconciliation**, and **U0.3 remains the single
+READY unit**. The existing front-door guard structurally defines “last completed unit” as a numbered
+U-unit, so U0.2 remains that field until a future product need justifies generalizing the guard.
 Do not begin U0.3 inside R0.
