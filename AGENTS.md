@@ -86,8 +86,9 @@ reference.
 - Documentation under `docs/`.
 - The browser (`browser/`) — pure static HTML/CSS/JS, no backend, no framework.
 - `scripts/validate_quotes.py` — improving checks is always welcome.
-- Adding new `unverified` quotes with correct schema, as long as `scripts/validate_quotes.py`
-  still passes.
+- Small documentation/test improvements that preserve product/state authority. **Do not add new
+  Garden passages by directly appending `quotes.csv` rows.** New material enters through the
+  candidate workbench; canonical Garden admission is operator-controlled.
 
 ## What requires human/provenance review before proceeding
 
