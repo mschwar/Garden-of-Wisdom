@@ -27,6 +27,14 @@ reconciliation outside the numbered U-unit chain; `scripts/check_front_door.py` 
 “last completed unit” as a `U<gate>.<unit>` execution unit, so U0.2 remains the structural
 last-completed U-unit while this explicit field records the later reconciliation.
 
+## What is usable now
+
+- The existing Garden browser and W1 candidate workbench are usable as summarized in
+  `docs/PRODUCT_REALITY.md`; this section exists only as the execution front door's compact
+  capability pointer, not as a second product dashboard.
+- Store bootstrap/status/sync and front-door resume routing are mechanized; U0.3 is the pending
+  real-state ecological proof.
+
 ## Current frontier
 
 The repo now has:
