@@ -87,7 +87,9 @@ Check that:
 Then give a frontier synthesis:
 - what is genuinely usable now;
 - remaining dependability gaps;
-- whether the highest-leverage next move is W2 research, operator ergonomics, release hardening, or something else;
+- the exact `docs/PRODUCT_REALITY.md` changes required by the accepted evidence;
+- whether the highest-leverage next move is research, operator ergonomics, exploration/memorization,
+  release hardening, or something else;
 - what should remain deferred.
 
-Do not authorize W2 automatically.
+Do not authorize W2 or any successor capability automatically.
