@@ -22,6 +22,7 @@ posture, and the bounded W1 decomposition.
 | Question | Canonical doc |
 |---|---|
 | What is Garden of Wisdom, and what is it not? | `../product/PRODUCT_DOCTRINE.md` |
+| What actually works, where does use break, and what is the current system constraint? | `../PRODUCT_REALITY.md` |
 | What are the CSVs, their schema, and known data issues? | `../data/DATA_CONTRACT.md` |
 | Why was a past choice made? | `../DECISIONS.md` (append-only) |
 | What work is open? | `../queue.md` |
