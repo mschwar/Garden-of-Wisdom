@@ -143,6 +143,22 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
 
 ## Open — infra
 
+- [ ] **The front-door guard's must-stay-green battery is local-only evidence; make it durable**
+      (U0.2 follow-up, discovered at closeout). `scripts/check_front_door.py` ships with 10
+      red-direction controls and **no CI-reapplied false-positive check**, because the committed
+      harness cannot register a `GREEN_OK` control (issue
+      [#56](https://github.com/mschwar/Garden-of-Wisdom/issues/56)). The false-positive direction
+      is currently covered by a throwaway script that lived at `/tmp/u02_staygreen.py` during the
+      unit (18 legitimate edits; 6 of them the round-3 reviewer's own false positives) plus a replay
+      probe (`/tmp/u02_fp_probe.py`, 15 cases). That is exactly the arrangement issue #43 exists to
+      replace: evidence that only a handoff records cannot be re-verified by anyone else, and it
+      disappears with the temp directory. **Proposal:** commit the battery as
+      `scripts/check_front_door_staygreen.py` (stdlib, `RESULT: PASS`/`FAIL`, its own count guard and
+      its own negative controls — a mutation that breaks a legitimate edit must make it fail) and add
+      it to the `browser-smoke.yml` guard step, so the direction is CI-enforced. Not done in U0.2
+      because a new CI-run checker needs its own review round, which is not the closeout of a
+      documentation unit; it is queued here with the rationale rather than slipped in after merge.
+
 - [x] Wire the D3 unverifiable-ledger acceptance suite into CI. `browser-smoke.yml`'s "Run the W1
       corpus-program acceptance suites" step runs the six W1 suites but not the new
       `scripts/check_garden_ledger.py` (45 checks) shipped by the D3 unit. A regression in the
