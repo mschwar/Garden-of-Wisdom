@@ -90,7 +90,7 @@ disputed, unverifiable, or in need of more evidence; the user-facing surface mus
 
 ### Existing Garden
 
-`legacy canonical CSVs → validated projection → static browser → search/filter/copy`
+`legacy canonical CSVs → static browser → search/filter/copy`
 
 This walks dependably for the current 324-row seed corpus.
 
@@ -98,8 +98,10 @@ This walks dependably for the current 324-row seed corpus.
 
 `encounter → capture → normalize → hints → operator curation → eligible → ??? → browser`
 
-This now walks dependably through `eligible`, including restart/reclone recovery, but the
-admission/projection/browser seam is not yet closed.
+The candidate workflow is implemented and tested through `eligible`; U0.1 demonstrated the
+restart/reclone recovery mechanism in deterministic lifecycle tests. **U0.3 still owes ecological
+proof with a real persistent operator passage.** The admission/projection/browser seam is also not
+yet closed.
 
 ## USABLE NOW
 
@@ -193,9 +195,11 @@ Generated projections are derived views, never writable authority.
 
 ## RECOVERY / DEPENDABILITY
 
-Current workbench state is recoverable from the committed mirror into a fresh local SQLite store.
-Divergence is detected rather than guessed away. The remaining dependability gap is product-level:
-newly curated state cannot yet reach the Garden-facing read surface.
+The workbench recovery mechanism is implemented and deterministically demonstrated: the committed
+mirror can rebuild a fresh local SQLite store, and divergence is detected rather than guessed away.
+U0.3 still must prove that path with real persistent operator state. After that, the remaining
+product-level dependability gap is that newly curated state cannot yet reach the Garden-facing read
+surface.
 
 ## WORKLOAD
 
