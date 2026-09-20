@@ -24,7 +24,7 @@ programme's own state machine, in both directions (see §4).
 | | before | after |
 |---|---|---|
 | store | `MISSING_DB` (no local SQLite; mirror only) | hydrated, `CURRENT`, with one real candidate |
-| mirror | `1b5959d1…`, 24,027 bytes, no candidates | `3b5c5407…`, 27,091 bytes, capture + candidate + 2 audit rows |
+| mirror | `1b5959d1…`, 24,027 bytes, no candidates | `ed45243c…`, 27,091 bytes, capture + candidate + 2 audit rows |
 | `CURRENT.md` | `## Current READY unit` = `U0.3` | `## Programme state` = `SYNTHESIS REQUIRED — GATE U0`, READY unit = none |
 | `check_front_door.py` | 27 checks, one-READY-unit contract only | 27 checks, state-aware in both directions, 13 controls |
 
@@ -78,7 +78,13 @@ the operator's. This is the packet's one non-ecological element and it is flagge
 
 ## 2. Recovery evidence
 
-Baseline after the canary: `3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377`, 27,091 bytes.
+Baseline after the canary: `ed45243c1f0889aaf7751675080dc4927aca0d73`, 27,091 bytes.
+
+> **Hash correction (2026-09-20):** this handoff originally recorded the mirror hash as
+> `3b5c5407…`. That hash does not exist in the object database; the actual committed blob for
+> `data/store/garden.export.txt` at the canary commit `8d6aa77` and at the live head `da9e2d0` is
+> `ed45243c1f0889aaf7751675080dc4927aca0d73` (27,091 bytes). All hash references below were
+> corrected to the real blob; the prior `3b5c5407…` record was stale.
 
 **a. Real store, SQLite deleted** (the acceptance criterion in its literal form):
 
@@ -89,8 +95,8 @@ $ python3 scripts/garden_store.py bootstrap --dir data/store
 bootstrap: CURRENT
 $ python3 scripts/garden_store.py export --dir data/store --out /tmp/u03_real_reexport.txt
 export: /tmp/u03_real_reexport.txt (27091 bytes)
-3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377  /tmp/u03_real_reexport.txt
-3b5c5407…  data/store/garden.export.txt      CMP: byte-identical after SQLite deletion + rebuild
+ed45243c1f0889aaf7751675080dc4927aca0d73  /tmp/u03_real_reexport.txt
+ed45243c…  data/store/garden.export.txt      CMP: byte-identical after SQLite deletion + rebuild
 ```
 
 **b. Fresh clone of the pushed branch** (`/tmp/u03_fresh`, clone head `c0e9116`) — the different-machine
@@ -99,11 +105,11 @@ transcript was supplied:
 
 ```
 === SQLite present? (must be absent) ===   total 56 ... garden.export.txt
-3b5c5407…  data/store/garden.export.txt
+ed45243c…  data/store/garden.export.txt
 $ python3 scripts/garden_store.py bootstrap --dir data/store   ->  bootstrap: CURRENT
 $ python3 scripts/garden_store.py export --dir data/store --out /tmp/u03_reexport.txt
-3b5c5407…  /tmp/u03_reexport.txt
-3b5c5407…  data/store/garden.export.txt      CMP: byte-identical
+ed45243c…  /tmp/u03_reexport.txt
+ed45243c…  data/store/garden.export.txt      CMP: byte-identical
 ```
 
 **c. Full state query in that clone** — the ecological claim, not just the bytes:
@@ -130,7 +136,7 @@ recorded, so the canary admitted nothing canonically.
 
 | probe | observed |
 |---|---|
-| real mutation (`submit`) | mirror went `3b5c5407…` → `06727301…` **by itself**; `status: CURRENT` — a supported path cannot leave it stale |
+| real mutation (`submit`) | mirror went `ed45243c…` → `06727301…` **by itself**; `status: CURRENT` — a supported path cannot leave it stale |
 | hand-edit appended to the committed mirror | `status: STALE` |
 | mirror deleted | `status: MISSING_MIRROR` |
 
@@ -144,7 +150,7 @@ including `CURRENT.md`, `SYNTHESIS_GATES.md` and the U0.3 work-unit doc itself. 
 resolved by hand (`CURRENT.md`, `docs/queue.md`, `docs/DECISIONS.md`) keeping **both** sides: R0's
 `## Last reconciliation` section, its `docs/PRODUCT_REALITY.md` pointers and its queue entries are
 preserved, and nothing R0 wrote was dropped. The canary artefact is byte-unchanged by the rebase
-(`data/store/garden.export.txt` is still `3b5c5407…`, re-measured after the rebase), and every guard,
+(`data/store/garden.export.txt` is still `ed45243c…`, re-measured after the rebase), and every guard,
 control and acceptance run below was **re-executed on the rebased tree**, not carried over.
 
 R0's queue disposition in `docs/queue.md` says: *"preserve the landed guards, but do not execute
@@ -254,7 +260,7 @@ bytes were attacked). Verdict: **the claim was not falsified**, with two real fi
 declared coverage gaps.
 
 Reproduced independently, byte-exactly: no SQLite in the clone (only the 27,091-byte mirror), 
-`bootstrap: CURRENT`, re-derived export `3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377`
+`bootstrap: CURRENT`, re-derived export `ed45243c1f0889aaf7751675080dc4927aca0d73`
 identical to the committed mirror, `quotes.csv`/`sources.csv` unchanged against `origin/main`, the
 canary located from the rebuilt store alone, and the two sub-answers — **not canonically admitted**
 (`corpus_state = eligible`) and **research not upgraded** (`not_started`) — confirmed by reading the
@@ -358,7 +364,7 @@ shasum -a 256 quotes.csv sources.csv                9766db8c… / 7aafcb67… (b
 
 | file | change |
 |---|---|
-| `data/store/garden.export.txt` | the canary: +1 capture, +1 candidate, +1 link, **and the 2 audit rows** (committed mirror; `3b5c5407…`, 27,091 bytes) |
+| `data/store/garden.export.txt` | the canary: +1 capture, +1 candidate, +1 link, **and the 2 audit rows** (committed mirror; `ed45243c…`, 27,091 bytes) |
 | `docs/program/usability-closure/U0_GATE_PACKET.md` | new — the Gate U0 packet |
 | `GARDEN_U0_3_HANDOFF.md` | new — this handoff |
 | `docs/program/usability-closure/CURRENT.md` | `## Programme state` = `SYNTHESIS REQUIRED — GATE U0`; READY = none; last completed = U0.3; frontier/proof-target updated (R0's `## Last reconciliation` and product-reality pointers preserved) |

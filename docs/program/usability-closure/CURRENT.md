@@ -46,7 +46,7 @@ is now U0.3.
   own capture `cap-2026-09-18-0001` and candidate `cand-2026-09-18-0001`, with its curation
   decision, survived mirror sync, deletion of the local SQLite file, bootstrap from the committed
   mirror, and a fresh clone of the pushed branch — the export bytes are identical
-  (`3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377`, 27,091 bytes) in all of them.
+  (`ed45243c1f0889aaf7751675080dc4927aca0d73`, 27,091 bytes) in all of them.
 
 ## Current frontier
 

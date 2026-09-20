@@ -37,7 +37,7 @@ Existing issues/debt remain in their current queue sections. If U0.2 closes issu
       candidate_only → eligible`; `research_state` untouched; the corpus state is capped at
       `eligible`, so nothing was canonically admitted). The committed mirror
       `data/store/garden.export.txt` is
-      `3b5c5407f5347835e091ad36bf5fb945c8ff2a4d758cdd902a8ca1c05b4b6377` (27,091 bytes) and
+      `ed45243c1f0889aaf7751675080dc4927aca0d73` (27,091 bytes) and
       **byte-identical** after all four recoveries: mirror sync, deletion of the local SQLite file on
       the real store, bootstrap from the committed mirror, and a fresh clone of the pushed branch.
       `scripts/check_front_door.py` was extended to express the state this unit's stop condition

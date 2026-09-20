@@ -59,13 +59,18 @@ every other claim is a machine verdict reproducible from the committed tree.
 
 ## 3. Recovery: four independent reconstructions, byte-identical
 
-Baseline (before the canary): `1b5959d1…`, 24,027 bytes. After: `3b5c5407…`, 27,091 bytes.
+Baseline (before the canary): `1b5959d1…`, 24,027 bytes. After: `ed45243c…`, 27,091 bytes.
+
+> **Hash correction (2026-09-20):** this packet originally recorded the mirror hash as
+> `3b5c5407…`. That hash does not exist in the object database; the actual committed blob for
+> `data/store/garden.export.txt` is `ed45243c1f0889aaf7751675080dc4927aca0d73` (27,091 bytes). All
+> hash references below were corrected to the real blob; the prior `3b5c5407…` record was stale.
 
 | # | What was done to the state | Result |
 |---|---|---|
 | 1 | Real operator mutations (submit, normalize, hints, accept) through the CLIs | mirror auto-synced; `status: CURRENT` after every one; no manual `sync` needed |
 | 2 | `rm data/store/garden.sqlite3` on the **real** store | `status: MISSING_DB` → `bootstrap: CURRENT` → re-derived export **byte-identical** to the committed mirror |
-| 3 | Fresh `git clone` of the pushed branch into `/tmp/u03_fresh` (only `garden.export.txt` present, **no SQLite**) | `bootstrap: CURRENT`; `export --out` produced `3b5c5407…`, `cmp` → identical, 27,091 bytes both sides |
+| 3 | Fresh `git clone` of the pushed branch into `/tmp/u03_fresh` (only `garden.export.txt` present, **no SQLite**) | `bootstrap: CURRENT`; `export --out` produced `ed45243c…`, `cmp` → identical, 27,091 bytes both sides |
 | 4 | Same clone, full state query | candidate, capture, normalization notes, `accepted`/`eligible`, **both** audit rows and the 324-row legacy batch all recovered |
 
 Reconstruction #3 is the different-machine case: the clone was taken from `origin`, so it consumed
@@ -78,7 +83,7 @@ matter. All three probes ran in throwaway copies under `/tmp`:
 
 | probe | expectation | observed |
 |---|---|---|
-| a real mutation (`garden_submit.py submit`) | mirror refreshed by the mutation itself | `3b5c5407…` → `06727301…`, `status: CURRENT` — it cannot go stale via a supported path |
+| a real mutation (`garden_submit.py submit`) | mirror refreshed by the mutation itself | `ed45243c…` → `06727301…`, `status: CURRENT` — it cannot go stale via a supported path |
 | a hand-edit appended to the committed mirror | divergence **detected** | `status: STALE` |
 | the mirror deleted | reported | `status: MISSING_MIRROR` |
 
