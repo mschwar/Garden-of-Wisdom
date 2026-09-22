@@ -26,7 +26,7 @@ programme's own state machine, in both directions (see §4).
 | store | `MISSING_DB` (no local SQLite; mirror only) | hydrated, `CURRENT`, with one real candidate |
 | mirror | `1b5959d1…`, 24,027 bytes, no candidates | `ed45243c…`, 27,091 bytes, capture + candidate + 2 audit rows |
 | `CURRENT.md` | `## Current READY unit` = `U0.3` | `## Programme state` = `SYNTHESIS REQUIRED — GATE U0`, READY unit = none |
-| `check_front_door.py` | 27 checks, one-READY-unit contract only | 27 checks, state-aware in both directions, 13 controls |
+| `check_front_door.py` | 27 checks, one-READY-unit contract only | 27 checks, state-aware in both directions, 14 controls |
 
 ## 1. The canary, verbatim
 
@@ -80,11 +80,13 @@ the operator's. This is the packet's one non-ecological element and it is flagge
 
 Baseline after the canary: `ed45243c1f0889aaf7751675080dc4927aca0d73`, 27,091 bytes.
 
-> **Hash correction (2026-09-20):** this handoff originally recorded the mirror hash as
-> `3b5c5407…`. That hash does not exist in the object database; the actual committed blob for
-> `data/store/garden.export.txt` at the canary commit `8d6aa77` and at the live head `da9e2d0` is
-> `ed45243c1f0889aaf7751675080dc4927aca0d73` (27,091 bytes). All hash references below were
-> corrected to the real blob; the prior `3b5c5407…` record was stale.
+> **Hash-type note (2026-09-20):** this handoff originally recorded the mirror hash as
+> `3b5c5407…`. That value is the file's **sha256** (`shasum -a 256 data/store/garden.export.txt`),
+> while `ed45243c1f0889aaf7751675080dc4927aca0d73` is the **git blob SHA-1** of the same
+> 27,091-byte file at the canary commit `8d6aa77` and at the live head `da9e2d0`. Both are valid
+> hashes of the identical file — different algorithms, not one being stale. All hash references
+> below use the git blob SHA-1 (`ed45243c…`) for consistency with the store tooling's object
+> identity; the sha256 (`3b5c5407…`) remains the file-content hash.
 
 **a. Real store, SQLite deleted** (the acceptance criterion in its literal form):
 
@@ -194,7 +196,7 @@ CI-wired guard, so either the guard learned the state or the unit could not comp
 
 ## 5. Negative controls
 
-`scripts/run_negative_controls.py` — table extended **57 → 60** controls. `fd3` was re-aimed: its
+`scripts/run_negative_controls.py` — table extended **57 → 61** controls. `fd3` was re-aimed: its
 mutation (flip a queue line to `READY`) now runs against a tree in the synthesis state, so its
 expected first `FAIL:` line is check 10's state-aware wording.
 
@@ -323,9 +325,9 @@ python3 scripts/validate_quotes.py                  RESULT: PASS                
 python3 scripts/check_program_contracts.py          RESULT: PASS                  [both interpreters]
 python3 scripts/check_pages_contract.py             RESULT: PASS (16 checks)      [both interpreters]
 python3 scripts/check_garden_*.py                   RESULT: PASS (all ten)        [both interpreters]
-python3 scripts/run_negative_controls.py            RESULT: PASS (60 controls fired)
+python3 scripts/run_negative_controls.py            RESULT: PASS (61 controls fired)
 python3 scripts/run_negative_controls.py --checker scripts/check_front_door.py
-                                                    RESULT: PASS (13 controls fired)
+                                                    RESULT: PASS (14 controls fired)
 shasum -a 256 quotes.csv sources.csv                9766db8c… / 7aafcb67… (byte-identical)
 ```
 
@@ -369,7 +371,7 @@ shasum -a 256 quotes.csv sources.csv                9766db8c… / 7aafcb67… (b
 | `GARDEN_U0_3_HANDOFF.md` | new — this handoff |
 | `docs/program/usability-closure/CURRENT.md` | `## Programme state` = `SYNTHESIS REQUIRED — GATE U0`; READY = none; last completed = U0.3; frontier/proof-target updated (R0's `## Last reconciliation` and product-reality pointers preserved) |
 | `scripts/check_front_door.py` | state-aware in both directions; structure tested against heading lines; `EXPECTED_CHECKS` still 27 |
-| `scripts/run_negative_controls.py` | `fd3` re-aimed, `fd11`–`fd13` added, table 57 → 60 |
+| `scripts/run_negative_controls.py` | `fd3` re-aimed, `fd11`–`fd14` added, table 57 → 61 |
 | `docs/queue.md` | U0.3 closed section, the two new findings, the #56 item extended (R0's line, R0 closed section and R0 disposition preserved) |
 | `docs/DECISIONS.md` | one appended dated entry (R0's entry preserved) |
 | `docs/PRODUCT_REALITY.md` | recovery moves from mechanism proof to ecological proof (the R0-amended in-scope item) |

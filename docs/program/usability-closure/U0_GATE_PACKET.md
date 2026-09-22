@@ -62,9 +62,11 @@ every other claim is a machine verdict reproducible from the committed tree.
 Baseline (before the canary): `1b5959d1…`, 24,027 bytes. After: `ed45243c…`, 27,091 bytes.
 
 > **Hash correction (2026-09-20):** this packet originally recorded the mirror hash as
-> `3b5c5407…`. That hash does not exist in the object database; the actual committed blob for
-> `data/store/garden.export.txt` is `ed45243c1f0889aaf7751675080dc4927aca0d73` (27,091 bytes). All
-> hash references below were corrected to the real blob; the prior `3b5c5407…` record was stale.
+> `3b5c5407…`. That value is the file's **sha256** (`shasum -a 256 data/store/garden.export.txt`),
+> while `ed45243c1f0889aaf7751675080dc4927aca0d73` is the **git blob SHA-1** of the same
+> 27,091-byte file. Both are valid hashes of the identical file — different algorithms, not one
+> being stale. All hash references below use the git blob SHA-1 (`ed45243c…`) for consistency
+> with the store tooling's object identity; the sha256 (`3b5c5407…`) remains the file-content hash.
 
 | # | What was done to the state | Result |
 |---|---|---|
