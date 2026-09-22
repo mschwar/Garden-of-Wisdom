@@ -98,10 +98,15 @@ This walks dependably for the current 324-row seed corpus.
 
 `encounter → capture → normalize → hints → operator curation → eligible → ??? → browser`
 
-The candidate workflow is implemented and tested through `eligible`; U0.1 demonstrated the
-restart/reclone recovery mechanism in deterministic lifecycle tests. **U0.3 still owes ecological
-proof with a real persistent operator passage.** The admission/projection/browser seam is also not
-yet closed.
+The candidate workflow is implemented and tested through `eligible`, and U0.1 demonstrated the
+restart/reclone recovery mechanism in deterministic lifecycle tests. **U0.3 has now supplied the
+ecological proof with a real persistent operator passage** — capture `cap-2026-09-18-0001`,
+candidate `cand-2026-09-18-0001` (*The Hidden Words*, Arabic 22) — which survived mirror sync,
+deletion of the local SQLite store, bootstrap from the committed mirror, and a fresh clone of the
+pushed branch, with the export byte-identical throughout. Gate U0 acceptance itself is still pending
+synthesis, and the one non-ecological element (the curation verdict was recorded by the agent on the
+operator's behalf) is disclosed in `U0_GATE_PACKET.md` §2. The admission/projection/browser seam is
+also not yet closed.
 
 ## USABLE NOW
 
@@ -196,10 +201,12 @@ Generated projections are derived views, never writable authority.
 ## RECOVERY / DEPENDABILITY
 
 The workbench recovery mechanism is implemented and deterministically demonstrated: the committed
-mirror can rebuild a fresh local SQLite store, and divergence is detected rather than guessed away.
-U0.3 still must prove that path with real persistent operator state. After that, the remaining
-product-level dependability gap is that newly curated state cannot yet reach the Garden-facing read
-surface.
+mirror can rebuild a fresh local SQLite store, and divergence is detected rather than guessed away
+(`status` reports `STALE` for a hand-edited mirror and `MISSING_MIRROR` when it is absent, while a
+supported mutation path cannot leave the mirror stale at all). **U0.3 proved that path with real
+persistent operator state** — the full transcript, including the four byte-identical recoveries, is
+in `docs/program/usability-closure/U0_GATE_PACKET.md`. The remaining product-level dependability gap
+is that newly curated state cannot yet reach the Garden-facing read surface.
 
 ## WORKLOAD
 

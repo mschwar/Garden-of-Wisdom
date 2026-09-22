@@ -98,11 +98,15 @@ must turn it red.
 
 ## The control table
 
-44 controls over 13 checkers: 36 from the original table, the 3 D4 `b1`–`b3` controls added
-with the legacy-batch-capture unit, and the 5 controls (`n4`, `r4`, `x3`, `l4`, `g4`)
-registered 2026-09-16, which move the five checker-coverage gaps issue #45 closed out of
-prose and into the table itself. `scripts/run_negative_controls.py --list` prints the same
-table with the exact anchor and replacement strings.
+**60** controls over **15** checkers, re-measured 2026-09-18: 36 from the original table, the 3 D4
+`b1`–`b3` controls added with the legacy-batch-capture unit, the 5 controls (`n4`, `r4`, `x3`,
+`l4`, `g4`) registered 2026-09-16 that moved the five checker-coverage gaps issue #45 closed out of
+prose and into the table itself, the 10 front-door controls `fd1`–`fd10` (U0.2), and `fd11`–`fd13`
+(U0.3, which pin the `SYNTHESIS REQUIRED` programme state). **Superseded:** this section said **44**
+until U0.3 re-measured it — U0.2 had already taken the table 47 → 57 without updating this file or
+`docs/RUNBOOK.md`, so the recorded number was two units stale. Re-measure; do not trust a count in
+prose. `scripts/run_negative_controls.py --list` prints the same table with the exact anchor and
+replacement strings.
 
 | checker | id | mutation | asserted first `FAIL:` |
 |---|---|---|---|
