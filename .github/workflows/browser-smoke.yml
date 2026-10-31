@@ -10,9 +10,6 @@ name: Quote browser smoke test
 # It is independent of the Pages deploy: this workflow never publishes anything.
 
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
