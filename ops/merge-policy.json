@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "required_checks": ["GitGuardian Security Checks"],
+  "retired_checks": ["smoke", "SonarCloud Code Analysis"],
+  "base_branch": "main",
+  "notes": "Hosted cloud-VM browser-smoke workflow retired to workflow_dispatch (pages.yml preserved); run local verification on the host and require GitGuardian Security Checks on the PR head."
+}
