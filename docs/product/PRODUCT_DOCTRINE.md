@@ -92,5 +92,5 @@ The bounded usability-closure programme exists to prove:
 Research, richer exploration, memorization/resurfacing, discovery adapters and any Initiate feed are
 later capability horizons. They are not authorized merely by being named here.
 
-**Live execution status and the single READY unit live in
+**Live execution status and the single authorized work unit (READY) live in
 `docs/program/usability-closure/CURRENT.md`.**

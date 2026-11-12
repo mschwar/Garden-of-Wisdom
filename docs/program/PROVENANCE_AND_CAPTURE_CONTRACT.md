@@ -52,7 +52,7 @@ Optional but captured whenever available:
 
 The existing rows in `quotes.csv` have **no reconstructable per-row encounter**: what the
 original author saw, where, when, and typed-in-as-is was never recorded. W0 refused to invent
-one. Decision D4 (2026-09-12) supersedes the open policy question: the corpus gets **ONE
+one. Decision D4 (2026-09-12) supersedes the open policy question: the corpus gets **one
 batch capture** for the 2026-09-11 rehabilitation import — a true, verifiable statement about
 the frozen archive + documented transform — not 324 fabricated encounters.
 

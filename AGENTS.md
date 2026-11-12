@@ -15,8 +15,8 @@ The durable domain object is **Passage**; “quote” is a legacy data/surface t
 **Product reality is not in this file.** It lives in `docs/PRODUCT_REALITY.md`.
 
 **Live programme status is not in this file.** It lives in
-`docs/program/usability-closure/CURRENT.md` — the current gate, the single READY unit, the
-last completed unit, the frontier. If this file and CURRENT disagree about status, CURRENT
+`docs/program/usability-closure/CURRENT.md` — the current gate, the single authorized work unit (READY), the
+last completed unit, the frontier. If this file and `CURRENT.md` disagree about status, `CURRENT.md`
 wins and this file is the bug (`scripts/check_front_door.py` enforces that routing).
 
 ## What data is authoritative vs provisional
@@ -48,6 +48,8 @@ Everything below is stdlib-only except the browser smoke test. `docs/RUNBOOK.md`
 arguments and the expected output for each — this list is the command surface, not the
 reference.
 
+- `/usr/bin/python3 -m unittest tests/test_doc_hygiene.py -v` — zero-dependency documentation
+  hygiene gate auditing [README.md](README.md#tldr), `AGENTS.md`, and active human-facing guides.
 - `python3 scripts/validate_quotes.py` — deterministic data validator. Run before and after
   any change to `quotes.csv` or `sources.csv`.
 - `python3 scripts/check_program_contracts.py` — doctrine and fixture consistency for the
@@ -69,7 +71,7 @@ reference.
 - `python3 scripts/run_negative_controls.py` — re-applies the committed negative-control table
   so every checker's falsifiability is machine-checked rather than asserted in a handoff.
 - `python3 scripts/check_front_door.py` — asserts the front-door docs still describe the
-  current command surface and route live status to CURRENT.
+  current command surface and route live status to `CURRENT.md`.
 - `python3 scripts/check_pages_contract.py` and `python3 scripts/check_live_pages.py` — the
   GitHub Pages deploy contract, and live acceptance (four 200s, three 404s, live CSV
   byte-identity against the repo).
@@ -105,7 +107,18 @@ reference.
 - Deleting or merging rows flagged as near-duplicates. Some are legitimate variant
   translations of the same verse; only a human curation pass should decide.
 - Any gate decision in the usability-closure programme (Gate U0 / Gate U1 acceptance), and
-  starting anything past the unit CURRENT marks READY.
+  starting anything past the unit `CURRENT.md` marks READY.
+
+## Documentation hygiene
+
+Keep [README.md](README.md#tldr), `AGENTS.md`, and active operator and architecture guides plain and inspectable:
+
+- Begin `README.md` (plain UTF-8 without Byte Order Mark) with a `## TL;DR` section of 1 to 60 words that states concrete inputs, checks, and outputs before internal taxonomy.
+- Keep prose sentences in active human-facing guides at 45 words or fewer, with zero banned filler or ambiguous modals.
+- Expand unfamiliar uppercase acronyms at first use as `Full Term (ACRONYM)` without backticks inside the parentheses.
+- Use valid repository-relative Markdown links and `#heading` anchors, with zero `file://` URLs.
+- Never rewrite `data/`, `exports/`, historical `*_HANDOFF.md` evidence logs, or verbatim literary, sacred, or philosophical passages.
+- Require `/usr/bin/python3 -m unittest tests/test_doc_hygiene.py -v` to pass alongside `python3 scripts/check_front_door.py`.
 
 ## How to resume work
 

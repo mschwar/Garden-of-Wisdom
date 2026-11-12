@@ -27,7 +27,7 @@ hard enum" stance on `tradition` (`../../README.md`).
 ## Rules
 
 1. **Facet writes never change evidence state.** Enrichment is a different lane from research
-   (`WORK_LANES.md`); classification of a passage cannot make it more or less verified.
+   (`WORK_LANES.md`); classification of a passage cannot raise or lower its verification status.
 2. **Facets are additive.** Adding a facet value to a record never removes the value a human
    or researcher set without an audit entry.
 3. **Vocabulary growth is a recorded decision.** Adding a new `tradition`/`domain` value is a

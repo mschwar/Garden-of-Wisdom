@@ -1,4 +1,4 @@
-# Operator Runbook — non-SWE mode
+# Operator Runbook — non-Software-Engineering (SWE) mode
 
 You can run this programme entirely by copy/paste.
 
@@ -8,7 +8,7 @@ You can run this programme entirely by copy/paste.
 
 Tell the agent:
 
-> Open Garden-of-Wisdom. Read AGENTS.md, Product Doctrine, docs/PRODUCT_REALITY.md, docs/program/usability-closure/CURRENT.md, docs/queue.md, docs/DECISIONS.md, and the READY work unit. Verify current main. Tell me only: current gate, READY unit, any blocker, and the exact builder prompt I should run. Do not start implementation yet.
+> Open Garden-of-Wisdom. Read `AGENTS.md`, `docs/product/PRODUCT_DOCTRINE.md`, `docs/PRODUCT_REALITY.md`, `docs/program/usability-closure/CURRENT.md`, `docs/queue.md`, `docs/DECISIONS.md`, and the authorized work unit (READY). Verify current `main`. Tell me only: current gate, READY unit, any blocker, and the exact builder prompt I should run. Do not start implementation yet.
 
 If the answer disagrees with `CURRENT.md`, use the resume/synthesis prompt instead of guessing.
 
@@ -21,27 +21,27 @@ The builder is expected to:
 - create its own branch/worktree;
 - implement the bounded unit;
 - add/modify tests;
-- add at least one meaningful falsifier/negative control where appropriate;
-- update RUNBOOK/DECISIONS/queue only where the unit requires;
+- add at least one meaningful falsifier/negative control where warranted;
+- update `docs/RUNBOOK.md`, `docs/DECISIONS.md`, or `docs/queue.md` only where the unit requires;
 - create a unit handoff;
-- open one PR;
-- stop for QA.
+- open one pull request;
+- stop for quality assurance.
 
-### 3. Foreign QA
+### 3. Foreign quality assurance
 
 Start a fresh context/agent. Copy the **Foreign QA prompt** from the same unit.
 
-QA must review the PR independently and must not rely on builder claims.
+Reviewers must inspect the pull request independently and must not rely on builder claims.
 
 ### 4. Resolve and merge
 
-Give the builder the QA output and say:
+Give the builder the review output and say:
 
-> Resolve every high/medium finding, address or explicitly disposition low findings, re-run the unit acceptance and relevant repo acceptance, update the handoff with the QA verdict, merge the PR, update docs/queue.md and CURRENT.md, clean up the branch/worktree, and STOP. Do not begin the next unit.
+> Resolve every high/medium finding, address or explicitly disposition low findings, re-run the unit acceptance and relevant repo acceptance, update the handoff with the review verdict, merge the pull request, update `docs/queue.md` and `CURRENT.md`, clean up the branch/worktree, and stop. Do not begin the next unit.
 
-### 5. Repeat only if CURRENT says a normal next unit is READY
+### 5. Repeat only if `CURRENT.md` says a normal next unit is READY
 
-If CURRENT says `SYNTHESIS REQUIRED`, use `SYNTHESIS_GATES.md`.
+If `CURRENT.md` says `SYNTHESIS REQUIRED`, use `SYNTHESIS_GATES.md`.
 
 ## What you should never need to do manually
 

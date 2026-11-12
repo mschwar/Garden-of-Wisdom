@@ -3,7 +3,7 @@
 ## Where are we? (resume here)
 
 Live programme status is not in this file. Read `docs/program/usability-closure/CURRENT.md`
-for the current gate, the single READY unit and the last completed unit, then `docs/queue.md`
+for the current gate, the single authorized work unit (READY) and the last completed unit, then `docs/queue.md`
 and `docs/DECISIONS.md`, then the READY unit's document under
 `docs/program/usability-closure/workunits/` and the matching `GARDEN_<UNIT>_HANDOFF.md` at repo
 root (root handoffs and the W0/W1 gate packets are historical evidence, not status). If the
@@ -164,7 +164,7 @@ python3 scripts/check_garden_normalize.py                                   # th
 `normalize` writes the Garden-facing **proposal** for a stored candidate — `candidate_text`,
 `candidate_author`, `candidate_source_ref`, `normalization_notes` — and never touches the capture:
 `captured_text` stays byte for byte the encounter, with its literal `_` placeholders, curly quotes
-and untrimmed whitespace intact. The declared transforms are NFC recomposition; curly quotes/primes,
+and untrimmed whitespace intact. The declared transforms are Unicode Normalization Form C (NFC) recomposition; curly quotes/primes,
 dashes, ellipses and no-break spaces canonicalized; whitespace runs collapsed and boundary
 whitespace trimmed; and every change is named, with counts, in `normalization_notes`. When nothing
 changed the note is `identical to capture`. A value the algorithm does not declare is never touched,
@@ -261,7 +261,7 @@ so it round-trips with the store and diffs in git; the mirror is committed at
 
 ## Seed and verify the D4 legacy batch capture
 
-Decision D4 gives the 324 legacy `quotes.csv` rows **ONE batch capture** for the 2026-09-11
+Decision D4 gives the 324 legacy `quotes.csv` rows **one batch capture** for the 2026-09-11
 rehabilitation import (`cap-2026-09-11-legacy-batch`), explicitly marked `legacy-import` and
 explicitly noting that encounter context is unknown. Membership links every legacy row id to
 that single capture — no per-row captures, no store candidates.
@@ -525,7 +525,7 @@ local run; CI runs all of it, because the point is coverage, not a fast green, a
 job's budget was raised from 15 to 30 minutes for exactly that reason (a table checked only for
 rot would not be evidence). Two checker families are exercised here:
 `scripts/smoke_quote_browser.py`'s controls need a real Chromium, so that checker declares
-`requires=("playwright",)` and is reported **SKIPPED** (never PASS) where the browser is
+`requires=("playwright",)` and is reported `SKIPPED` (never `PASS`) where the browser is
 missing — with `CI` set, or `--require-all`, a skip is an error rather than a quiet reduction
 in coverage.
 

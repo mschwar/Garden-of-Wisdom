@@ -1,4 +1,4 @@
-# D4 — ONE batch capture for the 324 legacy rows
+# D4 — One batch capture for the 324 legacy rows
 
 **Decision:** `docs/DECISIONS.md`, "2026-09-12 — D4 (legacy capture provenance): one batch
 capture record for the 2026-09-11 import".
@@ -12,7 +12,7 @@ capture record for the 2026-09-11 import".
 The 324 legacy rows in `quotes.csv` have no reconstructable raw encounter: what the original
 author saw, where, when, and typed-in-as-is was never recorded
 (`PROVENANCE_AND_CAPTURE_CONTRACT.md`). W0 rejected synthesizing a capture per row. Decision D4
-supersedes the open policy question: give the corpus **ONE batch capture** for the
+supersedes the open policy question: give the corpus **one batch capture** for the
 2026-09-11 rehabilitation import — a true, verifiable statement about the frozen archive +
 documented transform — rather than inventing 324 encounters or leaving provenance empty.
 
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS legacy_batch_membership(
 
 ## Write path (`Store.seed_legacy_batch_capture`)
 
-Inserts the fixed capture **and** every membership row in ONE transaction. Guards:
+Inserts the fixed capture **and** every membership row in one transaction. Guards:
 
 - the id list is non-empty, every id non-empty, no duplicates inside the call;
 - if the store already holds exactly this capture body and exactly this membership set →

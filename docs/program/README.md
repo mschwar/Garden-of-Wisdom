@@ -1,8 +1,8 @@
 # Garden Corpus Program — canonical doctrine
 
 **This directory is doctrine and history; live programme status is not here.** It lives in
-`docs/program/usability-closure/CURRENT.md` (current gate, the single READY unit, the last
-completed unit, the frontier). If this file and CURRENT disagree about status, CURRENT wins.
+`docs/program/usability-closure/CURRENT.md` (current gate, the single authorized work unit (READY), the last
+completed unit, the frontier). If this file and `CURRENT.md` disagree about status, `CURRENT.md` wins.
 
 Status as of 2026-09-17: **W0 complete, Gate A accepted** (`../audit/2026-09-12/GATE_A_FRONTIER_REVIEW.md`);
 **W1 complete, Gate B accepted** 2026-09-13 (`../audit/2026-09-13/GATE_B_FRONTIER_REVIEW.md`).

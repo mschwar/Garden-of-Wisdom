@@ -4,7 +4,7 @@
 > where use breaks, and what boundary should be closed next. It is **not execution authority**.
 > For the single authorized work unit, read `docs/program/usability-closure/CURRENT.md`.
 
-## PRODUCT
+## Product
 
 **Exists to:** let the operator build and use a personally curated, provenance-aware Garden of
 **passages worth keeping** — encountered across religious, philosophical, literary, scientific,
@@ -66,7 +66,7 @@ Garden keeps its native direct-capture path. A future Initiate → Garden adapte
 source-agnostic candidate envelope, but no integration or shared storage is required now.
 Repeated real use must earn any shared primitive.
 
-## CONOPS
+## Concept of Operations (CONOPS)
 
 Ordinary successful use:
 
@@ -121,7 +121,7 @@ also not yet closed.
 - Detect stale/divergent mirror/store state and keep operator-facing mutations synchronized.
 - Resume execution from repo-native current-state and work-unit documents.
 
-## PARTIAL
+## Partial
 
 ### Grow the Garden
 
@@ -139,7 +139,7 @@ State, doctrine and verification contracts exist; a full research workbench does
 The browser offers basic rediscovery. Rich relationships, faceted exploration, resurfacing and
 memorization/internalization are intended product capabilities, not current ones.
 
-## NOT YET
+## Not Yet
 
 - Admit a new candidate into the Garden and see it in the browser.
 - Investigate a new Garden passage end-to-end through a durable evidence workbench.
@@ -219,7 +219,7 @@ is that newly curated state cannot yet reach the Garden-facing read surface.
 - occasional agent-assisted batches/research;
 - static read surface.
 
-### MVP
+### Minimum Viable Product (MVP)
 
 Safely support a low-thousands personal corpus and batches of candidate intake without requiring a
 server, distributed queue, multi-user auth, Kubernetes, workflow engine, or other distributed
@@ -242,7 +242,7 @@ These are capability horizons, not automatic execution authorization.
 
 ## LIFECYCLE / DISPOSITION
 
-**ACTIVE.** The product is real and already useful as a read-only personal corpus. Its active
+**Active.** The product is real and already useful as a read-only personal corpus. Its active
 frontier is not more infrastructure: it is connecting the proven candidate workbench to the
 Garden-facing product while preserving the evidence/authority invariants already earned.
 

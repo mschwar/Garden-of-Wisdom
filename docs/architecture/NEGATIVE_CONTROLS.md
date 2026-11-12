@@ -127,10 +127,10 @@ replacement strings.
 | | p4 | `app.js` fetch repointed, old path kept in a `//` comment | `browser/app.js still fetches ../quotes.csv and ../sources.csv -- …` |
 | `smoke_quote_browser.py` | sm1 | `matchesSearch()` stops narrowing | `search 'Dhammapada': page never showed 29 quotes within 15000ms (filtered-count='324')` |
 | | sm2 | the empty state loses its message | `empty result (#filter-tradition = 'Akan (Ghana)' + search 'Dhammapada'): empty-state text was …` |
-| `check_garden_store.py` | g1 | the capture-immutability UPDATE trigger stops aborting | `captures accepted UPDATE: captures are not immutable` |
-| | g2 | the `research_state` CHECK constraint is dropped (W1.1's review finding) | `the SQL layer accepted research_state = 'maybe' (outside STATE_MODEL.md)` |
+| `check_garden_store.py` | g1 | the capture-immutability `UPDATE` trigger stops aborting | `captures accepted UPDATE: captures are not immutable` |
+| | g2 | the `research_state` `CHECK` constraint is dropped (W1.1's review finding) | `the SQL layer accepted research_state = 'maybe' (outside STATE_MODEL.md)` |
 | | g3 | a migration id is renamed | `create-from-empty applied migration ['0001_create_core_v2', …] into an empty directory` |
-| | g4 | the captures UPDATE trigger still aborts, but its `RAISE` message no longer names the invariant (#45 gap 5) | `the UPDATE trigger's own RAISE message names the invariant it enforces -- 'captures is immutable (trigger)' does not contain 'captures is immutable: UPDATE rejected'` |
+| | g4 | the captures `UPDATE` trigger still aborts, but its `RAISE` message no longer names the invariant (#45 gap 5) | `the UPDATE trigger's own RAISE message names the invariant it enforces -- 'captures is immutable (trigger)' does not contain 'captures is immutable: UPDATE rejected'` |
 | `check_garden_envelope.py` | e1 | the serializer loses `sort_keys` determinism | `key insertion order cannot change the serialized bytes (sort_keys is load-bearing)` |
 | | e2 | rule 1 stops checking the intake schema version (W1.2's review finding) | `fixture 'wrong-intake-schema-version' reports exactly rule-1 -- reported []` |
 | | e3 | rule 2 stops refusing an empty `captured_text` | `fixture 'empty-captured-text' reports exactly rule-2 -- reported []` |
@@ -175,7 +175,7 @@ in this harness's vocabulary (see limits). What was ported is the control, not t
 
 `browser-smoke.yml` runs the full table as its own step, after the acceptance suites. The
 browsers' controls run there because that job installs Chromium; when the capability is
-missing the checker is reported **SKIPPED** (never PASS) and, with `CI` set or `--require-all`,
+missing the checker is reported `SKIPPED` (never `PASS`) and, with `CI` set or `--require-all`,
 a skip is an error rather than a quiet reduction in coverage.
 
 Measured cost: **~4 minutes warm on the developer Mac** — dominated by `validate_quotes.py`
@@ -208,7 +208,7 @@ local run; CI does not narrow.
   rendered-geometry detail (the excluded `overflow-wrap` control above) and to a temp path
   (`normalize_paths()` masks that one).
 - **Coverage gaps the table itself does not close** (measured while authoring it, filed rather
-  than fixed here — each is a fixture/check change to an existing suite): the captures-UPDATE
+  than fixed here — each is a fixture/check change to an existing suite): the captures-`UPDATE`
   trigger's `RAISE` *message* text is unguarded; `garden_normalize._comparison_view()`'s
   documented case-folding has no case-differing fixture;
   `check_garden_review.py` never inspects a decision row's `action` vocabulary;

@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS legacy_verification(
 ## Write paths (`Store` methods, guarded)
 
 **`mark_legacy_unverifiable(id, *, transition_id, reason, evidence_ref, decided_by, decided_at)`**
-inserts the ledger row **and** a `research` `decisions` audit row in ONE transaction, so there is
+inserts the ledger row **and** a `research` `decisions` audit row in one transaction, so there is
 never a ledger row without its audit row (same atomicity rule as W1.5's `curate`). Guards, all
 checked before anything is written:
 
@@ -69,7 +69,7 @@ state is unknown; the declared route is the operator's stated path, never an inv
 
 **`reopen_legacy_unverifiable(id, *, reason, decided_by, decided_at)`** reverses an adjudication
 when a new witness appears (`T-R12 unverifiable → in_research`): it appends the `T-R12` audit row
-and **deletes** the ledger row in ONE transaction. Guards: the row must be in the ledger, and
+and **deletes** the ledger row in one transaction. Guards: the row must be in the ledger, and
 `reason` / `decided_by` must be non-empty.
 
 **`unverifiable_ledger()`** returns every ledger row ordered by legacy row id.
@@ -93,7 +93,7 @@ canonical single-line JSON.
 
 ## Acceptance — `scripts/check_garden_ledger.py` (45 checks)
 
-Runs in a throwaway temp dir; asserts schema + CHECK constraints, the atomic
+Runs in a throwaway temp dir; asserts schema + `CHECK` constraints, the atomic
 ledger-row-plus-audit-row write, no silent overwrite, the reopen reversal, byte-identical export
 round-trip, per-guard refusal messages, and `quotes.csv` / `sources.csv` byte-identity. The seven
 negative controls (mutate a guard's distinctive message in a `/tmp` repo copy → `RESULT: FAIL`
