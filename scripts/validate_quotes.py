@@ -35,19 +35,60 @@ Near-duplicate scope and citation rule (both decided 2026-09-13, issue #34):
 The measurement behind both rulings, and what each does to the counts, is in
 `docs/data/DATA_QUALITY_REPORT.md` under "Re-derivation 2026-09-13 (issue #34)".
 """
+import argparse
 import csv
 import difflib
+import itertools
 import pathlib
+import re
 import sys
+import unicodedata
 from collections import Counter
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# Ruling 2's locator test, imported so there is ONE implementation of it. The
-# import is deliberately not optional: a silently missing rule would weaken the
-# sweep, and a change to the store's rule must show up here as a named drift
-# failure rather than as a quietly moved pair count.
-from garden_normalize import citation_specificity  # noqa: E402
+_CHARACTER_CLASSES = (
+    {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201a": "'",
+        "\u201b": "'",
+        "\u2032": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u201e": '"',
+        "\u2033": '"',
+    },
+    {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2015": "-",
+        "\u2212": "-",
+    },
+    {"\u2026": "..."},
+    {"\u00a0": " ", "\u2007": " ", "\u202f": " "},
+)
+_LOCATOR_PATTERN = re.compile(
+    r"\d"
+    r"|(?:^|[^\w])([IVXLCDM]{2,})(?![\w])"
+    r"|(?:^|[^\w])([IVX])(?![\w])"
+    r"|\u00a7"
+)
+_NOT_A_VALUE = ("none", "unknown", "und", "")
+
+
+def citation_specificity(reference: str) -> str:
+    """Classify a citation: `none` (sentinel/empty), `generic` (bare label), or `specific`."""
+    value = unicodedata.normalize("NFC", reference)
+    for table in _CHARACTER_CLASSES:
+        value = value.translate({ord(glyph): repl for glyph, repl in table.items()})
+    value = re.sub(r"\s+", " ", value).strip()
+    if value in _NOT_A_VALUE:
+        return "none"
+    return "specific" if _LOCATOR_PATTERN.search(value) else "generic"
 
 REQUIRED_FIELDS = ["id", "quote_text", "tradition", "source_ref", "author", "tags"]
 VALID_ITEM_TYPES = {"full-passage", "excerpt", "paraphrase", "oral-attribution", "unknown"}
@@ -93,7 +134,7 @@ def pair_similarity(a, b):
     for char, count in smaller.items():
         other = larger.get(char)
         if other:
-            overlap += count if count < other else other
+            overlap += min(other, count)
     if 2 * overlap <= NEAR_DUPLICATE_THRESHOLD * (la + lb):
         return 0.0
     forward = difflib.SequenceMatcher(None, a, b).ratio()
@@ -110,18 +151,40 @@ def warn(msg):
     print(f"WARN: {msg}")
 
 
-def main():
+def _id_sort_key(raw_id: str) -> tuple[int, int | str]:
+    text = str(raw_id)
+    return (0, int(text)) if text.isdigit() else (1, text)
+
+
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser(description="Validate quotes.csv and sources.csv.")
+    parser.add_argument(
+        "--quotes",
+        type=pathlib.Path,
+        default=REPO_ROOT / "quotes.csv",
+        help="Path to quotes.csv (defaults to repo-root quotes.csv).",
+    )
+    parser.add_argument(
+        "--sources",
+        type=pathlib.Path,
+        default=REPO_ROOT / "sources.csv",
+        help="Path to sources.csv (defaults to repo-root sources.csv).",
+    )
+    args = parser.parse_args(argv)
+    quotes_path: pathlib.Path = args.quotes
+    sources_path: pathlib.Path = args.sources
+
     hard_failures = 0
 
     try:
-        raw = open("quotes.csv", "rb").read()
+        raw = quotes_path.read_bytes()
         raw.decode("utf-8")
     except UnicodeDecodeError as e:
         fail(f"quotes.csv is not valid UTF-8: {e}")
         hard_failures += 1
         return sys.exit(1)
 
-    with open("quotes.csv", encoding="utf-8", newline="") as f:
+    with quotes_path.open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
         fieldnames = reader.fieldnames or []
@@ -143,8 +206,11 @@ def main():
         print("duplicate ids: none")
 
     nums = sorted(int(i) for i in ids if i.isdigit())
-    gaps = [(a, b) for a, b in zip(nums, nums[1:]) if b - a > 1]
-    print(f"id range: {nums[0]}-{nums[-1]} ({len(nums)} ids). non-contiguous gaps (expected, legacy IDs preserved): {gaps}")
+    gaps = [(a, b) for a, b in itertools.pairwise(nums) if b - a > 1]
+    if nums:
+        print(f"id range: {nums[0]}-{nums[-1]} ({len(nums)} ids). non-contiguous gaps (expected, legacy IDs preserved): {gaps}")
+    else:
+        print(f"id range: non-numeric ({len(ids)} ids)")
 
     missing_field_rows = []
     for r in rows:
@@ -157,7 +223,7 @@ def main():
     else:
         print("missing required fields: none")
 
-    valid_traditions = set(r["tradition"] for r in rows)
+    valid_traditions = {r["tradition"] for r in rows}
     print(f"traditions in use ({len(valid_traditions)}): {sorted(valid_traditions)}")
 
     bad_item_types = [r["id"] for r in rows if r.get("item_type", "") not in VALID_ITEM_TYPES]
@@ -221,7 +287,12 @@ def main():
         return found
 
     def canonical(pairs):
-        return sorted((min(int(a), int(b)), max(int(a), int(b)), reason) for a, b, reason in pairs)
+        ordered = []
+        for a, b, reason in pairs:
+            first, second = (a, b) if _id_sort_key(a) <= _id_sort_key(b) else (b, a)
+            ordered.append((_id_sort_key(first), _id_sort_key(second), first, second, reason))
+        ordered.sort()
+        return [(first, second, reason) for _, _, first, second, reason in ordered]
 
     near_dupe_pairs = detect_pairs(groups)
     print(f"near-duplicate candidates: {len(near_dupe_pairs)} (corpus-wide)")
@@ -352,7 +423,7 @@ def main():
 
     # sources.csv checks
     try:
-        with open("sources.csv", encoding="utf-8", newline="") as f:
+        with sources_path.open(encoding="utf-8", newline="") as f:
             src_reader = csv.DictReader(f)
             src_rows = list(src_reader)
     except UnicodeDecodeError as e:
@@ -360,7 +431,7 @@ def main():
         hard_failures += 1
         src_rows = []
 
-    src_ids = set(s["source_id"] for s in src_rows)
+    src_ids = {s["source_id"] for s in src_rows}
     print(f"sources.csv: {len(src_rows)} rows, ids: {sorted(src_ids)}")
     dangling = [r["id"] for r in rows if r.get("source_id") and r["source_id"] not in src_ids]
     if dangling:
