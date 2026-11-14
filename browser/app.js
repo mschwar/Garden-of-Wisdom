@@ -3,6 +3,7 @@
 // everything client-side.
 
 function parseCSV(text) {
+  if (!text || !text.trim()) return [];
   const rows = [];
   let row = [];
   let field = "";
@@ -36,6 +37,7 @@ function parseCSV(text) {
     rows.push(row);
   }
   const header = rows.shift();
+  if (!header || (header.length === 1 && header[0] === "")) return [];
   return rows
     .filter((r) => r.length === header.length && r.some((v) => v !== ""))
     .map((r) => Object.fromEntries(header.map((h, idx) => [h, r[idx]])));
@@ -162,6 +164,7 @@ function sortByField(field) {
   const dropdown = document.getElementById("sort-field");
   if (dropdown.value !== field) dropdown.value = field;
   const dirBtn = document.getElementById("sort-dir");
+  dirBtn.dataset.dir = state.sortDir;
   dirBtn.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
   render();
 }
@@ -394,7 +397,8 @@ function wireControls() {
   });
   document.getElementById("sort-dir").addEventListener("click", (e) => {
     state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-    e.target.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
+    e.currentTarget.dataset.dir = state.sortDir;
+    e.currentTarget.textContent = state.sortDir === "asc" ? "↑ Ascending" : "↓ Descending";
     render();
   });
   document.getElementById("view-mode").addEventListener("change", (e) => {
@@ -414,10 +418,18 @@ function wireControls() {
   });
 }
 
+async function fetchTextChecked(url) {
+  const r = await fetch(url);
+  if (!r.ok) {
+    throw new Error(`HTTP ${r.status} fetching ${url}`);
+  }
+  return r.text();
+}
+
 async function main() {
   const [quotesText, sourcesText] = await Promise.all([
-    fetch("../quotes.csv").then((r) => r.text()),
-    fetch("../sources.csv").then((r) => r.text()),
+    fetchTextChecked("../quotes.csv"),
+    fetchTextChecked("../sources.csv"),
   ]);
   state.quotes = parseCSV(quotesText);
   const sourceRows = parseCSV(sourcesText);
@@ -429,6 +441,8 @@ async function main() {
 }
 
 main().catch((err) => {
+  document.getElementById("table-wrap").hidden = true;
+  document.getElementById("quote-table").hidden = true;
   document.getElementById("results").textContent = `Failed to load data: ${err}`;
   console.error(err);
 });
